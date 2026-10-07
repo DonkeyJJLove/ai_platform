@@ -14,6 +14,24 @@ from tools.lion_local_intelligence_runtime import LpclControlBridge
 
 
 class HybridGatewayTests(unittest.TestCase):
+    def test_hybrid_wrapper_preserves_canonical_provider_binding_and_attachments(self):
+        calls=[]
+        class Dummy:
+            def __init__(self,*args,**kwargs):self.ctx=type('Ctx',(),{'digest':'d'*64})()
+            def state(self):return {'status':'ok'}
+            def _route(self,message):return ('MODEL_ONLY','local')
+            def chat(self,message,use_web=False,history=None,output_language='auto',provider_binding=None,attachment_segments=None):
+                calls.append((message,provider_binding,attachment_segments,history))
+                return {'route':'MODEL_ONLY','answer':'ok'}
+        apply_hybrid_gateway_extension(Dummy)
+        binding={'conversation_id':'conv-1','binding_epoch':3,'lane_id':'lane-local'}
+        segments=('LION_ATTACHMENT_DATA={"content":"x"}',)
+        out=Dummy().chat('ordinary prompt',history=[{'role':'user','content':'prior'}],provider_binding=binding,attachment_segments=segments)
+        self.assertEqual(out['answer'],'ok')
+        self.assertEqual(calls[0][1],binding)
+        self.assertEqual(calls[0][2],segments)
+        self.assertEqual(calls[0][3],[{'role':'user','content':'prior'}])
+
     def ctxrepo(self):
         td = tempfile.TemporaryDirectory()
         root = Path(td.name)
@@ -28,6 +46,7 @@ class HybridGatewayTests(unittest.TestCase):
         (root / SOURCES[1]).write_text(json.dumps(auth), encoding='utf-8')
         for rel in SOURCES[2:-1]:
             (root / rel).write_text('x', encoding='utf-8')
+        (root / SOURCES[-2]).write_text(json.dumps({'architecture_epoch': '1.5'}), encoding='utf-8')
         (root / SOURCES[-1]).write_text(json.dumps({'preferred_release': 'r9'}), encoding='utf-8')
         return td, root
 
@@ -41,12 +60,14 @@ class HybridGatewayTests(unittest.TestCase):
     def git(op, args):
         return {'head': 'a' * 40, 'tree': 'b' * 40} if op == 'head_tree' else []
 
-    def test_context_declares_hybrid_identity(self):
+    def test_context_declares_hybrid_architecture_without_unbound_model_identity(self):
         td, root = self.ctxrepo(); self.addCleanup(td.cleanup)
         ctx = build_lion_context(root)
         self.assertIn('HYBRID_AI_NATIVE_CONTROL_AND_EXECUTION_ENVIRONMENT', ctx.text)
-        self.assertIn('gpt-oss-20b-MXFP4', ctx.text)
+        self.assertIn('ARCHITECTURE_EPOCH_SOURCE=1.5', ctx.text)
+        self.assertIn('UNKNOWN_NOT_SESSION_BOUND', ctx.text)
         self.assertIn('CHATGPT_SAAS_SUPERVISOR', ctx.text)
+        self.assertNotIn('LOCAL=gpt-oss-20b-MXFP4', ctx.text)
         self.assertIn('R8/R9/R10 are LION evolution/material/process epochs', ctx.text)
 
     def test_lion_definition_is_system_context_not_public_web(self):
@@ -56,8 +77,8 @@ class HybridGatewayTests(unittest.TestCase):
         apply_hybrid_gateway_extension(ExtendedGateway)
         g = ExtendedGateway(root, None, None, None, 'http://127.0.0.1:8772', 'b' * 64, lambda m, n: 'local', self.cur, self.git)
         self.assertEqual(g._route('Co to LION')[0], 'SYSTEM_CONTEXT')
-        self.assertEqual(g.state()['saas_supervisor']['transport'], 'EXTERNAL_SESSION_MEDIATED')
-        self.assertFalse(g.state()['saas_supervisor']['automatic_hop_materialized'])
+        self.assertEqual(g.state()['saas_supervisor']['transport'], 'UNKNOWN_NOT_SESSION_BOUND')
+        self.assertIsNone(g.state()['saas_supervisor']['automatic_hop_materialized'])
 
     def test_dual_evaluation_never_fakes_saas_answer(self):
         td, root = self.ctxrepo(); self.addCleanup(td.cleanup)
@@ -70,8 +91,9 @@ class HybridGatewayTests(unittest.TestCase):
         self.assertEqual(out['route'], 'DUAL_EVALUATION')
         self.assertEqual(out['local_evaluation']['answer'], 'LOCAL')
         self.assertEqual(out['local_evaluation']['route'], 'SYSTEM_CONTEXT')
-        self.assertEqual(out['saas_handoff']['status'], 'AWAITING_EXTERNAL_SESSION_MEDIATION')
-        self.assertFalse(out['saas_handoff']['automatic_hop_materialized'])
+        self.assertEqual(out['saas_handoff']['status'], 'AWAITING_BOUND_SUPERVISOR_TRANSPORT')
+        self.assertIsNone(out['saas_handoff']['automatic_hop_materialized'])
+        self.assertEqual(out['local_evaluation']['model'], 'UNKNOWN_NOT_RUNTIME_ATTESTED')
         self.assertEqual(len(calls), 1)
 
 

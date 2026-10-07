@@ -28,6 +28,9 @@ function canonicalPrompt(turn,candidate){
   ['causation_id',candidate.causation_id],
   ['correlation_id',candidate.correlation_id],
   ['context_digest',candidate.context_digest],
+  ['shared_context_digest',candidate.shared_context_digest],
+  ['projection_digest',candidate.projection_digest],
+  ...(candidate.synchronization_checkpoint_digest?[['synchronization_checkpoint_digest',candidate.synchronization_checkpoint_digest]]:[]),
   ['broker_request_id',candidate.request_id],
  ];
  return [
@@ -49,7 +52,7 @@ function canonicalPrompt(turn,candidate){
 
 function parseCanonicalIdentity(input){
  const out={};
- for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest','broker_request_id']){
+ for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest','shared_context_digest','synchronization_checkpoint_digest','broker_request_id']){
   const m=String(input||'').match(new RegExp('(?:^|\\n)'+key+'=([^\\n]+)'));
   if(m)out[key]=m[1].trim();
  }
@@ -136,12 +139,14 @@ class CanonicalConversationSaaSConsumer{
   return (await this.ingress('/v1/turns/'+encodeURIComponent(mapped.turn_id))).turn;
  }
  _validate(candidate,turn,broker){
-  for(const key of ['request_id','conversation_id','lane_id','request_message_id','causation_id','correlation_id','context_digest'])requiredString(candidate[key],key);
+  for(const key of ['request_id','conversation_id','lane_id','request_message_id','causation_id','correlation_id','context_digest','shared_context_digest','projection_digest'])requiredString(candidate[key],key);
+  if(!/^[a-f0-9]{64}$/.test(candidate.shared_context_digest)||!/^[a-f0-9]{64}$/.test(candidate.projection_digest))throw Error('CANONICAL_DIGEST_REQUIRED');
   if(!Number.isSafeInteger(Number(candidate.binding_epoch))||Number(candidate.binding_epoch)<1)throw Error('CANONICAL_BINDING_EPOCH_REQUIRED');
   if(!turn||turn.command_id!=='MC-'+candidate.request_id||turn.parent_event_id!=='saas_request:'+candidate.request_id)throw Error('CANONICAL_TURN_REQUEST_MISMATCH');
   if(turn.thread_id!==null)throw Error('CANONICAL_TURN_LEGACY_THREAD_DENIED');
   if(turn.session_id!==null&&turn.session_id!=='CHATGPT-SAAS')throw Error('CANONICAL_TURN_SESSION_MISMATCH');
   if(!broker||broker.request_id!==candidate.request_id||broker.scope_type!=='CONTROL_PLANE'||broker.thread_id!==null||broker.authority_effect!=='NONE'||broker.transport!==TRANSPORT)throw Error('CANONICAL_BROKER_MISMATCH');
+  if(typeof broker.question!=='string'||digest(broker.question)!==candidate.projection_digest||broker.question_digest!==candidate.projection_digest)throw Error('CANONICAL_PROJECTION_DIGEST_MISMATCH');
   const embedded=parseCanonicalIdentity(turn.input);
   if(embedded.broker_request_id!==candidate.request_id)throw Error('CANONICAL_TURN_BROKER_ID_MISMATCH');
   const exact={
@@ -152,9 +157,13 @@ class CanonicalConversationSaaSConsumer{
    causation_id:candidate.causation_id,
    correlation_id:candidate.correlation_id,
    context_digest:candidate.context_digest,
+   shared_context_digest:candidate.shared_context_digest,
+   projection_digest:candidate.projection_digest,
+   synchronization_checkpoint_digest:candidate.synchronization_checkpoint_digest||null,
    broker_request_id:candidate.request_id,
   };
-  for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest'])if(embedded[key]!==exact[key])throw Error('CANONICAL_TURN_IDENTITY_MISMATCH_'+key.toUpperCase());
+  for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest','shared_context_digest'])if(embedded[key]!==exact[key])throw Error('CANONICAL_TURN_IDENTITY_MISMATCH_'+key.toUpperCase());
+  if(exact.synchronization_checkpoint_digest&&embedded.synchronization_checkpoint_digest!==exact.synchronization_checkpoint_digest)throw Error('CANONICAL_TURN_IDENTITY_MISMATCH_SYNCHRONIZATION_CHECKPOINT_DIGEST');
   return exact;
  }
  _bridgeFor(conversation){
@@ -217,6 +226,25 @@ class CanonicalConversationSaaSConsumer{
   const result=await this.panel('/api/conversations/'+encodeURIComponent(candidate.conversation_id)+'/bridges','POST',body);
   return {...result,creation_receipt_digest:creationReceiptDigest};
  }
+ async _recordDispatchEvidence(candidate,bridge,dispatchEvidence,dispatchState){
+  const body={
+   conversation_id:candidate.conversation_id,
+   request_message_id:candidate.request_message_id,
+   request_id:candidate.request_id,
+   binding_epoch:Number(candidate.binding_epoch),
+   lane_id:candidate.lane_id,
+   shared_context_digest:dispatchEvidence.shared_context_digest,
+   projection_digest:dispatchEvidence.projection_digest,
+   actual_payload_bytes_digest:dispatchEvidence.actual_payload_bytes_digest,
+   attachment_payload_bytes_digest:dispatchEvidence.attachment_payload_bytes_digest,
+   turn_request_hash:dispatchEvidence.turn_request_hash,
+   turn_id:dispatchEvidence.turn_id,
+   bridge_id:requiredString(bridge.bridge_id,'bridge_id'),
+   external_thread_ref:requiredString(bridge.external_thread_ref,'external_thread_ref'),
+   dispatch_state:dispatchState,
+  };
+  return this.panel('/api/conversations/saas/dispatch','POST',body);
+ }
  async _dispatch(candidate){
   const rid=candidate.request_id;
   if(this.inFlight.has(rid))return;
@@ -229,7 +257,15 @@ class CanonicalConversationSaaSConsumer{
    const exact=this._validate(candidate,turn,broker);
    const prior=this.dispatchMap[rid];
    if(prior&&['SEND_COMMITTED','BOUND_SENT','SEND_UNKNOWN','RESULT_OBSERVED'].includes(prior.state)){
-    if(turn.status==='COMPLETED'){this.dispatchMap[rid]={...prior,state:'RESULT_OBSERVED',observed_at:this.now()};this._persist()}
+    if(
+     !prior.dispatch_evidence_recorded_at &&
+     ['SEND_COMMITTED','BOUND_SENT'].includes(prior.state) &&
+     prior.bridge_id && prior.external_thread_ref
+    ){
+     await this._recordDispatchEvidence(candidate,{bridge_id:prior.bridge_id,external_thread_ref:prior.external_thread_ref},prior,prior.state);
+     this.dispatchMap[rid]={...prior,dispatch_evidence_recorded_at:this.now()};this._persist();
+    }
+    if(turn.status==='COMPLETED'){this.dispatchMap[rid]={...this.dispatchMap[rid],state:'RESULT_OBSERVED',observed_at:this.now()};this._persist()}
     return;
    }
    if(turn.status!=='PENDING')return;
@@ -240,22 +276,29 @@ class CanonicalConversationSaaSConsumer{
    const forceNew=loadJson(this.store,'canonical_force_new_bridge',{});
    const rotate=forceNew[candidate.conversation_id]===true;
    const prompt=canonicalPrompt(turn,candidate);
+   const actualPayloadBytesDigest=digest(prompt);
+   const attachmentPayloadBytesDigest=digest(String(turn.input||''));
+   const dispatchEvidence={shared_context_digest:candidate.shared_context_digest,projection_digest:candidate.projection_digest,actual_payload_bytes_digest:actualPayloadBytesDigest,attachment_payload_bytes_digest:attachmentPayloadBytesDigest,turn_request_hash:turn.request_hash,turn_id:turn.turn_id};
    if(!bridge||rotate){
     this.state='PROVISIONING';this.lastDecision={stage:'AUTO_CREATE',request_id:rid,conversation_id:candidate.conversation_id};
-    this.dispatchMap[rid]={state:'PROVISIONING',exact,started_at:this.now()};this._persist();
+    this.dispatchMap[rid]={state:'PROVISIONING',exact,...dispatchEvidence,started_at:this.now()};this._persist();
     const created=await this.browser.createProjectConversationWithPrompt(prompt,()=>this.dispatchMap[rid]?.state==='PROVISIONING');
     this.dispatchMap[rid]={...this.dispatchMap[rid],state:'SEND_COMMITTED',conversation_url:created.conversation_url,external_thread_ref:created.external_thread_ref,sent_at:this.now()};this._persist();
     const persisted=await this._persistBridge(candidate,created,rotate?bridge:null);
     bridge={...persisted,provenance:{conversation_url:created.conversation_url,creation_receipt_digest:persisted.creation_receipt_digest}};
     if(rotate){delete forceNew[candidate.conversation_id];saveJson(this.store,'canonical_force_new_bridge',forceNew)}
-    this.dispatchMap[rid]={...this.dispatchMap[rid],state:'BOUND_SENT',bridge_id:persisted.bridge_id,creation_receipt_digest:persisted.creation_receipt_digest,bound_at:this.now()};this._persist();
+    this.dispatchMap[rid]={...this.dispatchMap[rid],state:'BOUND_SENT',bridge_id:persisted.bridge_id,external_thread_ref:created.external_thread_ref,creation_receipt_digest:persisted.creation_receipt_digest,bound_at:this.now()};this._persist();
+    await this._recordDispatchEvidence(candidate,{bridge_id:persisted.bridge_id,external_thread_ref:created.external_thread_ref},dispatchEvidence,'BOUND_SENT');
+    this.dispatchMap[rid]={...this.dispatchMap[rid],dispatch_evidence_recorded_at:this.now()};this._persist();
    }else{
     const url=this._conversationUrl(bridge);
     this.state='DISPATCHING';this.lastDecision={stage:'EXACT_BRIDGE_SEND',request_id:rid,bridge_id:bridge.bridge_id,conversation_id:candidate.conversation_id};
-    this.dispatchMap[rid]={state:'DISPATCHING',exact,bridge_id:bridge.bridge_id,conversation_url:url,started_at:this.now()};this._persist();
+    this.dispatchMap[rid]={state:'DISPATCHING',exact,...dispatchEvidence,bridge_id:bridge.bridge_id,external_thread_ref:bridge.external_thread_ref,conversation_url:url,started_at:this.now()};this._persist();
     try{
      await this.browser.sendToConversation(url,prompt,()=>this.dispatchMap[rid]?.state==='DISPATCHING');
      this.dispatchMap[rid]={...this.dispatchMap[rid],state:'SEND_COMMITTED',sent_at:this.now()};this._persist();
+     await this._recordDispatchEvidence(candidate,bridge,dispatchEvidence,'SEND_COMMITTED');
+     this.dispatchMap[rid]={...this.dispatchMap[rid],dispatch_evidence_recorded_at:this.now()};this._persist();
     }catch(error){
      this.dispatchMap[rid]={...this.dispatchMap[rid],state:'SEND_UNKNOWN',error:String(error?.message||error),observed_at:this.now()};this._persist();throw error;
     }

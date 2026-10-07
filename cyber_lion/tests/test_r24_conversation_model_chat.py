@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import sqlite3
+from hashlib import sha256
 from pathlib import Path
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -32,6 +35,7 @@ class FakeControl:
             self.requests[request_id] = {
                 "status": "PENDING",
                 "request_id": request_id,
+                "question_digest": sha256(args["question"].encode("utf-8")).hexdigest(),
                 "thread_id": None,
                 "receipt_digest": None,
                 "response_text": None,
@@ -53,6 +57,9 @@ class FakeControl:
             "status": "RESPONDED",
             "receipt_digest": ("d" if request_id.endswith("1") else "e") * 64,
             "response_text": text,
+            "response_digest": sha256(text.encode("utf-8")).hexdigest(),
+            "binding_id": "binding-" + request_id,
+            "claim_generation": 1,
             "response_meta_json": json.dumps({
                 "model_identity": model,
                 "transport": "CHATGPT_FIREFOX_PROJECT_MEDIATED",
@@ -69,23 +76,76 @@ class FakeGateway:
         self.control = control
         self.local_calls = []
         self.order = control.order
+        self.ctx = type("Ctx", (), {"digest": "a" * 64})()
 
-    def chat(self, message, use_web=False, history=None, output_language="auto"):
+    def chat(self, message, use_web=False, history=None, output_language="auto", provider_binding=None):
         self.order.append(("LOCAL_CHAT", message, list(history or [])))
         self.local_calls.append({
             "message": message,
             "history": list(history or []),
             "output_language": output_language,
+            "provider_binding": dict(provider_binding or {}),
         })
+        answer = "LOCAL-SECRET-OUTPUT:" + message
         return {
             "route": "LOCAL_MODEL",
-            "answer": "LOCAL-SECRET-OUTPUT:" + message,
+            "answer": answer,
             "authority_boundary": False,
             "authority_effect": "NONE",
+            "provider_provenance": {
+                "shared_context_digest": self.ctx.digest,
+                "projection_digest": "b" * 64,
+                "actual_payload_bytes_digest": "c" * 64,
+                "response_digest": sha256(answer.encode("utf-8")).hexdigest(),
+                "provider": "LOCAL",
+                "provider_session_ref": (provider_binding or {}).get("provider_session_ref"),
+                "provider_session_ref_class": (
+                    "LION_LANE_REF_NOT_PROVIDER_ATTESTATION"
+                    if (provider_binding or {}).get("provider_session_ref")
+                    else "UNKNOWN_NOT_PROVIDER_ATTESTED"
+                ),
+                "authority_effect": "NONE",
+            },
         }
 
     def state(self):
         return {"authority_effect": "NONE"}
+
+
+class ThreadStoreConnectionSafetyTests(unittest.TestCase):
+    class FakeConnection:
+        def __init__(self, fail_on=None):
+            self.fail_on=fail_on
+            self.statements=[]
+            self.closed=False
+            self.row_factory=None
+        def execute(self, statement):
+            self.statements.append(statement)
+            if statement==self.fail_on:
+                raise sqlite3.OperationalError("simulated pragma failure")
+            return self
+        def close(self):
+            self.closed=True
+
+    def store_without_init(self):
+        store=ThreadStore.__new__(ThreadStore)
+        store.path=Path("synthetic-thread-store.db")
+        return store
+
+    def test_connection_setup_does_not_renegotiate_journal_mode_per_request(self):
+        fake=self.FakeConnection()
+        with patch("tools.lion_local_intelligence_runtime.sqlite3.connect",return_value=fake):
+            result=self.store_without_init()._conn()
+        self.assertIs(result,fake)
+        self.assertEqual(fake.statements,["PRAGMA busy_timeout=10000","PRAGMA foreign_keys=ON"])
+        self.assertFalse(fake.closed)
+
+    def test_connection_setup_closes_descriptor_if_pragma_fails(self):
+        fake=self.FakeConnection(fail_on="PRAGMA foreign_keys=ON")
+        with patch("tools.lion_local_intelligence_runtime.sqlite3.connect",return_value=fake):
+            with self.assertRaises(sqlite3.OperationalError):
+                self.store_without_init()._conn()
+        self.assertTrue(fake.closed)
 
 
 class R24ConversationModelChatTests(unittest.TestCase):
@@ -125,7 +185,12 @@ class R24ConversationModelChatTests(unittest.TestCase):
         self.assertEqual(len(out["legs"]), 1)
         leg = out["legs"][0]
         self.assertEqual(leg["provider"], "LOCAL")
-        self.assertNotEqual(leg["provider_session_ref"], out["conversation_id"])
+        self.assertIsNone(leg["provider_session_ref"])
+        self.assertIsNone(out["responses"]["LOCAL"]["provider_provenance"]["provider_session_ref"])
+        self.assertEqual(
+            out["responses"]["LOCAL"]["provider_provenance"]["provider_session_ref_class"],
+            "UNKNOWN_NOT_PROVIDER_ATTESTED",
+        )
         for field in (
             "conversation_id", "binding_epoch", "correlation_id",
             "causation_id", "context_digest",
@@ -140,6 +205,45 @@ class R24ConversationModelChatTests(unittest.TestCase):
         self.assertEqual(transcript[0]["causation_id"], transcript[1]["causation_id"])
         self.assertEqual(transcript[0]["context_digest"], transcript[1]["context_digest"])
 
+    def test_saas_dispatch_evidence_persists_through_threadstore_boundary(self):
+        conv = self.create("saas-dispatch-persist")
+        out = submit_chat(self.store, self.gateway, conv["conversation_id"], {
+            "message": "persist dispatch",
+            "route": "SAAS",
+            "client_request_id": "saas-dispatch-persist-1",
+        })
+        leg = next(x for x in out["legs"] if x["provider"] == "SAAS")
+        handoff = out["saas_handoff"]
+        payload_digest = "d" * 64
+        turn_hash = "e" * 64
+        saved = self.store("conversation_chat_record_saas_dispatch", {
+            "conversation_id": conv["conversation_id"],
+            "request_message_id": leg["message_id"],
+            "request_id": handoff["request_id"],
+            "binding_epoch": out["binding_epoch"],
+            "lane_id": leg["lane_id"],
+            "shared_context_digest": out["shared_context_digest"],
+            "projection_digest": handoff["projection_digest"],
+            "actual_payload_bytes_digest": payload_digest,
+            "turn_request_hash": turn_hash,
+            "turn_id": "turn-dispatch-persist-1",
+            "bridge_id": "sentinelx-mcp",
+            "external_thread_ref": "turn-dispatch-persist-1",
+            "dispatch_state": "SEND_COMMITTED",
+        })
+        self.assertEqual(saved["dispatch_evidence"]["actual_payload_bytes_digest"], payload_digest)
+        check = sqlite3.connect(self.store.path)
+        try:
+            raw = check.execute(
+                "SELECT metadata_json FROM conversation_messages WHERE message_id=?",
+                (leg["message_id"],),
+            ).fetchone()[0]
+        finally:
+            check.close()
+        metadata = json.loads(raw)
+        self.assertEqual(metadata["dispatch_evidence"]["actual_payload_bytes_digest"], payload_digest)
+        self.assertEqual(metadata["dispatch_evidence"]["turn_request_hash"], turn_hash)
+
     def test_saas_request_uses_distinct_broker_identity_and_delivers_later(self):
         conv = self.create("saas-root")
         out = submit_chat(self.store, self.gateway, conv["conversation_id"], {
@@ -151,10 +255,7 @@ class R24ConversationModelChatTests(unittest.TestCase):
         request_id = out["saas_handoff"]["request_id"]
         self.assertEqual(out["saas_handoff"]["transport"], "CHATGPT_SENTINELX_MCP")
         self.assertNotEqual(request_id, conv["conversation_id"])
-        self.assertNotEqual(
-            out["saas_handoff"]["provider_session_ref"],
-            conv["conversation_id"],
-        )
+        self.assertIsNone(out["saas_handoff"]["provider_session_ref"])
         self.assertEqual(deliver_saas_once(self.store, self.control), [])
         before = self.transcript(conv["conversation_id"])["messages"]
         self.assertEqual([x["role"] for x in before], ["USER"])
@@ -166,6 +267,19 @@ class R24ConversationModelChatTests(unittest.TestCase):
         self.assertEqual(after[-1]["content"], "SAAS-DELAYED-ANSWER")
         self.assertEqual(after[-1]["context_digest"], out["context_digest"])
         self.assertEqual(after[-1]["correlation_id"], out["correlation_id"])
+        provider_meta=after[-1]["metadata"]["response_meta"]
+        self.assertEqual(provider_meta["projection_digest"], out["saas_handoff"]["projection_digest"])
+        self.assertEqual(provider_meta["response_digest"], sha256(b"SAAS-DELAYED-ANSWER").hexdigest())
+        self.assertEqual(provider_meta["broker_binding_id"], "binding-" + request_id)
+        self.assertEqual(provider_meta["broker_claim_generation"], 1)
+        lanes = self.store("conversation_lanes", {"conversation_id": conv["conversation_id"]})["lanes"]
+        saas_lane = next(x for x in lanes if x["provider"] == "SAAS")
+        self.assertEqual(saas_lane["provider_session_ref"], "binding-" + request_id)
+        self.assertEqual(after[-1]["metadata"]["provider_session_ref"], "binding-" + request_id)
+        self.assertEqual(
+            after[-1]["metadata"]["provider_session_ref_class"],
+            "SAAS_BROKER_SESSION_BINDING",
+        )
 
     def test_cancelled_saas_closes_mapping_without_fabricating_response(self):
         conv = self.create("saas-cancel-root")
@@ -202,10 +316,8 @@ class R24ConversationModelChatTests(unittest.TestCase):
         })
         self.assertEqual(out["state"], "DUAL_WAITING")
         self.assertEqual([x["provider"] for x in out["legs"]], ["LOCAL", "SAAS"])
-        self.assertNotEqual(
-            out["legs"][0]["provider_session_ref"],
-            out["legs"][1]["provider_session_ref"],
-        )
+        self.assertIsNone(out["legs"][0]["provider_session_ref"])
+        self.assertIsNone(out["legs"][1]["provider_session_ref"])
         self.assertEqual(self.control.order[0][0], "SAAS_REQUEST")
         self.assertEqual(self.control.order[1][0], "LOCAL_CHAT")
         saas_prompt = self.control.order[0][2]
@@ -220,11 +332,22 @@ class R24ConversationModelChatTests(unittest.TestCase):
             if x["lane_id"] in {leg["lane_id"] for leg in out["legs"]}
         ]
         self.assertEqual({x["context_digest"] for x in dual_rows}, {out["context_digest"]})
+        self.assertEqual(out["shared_context_digest"], self.gateway.ctx.digest)
+        self.assertEqual(out["responses"]["LOCAL"]["provider_provenance"]["shared_context_digest"], out["shared_context_digest"])
+        self.assertEqual(out["saas_handoff"]["shared_context_digest"], out["shared_context_digest"])
+        self.assertNotEqual(out["responses"]["LOCAL"]["provider_provenance"]["projection_digest"], out["saas_handoff"]["projection_digest"])
+        self.assertEqual(out["saas_handoff"]["projection_digest"], out["saas_handoff"]["broker_question_digest"])
+        self.assertIsNone(out["saas_handoff"]["actual_provider_payload_bytes_digest"])
         request_id = out["saas_handoff"]["request_id"]
         self.control.respond(request_id, "SAAS-GAMMA")
         delivered = deliver_saas_once(self.store, self.control)
         self.assertEqual(len(delivered), 1)
         self.assertIsNotNone(delivered[0]["join"])
+        lanes = self.store("conversation_lanes", {"conversation_id": conv["conversation_id"]})["lanes"]
+        local_lane = next(x for x in lanes if x["provider"] == "LOCAL")
+        saas_lane = next(x for x in lanes if x["provider"] == "SAAS")
+        self.assertIsNone(local_lane["provider_session_ref"])
+        self.assertEqual(saas_lane["provider_session_ref"], "binding-" + request_id)
         transcript = self.transcript(conv["conversation_id"])["messages"]
         self.assertEqual(
             [x["content"] for x in transcript],
@@ -353,10 +476,8 @@ class R24ConversationModelChatTests(unittest.TestCase):
             oa["saas_handoff"]["request_id"],
             ob["saas_handoff"]["request_id"],
         )
-        self.assertNotEqual(
-            oa["saas_handoff"]["provider_session_ref"],
-            ob["saas_handoff"]["provider_session_ref"],
-        )
+        self.assertIsNone(oa["saas_handoff"]["provider_session_ref"])
+        self.assertIsNone(ob["saas_handoff"]["provider_session_ref"])
 
 
     def test_mission_bound_local_saas_and_dual_routes_preserve_binding_identity(self):

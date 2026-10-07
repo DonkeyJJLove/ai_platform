@@ -144,10 +144,21 @@ def apply_saas_handoff_extension(cls):
             return answer
         return original_capability(message, mission, state, output_language) if callable(original_capability) else None
 
-    def chat(self, message, use_web=False, history=None, output_language="auto"):
+    def chat(self, message, use_web=False, history=None, output_language="auto", provider_binding=None, attachment_segments=None):
+        def call_original(current_message, current_history):
+            kwargs = {
+                "use_web": use_web,
+                "history": current_history,
+                "output_language": output_language,
+            }
+            if provider_binding is not None:
+                kwargs["provider_binding"] = provider_binding
+            if attachment_segments:
+                kwargs["attachment_segments"] = attachment_segments
+            return original_chat(self, current_message, **kwargs)
         if isinstance(message, str) and _dual_saas_local(message):
             if not callable(getattr(self, "control_provider", None)):
-                return original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
+                return call_original(message, history)
             recent = self.control_provider("recent", {})
             mission_id = recent.get("focus_mission_id")
 
@@ -174,15 +185,17 @@ def apply_saas_handoff_extension(cls):
             else:
                 local_prompt,saas_prompt,independent=_dual_queries(message)
                 dual={"request_id":None,"local_prompt":local_prompt,"saas_prompt":saas_prompt,"independent":independent}
-            local = original_chat(self, local_prompt, use_web=use_web, history=None, output_language=output_language)
+            local = call_original(local_prompt, None)
+            runtime_state = self.state()
+            local_model = runtime_state.get("local_cognitive_executor") or "UNKNOWN_NOT_RUNTIME_ATTESTED"
             if durable_dual:
-                self.control_provider("dual_response", {"request_id":dual["request_id"],"provider":"gpt-oss-20b-MXFP4","response_text":str(local.get("answer") or ""),"transport":"LOCAL_MODEL_RUNTIME"})
+                self.control_provider("dual_response", {"request_id":dual["request_id"],"provider":local_model,"response_text":str(local.get("answer") or ""),"transport":"LOCAL_MODEL_RUNTIME"})
             handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":saas_prompt,"authority_effect":"NONE","transport":"CHATGPT_FIREFOX_PROJECT_MEDIATED"})
             if durable_dual:
                 self.control_provider("dual_link_saas", {"request_id":dual["request_id"],"saas_request_id":handoff["request_id"]})
                 handoff["dual_request_id"] = dual["request_id"]
             polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:co|kim|czy|jak|zapytaj|porównaj|porownaj|zadaj)\b", message.lower())))
-            local_label = "### LOCAL · gpt-oss-20b-MXFP4\n" if polish else "### LOCAL · gpt-oss-20b-MXFP4\n"
+            local_label = "### LOCAL · " + str(local_model) + "\n"
             wait_label = ("\n\n### CHATGPT_SAAS_SUPERVISOR\nOdpowiedź SaaS została zlecona jako niezależna trajektoria. "
                           f"Request `{handoff['request_id']}`, dual `{dual.get('request_id') or 'LEGACY_COMPAT'}`, kod `{handoff['request_code']}`. Panel czeka na receipt; końcowy wynik zostanie złączony dopiero po receipt obu modeli.")
             answer = local_label + str(local.get("answer") or "") + wait_label
@@ -198,7 +211,7 @@ def apply_saas_handoff_extension(cls):
                 "mission_control": mission_snapshot,
                 "tool_calls": list(local.get("tool_calls", [])) + ["lion.dual.create","lion.dual.local.receipt","lion.saas.handoff.create","lion.dual.link"],
                 "material_receipts": local.get("material_receipts", []),
-                "local_evaluation": {"model": "gpt-oss-20b-MXFP4", "question": local_prompt, "answer": local.get("answer"), "route": local.get("route")},
+                "local_evaluation": {"model": local_model, "question": local_prompt, "answer": local.get("answer"), "route": local.get("route")},
                 "saas_question": saas_prompt,
                 "independent_questions": True,
                 "dual_evaluation": dual,
@@ -212,16 +225,17 @@ def apply_saas_handoff_extension(cls):
             question = _question(message)
             handoff = self.control_provider("saas_request", {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":question,"authority_effect":"NONE","transport":"CHATGPT_FIREFOX_PROJECT_MEDIATED"})
             polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:kim|co|czy|jak|wykonaj|zapytaj|pytanie)\b", message.lower())))
-            firefox_transport=handoff.get('transport')=='CHATGPT_FIREFOX_PROJECT_MEDIATED'
+            handoff_transport=handoff.get('transport') or 'UNKNOWN_NOT_SESSION_BOUND'
+            firefox_transport=handoff_transport=='CHATGPT_FIREFOX_PROJECT_MEDIATED'
             if polish:
-                transport_text=("Transport CHATGPT_FIREFOX_PROJECT_MEDIATED: przypięty Firefox mediator przejmie request automatycznie i po realnej odpowiedzi ChatGPT zwróci receipt do tego samego wątku. " if firefox_transport else "Transport pozostaje EXTERNAL_SESSION_MEDIATED — automatyczny browser mediator nie jest obecnie READY, więc odpowiedź wymaga zewnętrznego mediatora. ")
+                transport_text=("Transport CHATGPT_FIREFOX_PROJECT_MEDIATED: przypięty Firefox mediator przejmie request automatycznie i po realnej odpowiedzi ChatGPT zwróci receipt do tego samego wątku. " if firefox_transport else f"Transport requestu: {handoff_transport}. Brak stanu READY automatycznego browser mediatora nie jest zastępowany domyślnym transportem. ")
                 answer = ("Żądanie zostało zapisane w kontrolowanym kanale SaaS. "
                           f"Kod {handoff['request_code']}; request {handoff['request_id']}. "
                           "Panel śledzi dokładnie ten request automatycznie i po otrzymaniu realnego receiptu dopisze odpowiedź do tego samego wątku. "
                           +transport_text+
                           "Powtórzenie identycznego unresolved pytania jest wiązane przez dedupe/retry lineage zamiast mnożyć aktywną kolejkę. Odpowiedź ma authority_effect=NONE.")
             else:
-                transport_text=("Transport is CHATGPT_FIREFOX_PROJECT_MEDIATED: the pinned Firefox mediator will claim the request automatically and return a real ChatGPT receipt to the same thread. " if firefox_transport else "Transport remains EXTERNAL_SESSION_MEDIATED: the automatic browser mediator is not READY, so an external mediator is still required. ")
+                transport_text=("Transport is CHATGPT_FIREFOX_PROJECT_MEDIATED: the pinned Firefox mediator will claim the request automatically and return a real ChatGPT receipt to the same thread. " if firefox_transport else f"Request transport: {handoff_transport}. A non-READY automatic browser mediator is not replaced with a default transport claim. ")
                 answer = ("The request is queued in the controlled SaaS channel. "
                           f"Code {handoff['request_code']}; request {handoff['request_id']}. "
                           "The panel follows this exact request and appends the real supervisor response to the same thread when its receipt arrives. "
@@ -238,7 +252,7 @@ def apply_saas_handoff_extension(cls):
                 "saas_handoff": handoff,
                 "response_language": output_language,
             }
-        return original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
+        return call_original(message, history)
 
     cls._route = route
     cls._capability_answer = staticmethod(capability_answer)

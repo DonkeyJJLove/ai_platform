@@ -217,3 +217,47 @@ SAME_UNIFIED_INTERPRETATION_BOUNDARY
 ```
 
 A thread that emits YAML, free-form prose or raw JSON as the primary v1.1 human LPCL artifact is non-conformant unless the caller explicitly requests a machine serialization.
+
+## Stream-loss and long-running generation continuity
+
+Cross-thread generation must not depend on one interactive response/log stream remaining available.
+
+```text
+STREAM != EXECUTION_STATE
+STREAM_LOSS != WORK_FAILURE
+STREAM_EXPIRY != CANDIDATE_ABSENCE
+```
+
+For a long-running phase or candidate generation, the authoring/execution process should:
+
+```text
+FREEZE EXACT INPUTS
+→ START ONE BOUNDED GENERATION
+→ PERSIST RUN / GENERATION IDENTITY
+→ RETURN CONTROL
+→ POLL DURABLE WORK / ARTIFACT STATE
+→ VERIFY AVAILABLE CANDIDATE BY READBACK
+→ PASS | REJECTED | UNKNOWN
+```
+
+A stream/cache failure is treated as an observation failure. It never authorizes an automatic retry,
+a second concurrent generation, or a replacement effect. When durable execution state is UNKNOWN,
+the required action is reconciliation before retry.
+
+Rejected candidates remain lineage. A successor generation is permitted only after the predecessor
+has a terminal verified rejection and the finite generation/retry budget has not been exhausted.
+
+Where existing Mission Control/model-call/artifact state is available, use it as the durable owner.
+Otherwise a bounded local job may expose a small checkpoint/status artifact and final verification
+receipt. The stream itself is never that receipt.
+
+Recommended artifact-first observation policy is bounded exponential polling with a short initial
+interval, a capped maximum interval, a wall-time budget, and a generation budget. Exact values are
+task-specific and are not authority.
+
+For repository/CI work, bind the exact candidate HEAD first, then poll exact workflow run/job
+identities to terminal state. Do not keep a log stream open as the only continuity mechanism.
+A new HEAD invalidates prior exact-head CI.
+
+This rule preserves the existing continuation semantics: failure/unknown must retain exact
+identities, the last completed phase, the blocking phase, and the next legal phase.

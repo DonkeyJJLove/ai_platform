@@ -36,7 +36,7 @@ function atomicJson(file, value) {
   fs.renameSync(temp, file);
 }
 
-function makeTurn(row) {
+function makeTurn(row, claimGeneration = null) {
   const rid = row.request_id;
   return {
     command_id: `MC-${rid}`,
@@ -49,6 +49,7 @@ function makeTurn(row) {
       source: 'LION_MISSION_CONTROL', broker_request_id: rid, parent_event_id: 'saas_request:' + rid, request_code: row.request_code || null,
       scope_type: row.scope_type || null, scope_id: row.scope_id || null, mission_id: row.mission_id || null, thread_id: row.thread_id || null,
       transport: SECURE, authority_effect: 'NONE', browser_automation: 'DISABLED_BY_POLICY',
+      claim_generation: Number.isSafeInteger(claimGeneration) ? claimGeneration : null,
     },
   };
 }
@@ -87,6 +88,9 @@ class BrowserlessSecureMcpRelay {
 
   broker(pathname, options = {}) {
     return jsonRequest(this.config.broker, pathname, { ...options, headers: { ...(options.headers || {}), ...(options.method === 'POST' ? { 'X-LION-Mediator-Key': this.mediatorKey } : {}) } });
+  }
+  panel(pathname, options = {}) {
+    return jsonRequest(this.config.panel, pathname, options);
   }
   ingress(pathname, options = {}) {
     return jsonRequest(this.config.ingress, pathname, { ...options, headers: { ...(options.headers || {}), 'X-LION-Token': this.ingressToken } });
@@ -147,12 +151,76 @@ class BrowserlessSecureMcpRelay {
     };
     this.save(base);
     try {
-      const created = await this.ingress('/v1/turns', { method: 'POST', body: makeTurn(row), timeoutMs: 10000 });
+      const created = await this.ingress('/v1/turns', { method: 'POST', body: makeTurn(row, claim.claim_generation), timeoutMs: 10000 });
       const turn = created.turn || {};
       if (!turn.turn_id) throw new Error('turn create missing turn_id');
       return this.save({ ...base, state: 'SAAS_ACTIVE', turn_id: turn.turn_id, turn_command_id: `MC-${rid}`, turn_request_hash: turn.request_hash || null, last_observed_at: now() });
     } catch (error) {
       return this.save({ ...base, state: 'TURN_CREATE_UNKNOWN_RECONCILE_REQUIRED', error_class: error.name, error: String(error.message).slice(0, 400), last_observed_at: now(), reconciliation_state: 'NO_BLIND_RETRY' });
+    }
+  }
+
+  async recordCanonicalDispatch(rec, turn) {
+    if (rec.dispatch_evidence_recorded_at) return { required: false, recorded: true };
+    const turnInput = typeof turn.input === 'string' ? turn.input : '';
+    const attachmentRequired = turnInput.includes('LION_ATTACHMENT_DATA=');
+    let pending;
+    try {
+      pending = await this.panel('/api/conversations/saas/pending?limit=128', { timeoutMs: 5000 });
+    } catch (error) {
+      rec.dispatch_evidence_error = 'PANEL_PENDING:' + error.name;
+      this.save(rec);
+      return { required: attachmentRequired, recorded: false };
+    }
+    const candidate = (pending.candidates || []).find((row) => row && row.request_id === rec.request_id);
+    if (!candidate) {
+      if (attachmentRequired) {
+        rec.dispatch_evidence_error = 'CANONICAL_ATTACHMENT_CANDIDATE_REQUIRED';
+        this.save(rec);
+      }
+      return { required: attachmentRequired, recorded: false };
+    }
+    const projections = Array.isArray(candidate.attachment_projections) ? candidate.attachment_projections : [];
+    const projectionRequiresAttachment = projections.length > 0;
+    const required = attachmentRequired || projectionRequiresAttachment;
+    if (attachmentRequired !== projectionRequiresAttachment) {
+      rec.dispatch_evidence_error = 'CANONICAL_ATTACHMENT_PROJECTION_MISMATCH';
+      this.save(rec);
+      return { required: true, recorded: false };
+    }
+    if (!turnInput) {
+      rec.dispatch_evidence_error = 'TURN_INPUT_REQUIRED';
+      this.save(rec);
+      return { required, recorded: false };
+    }
+    const payloadDigest = sha(turnInput);
+    const body = {
+      conversation_id: candidate.conversation_id,
+      request_message_id: candidate.request_message_id,
+      request_id: candidate.request_id,
+      binding_epoch: candidate.binding_epoch,
+      lane_id: candidate.lane_id,
+      shared_context_digest: candidate.shared_context_digest,
+      projection_digest: candidate.projection_digest,
+      actual_payload_bytes_digest: payloadDigest,
+      turn_request_hash: turn.request_hash,
+      turn_id: turn.turn_id,
+      bridge_id: 'sentinelx-mcp',
+      external_thread_ref: turn.turn_id,
+      dispatch_state: 'SEND_COMMITTED',
+      ...(required ? { attachment_payload_bytes_digest: payloadDigest } : {}),
+    };
+    try {
+      await this.panel('/api/conversations/saas/dispatch', { method: 'POST', body, timeoutMs: 5000 });
+      rec.dispatch_evidence_recorded_at = now();
+      rec.dispatch_payload_digest = payloadDigest;
+      rec.dispatch_evidence_error = null;
+      this.save(rec);
+      return { required, recorded: true };
+    } catch (error) {
+      rec.dispatch_evidence_error = error.name + ':' + String(error.message).slice(0, 240);
+      this.save(rec);
+      return { required, recorded: false };
     }
   }
 
@@ -194,21 +262,34 @@ class BrowserlessSecureMcpRelay {
     let turn;
     try { turn = (await this.ingress(`/v1/turns/${encodeURIComponent(rec.turn_id)}`, { timeoutMs: 5000 })).turn || {}; }
     catch { this.save(rec); return; }
+    if (turn.request_hash !== rec.turn_request_hash || turn.command_id !== rec.turn_command_id) {
+      rec.state = 'TURN_IDENTITY_MISMATCH'; rec.reconciliation_state = 'FAIL_CLOSED_REQUEST_HASH_OR_COMMAND'; this.save(rec); return;
+    }
     if (turn.status !== 'COMPLETED') { this.save(rec); return; }
+    const dispatch = await this.recordCanonicalDispatch(rec, turn);
+    if (dispatch.required && !dispatch.recorded) {
+      rec.state = 'DISPATCH_EVIDENCE_PENDING';
+      rec.reconciliation_state = 'CANONICAL_ATTACHMENT_EVIDENCE_REQUIRED';
+      this.save(rec);
+      return;
+    }
     const answer = turn.response && typeof turn.response === 'object' ? turn.response.text : turn.response;
     if (typeof answer !== 'string' || !answer.trim()) { rec.state = 'FAILED'; rec.error = 'completed turn missing response text'; this.save(rec); return; }
     rec.response_digest = sha(answer);
     let claim = this.claims.get(rid);
     if (claim && !claimUsable(claim, brokerState)) {
       this.claims.delete(rid); claim = null;
+      rec.state = 'STALE_TURN_GENERATION'; rec.reconciliation_state = 'NEW_BROKER_REQUEST_REQUIRED'; this.save(rec); return;
     }
     if (!claim) {
       if (brokerState.status === 'CLAIMED') { this.save(rec); return; }
-      if (!WAITING.has(brokerState.status)) { this.save(rec); return; }
-      try {
-        claim = await this.broker(`/api/v3/saas-broker/requests/${encodeURIComponent(rid)}/claim`, { method: 'POST', body: {}, timeoutMs: 8000 });
-        this.claims.set(rid, claim); rec.claim_generation = claim.claim_generation; rec.claim_expires_at = claim.claim_expires_at || null;
-      } catch { this.save(rec); return; }
+      if (WAITING.has(brokerState.status)) {
+        rec.state = 'STALE_TURN_GENERATION'; rec.reconciliation_state = 'NEW_BROKER_REQUEST_REQUIRED'; this.save(rec); return;
+      }
+      this.save(rec); return;
+    }
+    if (Number(rec.claim_generation) !== Number(claim.claim_generation)) {
+      rec.state = 'STALE_TURN_GENERATION'; rec.reconciliation_state = 'CLAIM_GENERATION_MISMATCH'; this.save(rec); return;
     }
     rec.state = 'BROKER_RESPOND_ATTEMPT'; this.save(rec);
     try {
@@ -255,7 +336,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const helper = path.resolve(__dirname, '..', 'scripts', 'unprotect_secret.ps1');
   const config = {
-    broker: args.broker || 'http://127.0.0.1:8766', ingress: args.ingress || 'http://127.0.0.1:8791',
+    broker: args.broker || 'http://127.0.0.1:8766', ingress: args.ingress || 'http://127.0.0.1:8791', panel: args.panel || 'http://127.0.0.1:8780',
     mediatorKeyFile: path.resolve(args['mediator-key-file']), ingressTokenFile: path.resolve(args['ingress-token-file']),
     stateDir: path.resolve(args['state-dir']), legacyTurnMap: path.resolve(args['legacy-turn-map']), unprotectHelper: helper,
     sentinelxStatusFile: path.resolve(args['sentinelx-status-file'] || path.join(process.env.LOCALAPPDATA || '.', 'LION', 'sentinelx-bridge', 'status.json')),

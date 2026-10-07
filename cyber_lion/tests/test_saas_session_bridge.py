@@ -146,6 +146,33 @@ class SaaSSessionBridgeTests(unittest.TestCase):
         self.assertIsNotNone(after['last_response']['receipt_digest'])
 
 class SaaSHandoffExtensionTests(unittest.TestCase):
+    def test_extension_preserves_canonical_provider_binding_and_attachment_segments(self):
+        calls=[]
+        class Dummy:
+            def _route(self,m):return ('MODEL_ONLY','local')
+            def state(self):return {'status':'ok'}
+            def chat(self,message,use_web=False,history=None,output_language='auto',provider_binding=None,attachment_segments=None):
+                calls.append({
+                    'message':message,
+                    'history':history,
+                    'provider_binding':provider_binding,
+                    'attachment_segments':attachment_segments,
+                })
+                return {'route':'MODEL_ONLY','answer':'ok'}
+        apply_saas_handoff_extension(Dummy)
+        binding={'conversation_id':'conv-1','binding_epoch':2,'lane_id':'lane-1'}
+        segments=('LION_ATTACHMENT_DATA={"content":"x"}',)
+        out=Dummy().chat(
+            'ordinary local prompt',
+            history=[{'role':'user','content':'prior'}],
+            provider_binding=binding,
+            attachment_segments=segments,
+        )
+        self.assertEqual(out['answer'],'ok')
+        self.assertEqual(calls[0]['provider_binding'],binding)
+        self.assertEqual(calls[0]['attachment_segments'],segments)
+        self.assertEqual(calls[0]['history'],[{'role':'user','content':'prior'}])
+
     def test_explicit_saas_route_is_not_capability_answer(self):
         class Dummy:
             def _route(self,m):return ('LOCAL','x')
@@ -159,7 +186,8 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
         out=d.chat('No to wykonaj na SaaS zapytanie: Kim jesteś?',output_language='pl')
         self.assertEqual(out['route'],'SAAS_HANDOFF')
         self.assertIn('automatycznie',out['answer'])
-        self.assertIn('EXTERNAL_SESSION_MEDIATED',out['answer'])
+        self.assertIn('UNKNOWN_NOT_SESSION_BOUND',out['answer'])
+        self.assertNotIn('EXTERNAL_SESSION_MEDIATED',out['answer'])
 
     def test_explicit_saas_route_reports_firefox_mediator_when_request_is_browser_bound(self):
         class Dummy:

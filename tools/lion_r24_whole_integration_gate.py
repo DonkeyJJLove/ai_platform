@@ -27,7 +27,7 @@ HISTORICAL_PACKAGE_MANIFEST_PATH = EVIDENCE / "PACKAGE_MANIFEST.json"
 # Passing this source gate never claims deployment.
 SOURCE_PACKAGE_MANIFEST_PATH = (
     ROOT / "LION" / "architecture" / "v1_5" / "cooperative_production_r1"
-    / "SOURCE_PACKAGE_MANIFEST_R6_6.json"
+    / "SOURCE_PACKAGE_MANIFEST_CCF_R1.json"
 )
 PACKAGE_MANIFEST_PATH = HISTORICAL_PACKAGE_MANIFEST_PATH  # compatibility alias
 MATRIX_PATH = EVIDENCE / "TEST_MATRIX_SPEC.json"
@@ -39,6 +39,9 @@ CRITICAL_TEST_MODULES = (
     "cyber_lion.tests.test_r24_conversation_model_chat",
     "cyber_lion.tests.test_r24_conversation_backfill",
     "cyber_lion.tests.test_r24_protocol_cognitive_fanout",
+    "cyber_lion.tests.test_attachment_projection",
+    "cyber_lion.tests.test_attachment_ingestion_path",
+    "cyber_lion.tests.test_local_assignment_worker",
     "cyber_lion.tests.test_lion_mission_control_ui",
     "cyber_lion.tests.test_lion_mission_control_security",
     "cyber_lion.tests.test_r9d8_exact_inventory",

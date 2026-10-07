@@ -1,5 +1,7 @@
+import base64
+import json
 import unittest
-from tools.lion_local_intelligence_runtime import local_assignment_worker_once
+from tools.lion_local_intelligence_runtime import ProviderAnswer, local_assignment_worker_once
 
 class LocalAssignmentWorkerTests(unittest.TestCase):
     def test_worker_claims_executes_dual_and_receipts_without_browser(self):
@@ -44,6 +46,31 @@ class LocalAssignmentWorkerTests(unittest.TestCase):
         self.assertEqual(provider,[])
         self.assertEqual(calls[-1][1]['status'],'FAIL')
         self.assertIn('lease expired',calls[-1][1]['result']['error'])
+
+    def test_worker_projects_text_attachment_into_actual_local_model_payload(self):
+        calls=[];captured=[]
+        payload={"kind":"LOCAL_MODEL_INFERENCE","messages":[{"role":"user","content":"summarize"}],
+                 "max_tokens":64,"attachments":[{"display_name":"evidence.txt","media_type":"text/plain",
+                 "data_b64":base64.b64encode(b"worker evidence").decode("ascii")}]}
+        row={"assignment_id":"assignment-attachment","material_drone_id":"MD025","lease_generation":9,
+             "lease_expires_at":"2099-01-01T00:00:00Z","input_json":json.dumps(payload)}
+        def control(op,args):
+            calls.append((op,args))
+            if op=="local_assignments":return {"assignments":[row]}
+            if op=="local_assignment_claim":return dict(row,state="CLAIMED",mission_id="M1",phase_id="P1",logical_drone_id="LD1")
+            if op=="model_call_intent":return {"status":"INTENT_DURABLE","model_call_id":args["model_call_id"]}
+            if op=="model_call_transition":return {"status":args["state"],"model_call_id":args["model_call_id"]}
+            if op=="local_assignment_receipt":return {"receipt_id":"receipt-attachment","captured":args}
+            raise AssertionError(op)
+        def model(messages,max_tokens):
+            captured.extend(messages);return ProviderAnswer("OK","f"*64)
+        out=local_assignment_worker_once(control,model,material_drone_id="MD025")
+        self.assertEqual(out["receipt_id"],"receipt-attachment")
+        self.assertIn("LION_ATTACHMENT_DATA=",captured[-1]["content"])
+        result=out["captured"]["result"]
+        self.assertEqual(result["actual_provider_payload_bytes_digest"],"f"*64)
+        self.assertEqual(result["attachment_projections"][0]["actual_provider_payload_digest"],"f"*64)
+        self.assertEqual(result["attachment_manifests"][0]["source_domain"],"WORKER")
 
     def test_worker_ignores_assignment_for_other_material_identity(self):
         def control(op,args):
