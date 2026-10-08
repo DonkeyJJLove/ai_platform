@@ -56,7 +56,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertEqual(result["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(result["authority_effect"], "NONE")
         self.assertEqual(result["source_bytes"], "GIT_INDEX_BLOB")
-        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R2.json"))
+        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R3.json"))
 
     def test_source_successor_retains_historical_ccf_manifest_immutably(self):
         import subprocess
@@ -72,7 +72,35 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         ).stdout
         self.assertEqual(original.read_bytes(), tracked)
         source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R1.json")
+        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R2.json")
+        self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
+        self.assertEqual(source["authority_effect"], "NONE")
+
+    def test_pr431_source_manifest_remains_byte_identical(self):
+        import subprocess
+        historical = SOURCE_PACKAGE_MANIFEST_PATH.parent / "SOURCE_PACKAGE_MANIFEST_CCF_R2.json"
+        committed = subprocess.run(
+            ["git", "-C", str(SOURCE_PACKAGE_MANIFEST_PATH.parents[4]),
+             "show", "HEAD:LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_MANIFEST_CCF_R2.json"],
+            capture_output=True, check=True,
+        ).stdout
+        self.assertEqual(historical.read_bytes(), committed)
+
+    def test_r4_desktop_source_closure_is_explicitly_pinned(self):
+        source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
+        paths = {row["path"] for row in source["files"]}
+        required = {
+            "browser_broker/src/main.cjs",
+            "browser_broker/src/desktop-read-model.cjs",
+            "browser_broker/src/local-advisory.cjs",
+            "browser_broker/src/observer-preload.cjs",
+            "browser_broker/src/local-preload.cjs",
+            "browser_broker/src/canonical-conversation-consumer.cjs",
+            "browser_broker/local-gpt.html",
+            "browser_broker/observability-preview/LION_Cluster_System_Tabs_Preview.html",
+            ".github/workflows/lion-desktop-r4-node24.yml",
+        }
+        self.assertTrue(required.issubset(paths), sorted(required - paths))
         self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(source["authority_effect"], "NONE")
 

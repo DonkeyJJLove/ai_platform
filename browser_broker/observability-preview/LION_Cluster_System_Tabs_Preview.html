@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'">
+<title>LION • Cluster / System — obserwacja źródłowa</title>
+<style>
+:root{color-scheme:dark;font-family:Segoe UI,Inter,Arial,sans-serif;background:#08131c;color:#e4f1fa}
+*{box-sizing:border-box}body{margin:0}header{padding:22px 28px;background:#0a1a29;border-bottom:1px solid #274b61}
+header h1{margin:0 0 4px;font-size:23px;letter-spacing:.03em}header p{margin:0;color:#90b0c6;font-size:13px}
+.tabbar{display:flex;gap:12px;padding:13px 26px;background:#081826;border-bottom:1px solid #31516a;position:sticky;top:0;z-index:1}
+.tabbar button{padding:10px 18px;border-radius:7px;border:1px solid #34566f;background:#10273a;color:#d0e4ef;cursor:pointer;font-size:14px}
+.tabbar button.active{background:#135276;border-color:#30a4e6;color:white}
+main{padding:22px 28px;max-width:1400px;margin:auto}
+.meta{font-size:12px;color:#a2b9cb;line-height:1.6;margin-bottom:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:14px 0 24px}
+.card{background:#102231;border:1px solid #26465c;border-radius:9px;padding:16px}
+.card .value{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;margin:5px 0}
+.card .caption{font-size:12px;color:#9ab5c7}
+section{background:#0e1e2d;border:1px solid #26465c;border-radius:10px;padding:18px;margin:18px 0}
+h2{font-size:17px;font-weight:600;margin:0 0 14px;color:#c3eaff}
+h3{font-size:14px;font-weight:600;color:#b5d6ea}
+.pill{display:inline-block;font-size:11px;padding:3px 8px;border:1px solid #405469;border-radius:20px;margin-left:8px}
+.good{color:#79d6ab}.warn{color:#f9c975}.muted{color:#9ab2c2}
+.tablewrap{overflow:auto;max-height:350px;border:1px solid #29475b;border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:12px}th{text-align:left;background:#172d3f;color:#a7c3d6;position:sticky;top:0}
+th,td{padding:9px 10px;border-bottom:1px solid #253b4d;vertical-align:top}tr:hover{background:#163247}
+code{font-size:12px;color:#8ad2ed;word-break:break-all}
+.log{font-family:Consolas,monospace;white-space:pre-wrap;word-break:break-word;font-size:11px;padding:7px 9px;border-bottom:1px solid #213545;color:#adcadd}
+a{color:#7dcfff;text-decoration:none}a:hover{text-decoration:underline}
+.notice{color:#e9c682;background:#2d271a;border:1px solid #6b5530;border-radius:7px;padding:12px 14px;font-size:12px;line-height:1.7}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+input{padding:9px;border:1px solid #38566a;background:#091722;color:#e4f1fa;border-radius:6px;min-width:250px}
+footer{font-size:11px;color:#8295a5;padding:18px 28px;border-top:1px solid #244157}
+</style>
+</head>
+<body>
+<header><h1>LION OBSERVABILITY <span class="pill">SOURCE SNAPSHOT</span></h1>
+<p>Operator Desktop • podgląd materialnych workerów, misji, artefaktów i federacji</p></header>
+<div class="tabbar"><button id="clusterTab" class="active" type="button">Cluster / Logi / Artefakty</button>
+<button id="systemTab" type="button">System / 10 repozytoriów</button></div>
+<main><div id="provenance" class="meta"></div><div id="content"></div></main>
+<footer>Wariant demonstracyjny: dane są snapshotem, nie live-pollingiem. Żaden przycisk nie startuje workerów, nie wysyła SaaS ani nie przyznaje authority.</footer>
+<script id="observations" type="application/json">{"schema":"lion.desktop-observability-preview/v1","generated_at":"2026-10-08T16:54:01.369239+00:00","source_class":"MIXED_LIVE_OBSERVATIONS_AND_STORED_SOURCE_BOUND_READBACK","source_lines":{"docker":"MOON docker ps -a exact read at generated_at","mat12":"WINDOWS_MOON material worker health file read at generated_at","mission_control":"MOON 8766 GET /health and GET /api/v3/missions/recent","broker":"MOON 8766 GET /api/v3/saas-broker/status","bridge":"MOON 8780 GET /health via read-only bridge","artifacts":"LION-AUTH-LAB mission-control-v3.db query-only earlier 2026-10-08 (not live refreshed here)","federation":"10 independent GitHub default-branch commit observations earlier 2026-10-08","launch_log":"WINDOWS_MOON desktop launcher log read at generated_at"},"cluster":{"docker_total":94,"material_worker_count":32,"material_worker_states":{"exited":32},"workers":[{"name":"lion-r24-md001","state":"exited","id_prefix":"4d7d3e07e7bb","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md002","state":"exited","id_prefix":"353c9520504c","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md003","state":"exited","id_prefix":"4bb48aed2410","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md004","state":"exited","id_prefix":"042fa3e16beb","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md005","state":"exited","id_prefix":"0cfa6109ba58","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md006","state":"exited","id_prefix":"29e005eea024","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md007","state":"exited","id_prefix":"cc30bbb62063","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md008","state":"exited","id_prefix":"9d787744eed8","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md009","state":"exited","id_prefix":"d9bfcaf3260d","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md010","state":"exited","id_prefix":"a6a8e9f151ba","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md011","state":"exited","id_prefix":"4fa091ecdfc7","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md012","state":"exited","id_prefix":"2c8147c67e02","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md013","state":"exited","id_prefix":"34747bd2948c","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md014","state":"exited","id_prefix":"1f36d29c5365","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md015","state":"exited","id_prefix":"87b9bc9a8652","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md016","state":"exited","id_prefix":"c7d8e2dd2ce3","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md017","state":"exited","id_prefix":"da475402b10a","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md018","state":"exited","id_prefix":"dec43ebf67ed","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md019","state":"exited","id_prefix":"f9611512cb59","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md020","state":"exited","id_prefix":"f315dab95d99","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md021","state":"exited","id_prefix":"3fe57c00e592","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md022","state":"exited","id_prefix":"9b81e0784364","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md023","state":"exited","id_prefix":"34a099699829","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md024","state":"exited","id_prefix":"89a100b9b91e","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md025","state":"exited","id_prefix":"49041f295fee","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md026","state":"exited","id_prefix":"dfd2e6236bed","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md027","state":"exited","id_prefix":"e5768f88681a","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md028","state":"exited","id_prefix":"bf0dfeea35f6","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md029","state":"exited","id_prefix":"474cb759543b","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md030","state":"exited","id_prefix":"9fe2e8e4a4e0","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md031","state":"exited","id_prefix":"c4cd8f7bc72a","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md032","state":"exited","id_prefix":"203dd870bef8","status":"Exited (137) 4 hours ago"}],"logical_helpers":[{"name":"MAT01","state":"READY","pid":37368,"observed_at":"2026-10-08T16:54:00.295241+00:00"},{"name":"MAT02","state":"READY","pid":23304,"observed_at":"2026-10-08T16:54:00.297263+00:00"},{"name":"MAT03","state":"READY","pid":49480,"observed_at":"2026-10-08T16:54:00.295784+00:00"},{"name":"MAT04","state":"READY","pid":48928,"observed_at":"2026-10-08T16:54:00.378272+00:00"},{"name":"MAT05","state":"READY","pid":36464,"observed_at":"2026-10-08T16:54:00.382536+00:00"},{"name":"MAT06","state":"READY","pid":46432,"observed_at":"2026-10-08T16:54:00.385315+00:00"},{"name":"MAT07","state":"READY","pid":49776,"observed_at":"2026-10-08T16:54:00.378007+00:00"},{"name":"MAT08","state":"READY","pid":33440,"observed_at":"2026-10-08T16:54:00.385619+00:00"},{"name":"MAT09","state":"READY","pid":21908,"observed_at":"2026-10-08T16:54:00.385544+00:00"},{"name":"MAT10","state":"READY","pid":32192,"observed_at":"2026-10-08T16:54:00.380507+00:00"},{"name":"MAT11","state":"READY","pid":41236,"observed_at":"2026-10-08T16:54:00.383779+00:00"},{"name":"MAT12","state":"READY","pid":17416,"observed_at":"2026-10-08T16:54:00.384965+00:00"}],"mission_control":{"status":"ok","mission_id":"LION-COOPERATIVE-PRODUCTION-PILOT-R3","authority_effect":"NONE"},"missions_recent":[{"mission_id":"LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3","state":"STOPPED","runtime_state":"K3S_NOT_RUNNING","materialized":0,"ready":0},{"mission_id":"LION-COOPERATIVE-PRODUCTION-PILOT-R1","state":"AUTHORIZED","runtime_state":"NOT_STARTED","materialized":0,"ready":0},{"mission_id":"LION-COOPERATIVE-PRODUCTION-PILOT-R3","state":"REGISTERED","runtime_state":"NOT_STARTED","materialized":0,"ready":0},{"mission_id":"LION-R24-PROTOCOL-COGNITIVE-FANOUT-CANARY-R2","state":"COMPLETE","runtime_state":"CANARY_PASS_8_OF_8","materialized":4,"ready":4},{"mission_id":"LION-R24-OTP-PREDICATE-LIVE-DEPLOY-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"E3C-SUPERVISOR-ADAPTER-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"E3C-PR-CONSOLIDATION-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"LION-R23-DYNAMIC-76L32M-CANARY","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"LION-R23-MATERIAL-SANDBOX-CANARY","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"LION-AUTO-CF2269C51B8AB8A01AD9AC2A","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"LION-OPERATOR-SWARM-COMMUNICATION-TEST-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":0,"ready":0},{"mission_id":"LION-POST-ASTRA-SAAS-TRANSPORT-TRUTH-REACQUIRE-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":64,"ready":64},{"mission_id":"LION-CONTROL-PLANE-PANEL-BROKER-REPAIR-SUCCESSOR-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":64,"ready":64},{"mission_id":"LION-CONTROL-LPCL-PANEL-BROKER-RECON-AND-LANGUAGE-INTELLIGENCE-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":64,"ready":64},{"mission_id":"LION-GENERIC-LPCL-MISSION-EXECUTION-ADAPTER-REPAIR-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":64,"ready":64},{"mission_id":"LION-GLOBAL-DRIVER-BOOTSTRAP-128L64M-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":64,"ready":64}],"saas_broker":{"state":"PENDING_HANDOFF","pending_count":4},"cognitive_bridge":{"status":"ok","authority_effect":"NONE"},"desktop":{"release":"E0_RECOVERY_R2","saas_auto_send":"PAUSED","browser_port":8794,"control_panel_port":8780},"launch_log_tail":["2026-10-08T11:33:15.6717790Z ELECTRON_START source=panel-master-b6cc132-r1 panel=8780 mc=8766","2026-10-08T11:33:17.1300418Z ELECTRON_READY pid=31040 focused=True","2026-10-08T16:09:40.9946835Z ERROR PANEL_8780_SOURCE_NOT_B6_RELEASE","2026-10-08T16:09:46.5489571Z ERROR PANEL_8780_SOURCE_NOT_B6_RELEASE","2026-10-08T16:09:59.1587922Z ERROR PANEL_8780_NOT_RUNNING","2026-10-08T16:11:24.9283811Z ERROR PANEL_8780_SOURCE_NOT_B6_RELEASE","2026-10-08T16:11:44.6138593Z ERROR PANEL_8780_SOURCE_NOT_B6_RELEASE","2026-10-08T16:25:57.9559881Z ERROR PANEL_8780_NOT_RUNNING","2026-10-08T16:41:02.0249249Z ELECTRON_START source=panel-master-e0e979d-r1 browser=RECOVERY_E0R2 SaaS=PAUSED panel=8780 mc=8766","2026-10-08T16:41:03.3862508Z ELECTRON_READY pid=43596 focused=True","2026-10-08T16:44:56.4613236Z VALIDATE_ONLY source=E0 browser=RECOVERY_R2 saas_auto_dispatch=PAUSED","2026-10-08T16:46:44.2024347Z ALREADY_RUNNING pid=43596 focused=True"],"historical_artifact_metadata":{"count":95,"type_counts":{"RECON_PHASE_SUMMARY":22,"RECON_EVIDENCE_BUNDLE":22,"PHASE_CURRICULUM_LESSON":13,"CONTROL_PLANE_RECON_BASELINE_PRE":13,"LOCAL_RECON_ANALYSIS":12,"PHASE_CURRICULUM_RUN":9,"SUCCESSOR_REPAIR_LPCL_PROPOSAL":1,"LANGUAGE_GAP_MATRIX":1,"CONTROL_PLANE_RECON_BASELINE_POST":1,"CONTROL_PLANE_INTELLIGENCE_BUNDLE":1},"application_factory_mission_artifact_count":0,"content_access":"NOT_EXPOSED_BY_PREVIEW"}},"federation":{"repository_count":10,"repositories":[{"name":"ai_platform","branch":"master","head_sha":"e0e979d5affca433743dc3eb2db8ed7cc7b40374","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"swarm","branch":"master","head_sha":"91b0a4174300b5efb3e6072b44ad323136a77337","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"HA2D","branch":"master","head_sha":"f41cd0f089b714c9474a1f11757fc8c9bbcf1358","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"mosaic_lab_pro.py","branch":"main","head_sha":"94c141c9f0bd8830bb9b93f11561056c629a5607","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"glitchlab","branch":"master","head_sha":"0afffd9ac6e0d346735615352fba9a43791cb017","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"hipotezy_nadawcze_LLM","branch":"main","head_sha":"25b432b7a57b83e0a97387bce4fce45eab5c15c9","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"chunk-chunk","branch":"master","head_sha":"b8327059360b675d01d091d70ef3eaef17ed1972","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"sbom","branch":"main","head_sha":"48aab54cc260bfbfea4881f7a6f264caef814440","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"SymulacjaKaskadySieciowej","branch":"main","head_sha":"0a9413f36ee8cf7684bcb77f42abcaffcf59a60d","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"writeups","branch":"master","head_sha":"adff63c38f2c83ab3f8d37e7e802d5209b59faad","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"}]},"status":"READ_ONLY_STATIC_SNAPSHOT_NOT_LIVE_TAB","authority_effect":"NONE","execution_effect":"NONE"}</script>
+<script>
+'use strict';
+const data=JSON.parse(document.getElementById('observations').textContent);
+const $=(t,cl,txt)=>{const x=document.createElement(t);if(cl)x.className=cl;if(txt!==undefined)x.textContent=String(txt);return x};
+const block=(parent,child)=>{parent.appendChild(child);return child};
+const cell=(row,tag,value)=>block(row,$(tag,'',value==null?'—':value));
+const createTable=(columns,records)=>{
+ const outer=$('div','tablewrap'),table=block(outer,$('table'));
+ const header=block(block(table,$('thead')),$('tr'));
+ for(const c of columns)cell(header,'th',c[0]);
+ const body=block(table,$('tbody'));
+ for(const obj of records){const tr=block(body,$('tr'));for(const c of columns)cell(tr,'td',c[1](obj))}
+ return outer;
+};
+const section=(title,root)=>{const el=block(root,$('section'));block(el,$('h2','',title));return el};
+const card=(title,value,desc,root)=>{
+ const el=block(root,$('div','card'));
+ block(el,$('div','caption',title));block(el,$('div','value',value));
+ block(el,$('div','caption',desc));return el;
+};
+function renderCluster(target){
+ const c=data.cluster;
+ const stats=block(target,$('div','cards'));
+ card('Docker MD',''+c.material_worker_count,(c.material_worker_states.exited||0)+' zaparkowanych',stats);
+ card('Helpery MAT',''+c.logical_helpers.length,'osobna warstwa narzędzi',stats);
+ card('Misje widoczne',''+c.missions_recent.length,'nie oznacza aktywnych wykonań',stats);
+ card('Artefakty w ledgerze',''+c.historical_artifact_metadata.count,'0 dla Application Factory',stats);
+ const note=block(target,$('div','notice','Dane nie dowodzą gotowości produkcyjnej. Workery MD są zaparkowane. Historyczne artefakty mają metadane, lecz pobieranie ich bajtów wymaga osobnego uwierzytelnionego API. SaaS auto-dispatch: PAUSED.'));
+ const h=section('Kontrolery i źródła',target);
+ for(const [name,v] of [
+  ['Mission Control 8766',c.mission_control.status],
+  ['Cognitive Bridge 8780',c.cognitive_bridge.status],
+  ['SaaS handoff',c.saas_broker.state],
+  ['SaaS pending',c.saas_broker.pending_count],
+  ['Desktop',c.desktop.release],
+ ])block(h,$('p','',name+': '+String(v??'UNKNOWN')));
+ const w=section('Materialne kontenery — 32',target);
+ block(w,createTable([['Worker',r=>r.name],['Docker state',r=>r.state],['ID',r=>r.id_prefix],['Status',r=>r.status]],c.workers));
+ const m=section('MAT helpery — logika i narzędzia',target);
+ block(m,createTable([['Helper',r=>r.name],['Stan z heartbeat',r=>r.state],['PID',r=>r.pid],['Odczyt',r=>r.observed_at]],c.logical_helpers));
+ const artifacts=section('Artefakty — aktualnie indeks metadanych',target);
+ const types=Object.entries(c.historical_artifact_metadata.type_counts).sort((a,b)=>b[1]-a[1]).map(([name,count])=>({name,count}));
+ block(artifacts,createTable([['Typ artefaktu',r=>r.name],['Liczba historycznych',r=>r.count]],types));
+ block(artifacts,$('p','muted','CONTENT BYTES: NOT_EXPOSED_BY_PREVIEW — brak ścieżki pobierania i powiązania z Application Factory.'));
+ const mission=section('Misje z Mission Control',target);
+ block(mission,createTable([['Mission ID',r=>r.mission_id],['Stan',r=>r.state],['Runtime',r=>r.runtime_state],['Materialized / Ready',r=>String(r.materialized)+' / '+String(r.ready)]],c.missions_recent));
+ const logs=section('Log uruchamiania Desktop — tylko bezpieczny wycinek',target);
+ for(const s of c.launch_log_tail)block(logs,$('div','log',s));
+ block(logs,$('p','muted','Przegląd pełnych logów workera i artefaktów nie jest jeszcze podłączony do uwierzytelnionego read-modelu.'));
+}
+function renderSystem(target){
+ const f=data.federation;
+ const stats=block(target,$('div','cards'));
+ card('Repozytoria federacji',f.repository_count,'źródło: GitHub default branch',stats);
+ card('Kontrola zmian','SOURCE ONLY','brak możliwości merge w podglądzie',stats);
+ const n=block(target,$('div','notice','To nie jest subskrypcja GitHub ani automatyczna synchronizacja. Pokazano SHA zaobserwowane podczas przygotowania snapshotu. Ich aktualność należy ponownie sprawdzić przed zależnym efektem.'));
+ const s=section('Federation Source Vector — 10 repozytoriów',target);
+ const inp=block(s,$('input'));inp.type='search';inp.placeholder='Filtruj repozytorium';
+ const host=block(s,$('div'));host.style.marginTop='12px';
+ function redraw(){
+  host.replaceChildren();
+  const chosen=f.repositories.filter(x=>x.name.toLowerCase().includes(inp.value.trim().toLowerCase()));
+  const tab=createTable([['Repozytorium',r=>r.name],['Gałąź',r=>r.branch],['HEAD',r=>r.head_sha],['Klasa',r=>r.ref_source]],chosen);
+  host.appendChild(tab);
+  for(const record of chosen){
+   const p=block(host,$('p','muted'));
+   const a=block(p,$('a','',record.name+' · GitHub commit'));
+   a.href='https://github.com/DonkeyJJLove/'+encodeURIComponent(record.name)+'/commit/'+record.head_sha;
+   a.target='_blank';a.rel='noopener noreferrer';
+  }
+ }
+ inp.addEventListener('input',redraw);redraw();
+}
+function choose(which){
+ document.getElementById('clusterTab').classList.toggle('active',which==='cluster');
+ document.getElementById('systemTab').classList.toggle('active',which==='system');
+ const target=document.getElementById('content');target.replaceChildren();
+ document.getElementById('provenance').textContent=
+  'Snapshot '+data.generated_at+' · '+data.source_class+' · authority_effect=NONE · '+(which==='cluster'?'MOON / Windows / WSL':'GitHub / federation');
+ if(which==='cluster')renderCluster(target);else renderSystem(target);
+}
+document.getElementById('clusterTab').addEventListener('click',()=>choose('cluster'));
+document.getElementById('systemTab').addEventListener('click',()=>choose('system'));
+choose(location.hash==='#system'?'system':'cluster');
+const liveRefresh=document.createElement('section');
+const liveTitle=document.createElement('h2');liveTitle.textContent='Bieżący odczyt kanoniczny — źródła i synchronizacja';
+const liveStamp=document.createElement('p');liveStamp.className='muted';
+const liveStatus=document.createElement('div');
+const liveButton=document.createElement('button');liveButton.type='button';liveButton.textContent='Odśwież teraz';
+liveRefresh.append(liveTitle,liveStamp,liveButton,liveStatus);
+document.getElementById('content').prepend(liveRefresh);
+let lastObservation=null,refreshPending=false;
+async function refreshLive(){
+ if(refreshPending)return;
+ refreshPending=true;liveButton.disabled=true;
+ try{
+  const value=await window.lionObserver.snapshot();
+  if(value?.schema!=='lion.operator-read-model/v1'||value.authority_effect!=='NONE')throw Error('READ_MODEL_IDENTITY_INVALID');
+  lastObservation=value;
+  liveStamp.textContent='Odczyt '+value.observed_at+' • '+value.data_class+' • authority NONE';
+  liveStatus.replaceChildren();
+  const cards=document.createElement('div');cards.className='cards';
+  for(const [key,val] of [
+   ['Mission Control',value.endpoints.mission_control],
+   ['LPCL / Model Chat',value.endpoints.panel],
+   ['Local GPT',value.endpoints.model],
+   ['SaaS broker',value.endpoints.broker_state],
+   ['SaaS pending',value.endpoints.broker_pending],
+   ['Misje widoczne',value.missions.length],
+  ])card(key,String(val??'UNKNOWN'),'odczyt bieżący; nie oznacza dopuszczenia efektów',cards);
+  liveStatus.appendChild(cards);
+  const info=document.createElement('p');info.className='muted';
+  info.textContent='Workery i repozytoria: snapshot '+(value.scope==='system'?value.repos.snapshot_at:value.material_workers.snapshot_at)+'. Zmiana misji nie modyfikuje ich automatycznie.';
+  liveStatus.appendChild(info);
+  if(value.scope==='cluster'){
+   const title=document.createElement('h3');title.textContent='Aktualne misje (GET /api/v3/missions/recent)';
+   liveStatus.appendChild(title);
+   liveStatus.appendChild(createTable([['Misja',x=>x.mission_id],['Stan',x=>x.state],['Runtime',x=>x.runtime_state],['M / R',x=>x.materialized+' / '+x.ready]],value.missions));
+   const logHead=document.createElement('h3');logHead.textContent='Logi Desktop — aktualny, ograniczony odczyt';liveStatus.appendChild(logHead);
+   for(const line of value.logs.lines){const node=document.createElement('div');node.className='log';node.textContent=line;liveStatus.appendChild(node);}
+  }else{
+   const heading=document.createElement('h3');heading.textContent='Stan federacji: HEAD-y zapisane przy '+value.repos.snapshot_at;
+   liveStatus.appendChild(heading);
+   liveStatus.appendChild(createTable([['Repozytorium',x=>x.name],['Ref',x=>x.branch],['HEAD',x=>x.head_sha]],value.repos.repositories));
+   const note=document.createElement('p');note.className='muted';
+   note.textContent='Automatyczne odświeżanie dotyczy tylko kontrolerów live. Repozytoria wymagają ponownego GitHub-currentness przed zmianą.';
+   liveStatus.appendChild(note);
+  }
+ }catch(e){
+  liveStamp.textContent='Bieżący read-model niedostępny: '+String(e?.message||e).slice(0,120);
+ }finally{refreshPending=false;liveButton.disabled=false}
+}
+liveButton.addEventListener('click',refreshLive);
+window.addEventListener('lion-refresh',refreshLive);
+if(window.lionObserver){refreshLive();setInterval(refreshLive,30000);}
+else liveStamp.textContent='Live read-model niepołączony — poniżej widoczny wyłącznie historyczny snapshot.';
+
+</script>
+</body></html>

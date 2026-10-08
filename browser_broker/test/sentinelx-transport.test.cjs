@@ -39,35 +39,30 @@ test('canonical SaaS admission uses current broker and canonical conversation qu
 });
 
 
-test('Mission Control stays on the left while LPCL Panel and SaaS are persistent right-side siblings',()=>{
+test('Mission Control, Cluster and System share the left surface with distinct tabs',()=>{
  const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
- assert.match(main,/let activeRightTab='panel'/);
- assert.match(main,/const mission=new WebContentsView/);
- assert.match(main,/const tabs=new WebContentsView/);
- assert.match(main,/views=\[saas,panel,mission,tabs\]/);
- assert.match(main,/mission\.setBounds\(\{x:0,y:0,width:split,height\}\)/);
- assert.match(main,/panel\.setBounds\(activeRightTab==='panel'\?shown:hidden\)/);
- assert.match(main,/saas\.setBounds\(shown\)/);
- assert.match(main,/selectRightTab\('panel'\)/);
- assert.match(main,/mission\.webContents\.loadURL\(MC\)/);
- assert.match(main,/saas\.webContents\.loadURL\(startupConversation\)/);
+ assert.match(main,/let activeLeftTab='mission',activeRightTab='panel'/);
+ assert.match(main,/const leftTabs=new WebContentsView/);
+ assert.match(main,/const rightTabs=new WebContentsView/);
+ assert.match(main,/mission.setBounds\(activeLeftTab==='mission'\?L:HL\)/);
+ assert.match(main,/cluster.setBounds\(activeLeftTab==='cluster'\?L:HL\)/);
+ assert.match(main,/system.setBounds\(activeLeftTab==='system'\?L:HL\)/);
+ assert.match(main,/saas.setBounds\(activeRightTab==='saas'\?R:HR\)/);
+ assert.match(main,/local.setBounds\(activeRightTab==='local'\?R:HR\)/);
+ assert.match(main,/saas.webContents.loadURL\(startupConversation\)/);
 });
-
-test('Mission Control left surface is loopback-origin constrained and right tab chrome has no external navigation',()=>{
+test('independent tab bars limit navigation and never reload SaaS on switch',()=>{
  const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
- assert.match(main,/if\(v===mission\)return u\.origin===new URL\(MC\)\.origin/);
- assert.match(main,/if\(v===tabs\)return u\.protocol==='data:'\|\|u\.protocol==='lion-tab:'/);
- assert.match(main,/lion-tab:\/\/panel/);
- assert.match(main,/lion-tab:\/\/saas/);
- assert.match(main,/LPCL PANEL/);
- assert.match(main,/ChatGPT SaaS/);
-});
-
-test('switching right tabs changes bounds only and never reloads the SaaS conversation',()=>{
- const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
- const line=main.split('\n').find(x=>x.includes('selectRightTab=name=>'));
- assert.ok(line);
- assert.doesNotMatch(line,/loadURL|reload|close/);
- assert.match(line,/activeRightTab=name==='saas'\?'saas':'panel'/);
- assert.match(line,/layout\(\)/);
+ assert.match(main,/if\(v===mission\)return u.origin===new URL\(MC\).origin/);
+ assert.match(main,/if\(v===leftTabs\)return u.protocol==='data:'\|\|u.protocol==='lion-left:'/);
+ assert.match(main,/if\(v===rightTabs\)return u.protocol==='data:'\|\|u.protocol==='lion-right:'/);
+ for(const label of ['mission','cluster','system'])assert(main.includes('lion-left://'+label));
+ for(const label of ['panel','saas','local'])assert(main.includes('lion-right://'+label));
+ const lines=main.split('\n');
+ for(const name of ['selectLeftTab=name=>','selectRightTab=name=>']){
+  const at=lines.findIndex(line=>line.includes(name));
+  const part=lines.slice(at,at+4).join('\n');
+  assert(at>=0);
+  assert(!/loadURL\(|reload\(|\.close\(/.test(part));
+ }
 });

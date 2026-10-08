@@ -1,0 +1,17 @@
+# LION Desktop R4 — dual-column operator shell source candidate
+
+This successor is based on the exact *source* tree of the PR #431 delivery-reconciliation candidate, not on the older E0 canonical-consumer bytes. It does not update a running Electron application, restore a missing 8780 owner, activate LPCL, or replay any historical SaaS message.
+
+The LEFT tab strip has Mission Control, Cluster and System. The RIGHT strip has LPCL/Model Chat, ChatGPT SaaS and Local GPT. The halves are independently switched without reloading SaaS. Six groups of native Electron menus provide navigation, read-only diagnostics, the 10 declared federation names, and operator-gated control of the external SaaS relay. The existing canonical conversation and Mission Control owners remain unchanged.
+
+The Local GPT viewport is a sandboxed file renderer. Only a sender-identity-checked Electron preload can invoke status and bounded advisory inference through the Electron main process to 127.0.0.1:8772. It offers no tool use, worker action, mission binding, provider-token access, or direct filesystem access. Its displayed request/response digest is not a canonical mission receipt. Only canonical Model Chat may bind LOCAL/SAAS/DUAL requests to conversation_id, mission_id, binding_epoch, lane, correlation/causation and separate shared-context/projection digests.
+
+The Cluster/System viewport uses a distinct allowlisted read-only projection of current Mission Control/panel/model/broker health and mission states. Historical Docker worker state, GitHub repository HEADs and artifact counts remain labelled as STALE/SNAPSHOT and carry their own observation dates. No raw SQLite, filesystem or credentials are exposed to renderers. The read-model only exposes a bounded, redacted launcher-log tail; authenticated current worker logs and artifact bytes remain future work.
+
+On startup the canonical SaaS automatic consumer remains STOPPED. Interactive ChatGPT browser usage is still possible. Menu-driven resumption checks outstanding send states and upstream backlog first. A durable SEND_UNKNOWN or unverified response digest is never retransmitted simply because an HTTP/UI timeout occurred. This candidate retains the single-inflight/receipt protections of PR #431.
+
+Observed Windows-host history: an earlier local E0R4 isolated Electron on port 8795 reported 6 distinct tabs, Mission Control HEALTHY and Local GPT READY, before the reception script hit a PowerShell case-insensitive variable-name collision; raw status was preserved and the isolated process exited. This is **not a native acceptance test of this PR's combined PR431+R4 bytes**. Source testing for the combined tree is required under Node 24 on both supported runners and with exact Git HEAD/TREE.
+
+This branch is intended as a stacked draft PR targeting the validated PR #431 branch. Merge/rebase order must be controlled: first integrate PR #431, then currentness-rebase this PR and recalculate truth subject carriers after all other source changes. Do not erase historical source-package manifests R1/R2; R3 is a separate exact-byte successor and is SOURCE_ONLY_NOT_DEPLOYMENT.
+
+Effect closure: NO new Mission Control, no R24 worker restart, no SaaS backlog changes, no release source deployment. An operator-authorized native handoff of exact source, single-writer 8780 verification, and observed six-tab status remain separate follow-on gates.

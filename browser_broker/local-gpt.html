@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<title>LION Local GPT — advisory</title>
+<style>
+:root{color-scheme:dark;font-family:Segoe UI,Arial,sans-serif;background:#07141f;color:#e5f0f9}
+*{box-sizing:border-box}body{margin:0;display:flex;flex-direction:column;height:100vh}
+header{padding:17px 20px;border-bottom:1px solid #24445a;background:#0d2131}
+h1{margin:0;font-size:19px}p{margin:6px 0;color:#a6bccb;font-size:12px;line-height:1.6}
+#state{color:#f1c983;font-size:12px}main{flex:1;min-height:0;overflow:auto;padding:16px 20px}
+.notice{border:1px solid #675331;color:#e6d29a;border-radius:8px;padding:11px 13px;font-size:12px;line-height:1.65;margin-bottom:16px;background:#29251f}
+.msg{background:#10283c;border:1px solid #295169;border-radius:9px;margin:10px 0;padding:12px;white-space:pre-wrap;line-height:1.5;font-size:13px;overflow-wrap:anywhere}
+.msg.user{background:#173045;border-color:#3b6d8b}.heading{font-weight:600;color:#7fccf1;font-size:11px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em}
+#empty{color:#90aabc;padding:30px;text-align:center}
+footer{padding:14px 20px;background:#0d2131;border-top:1px solid #24445a}
+textarea{width:100%;height:100px;max-height:220px;resize:vertical;background:#071826;color:#fff;border:1px solid #40647e;border-radius:8px;font:13px/1.5 Segoe UI,Arial;padding:12px}
+button{padding:9px 15px;border:1px solid #2d799a;border-radius:7px;background:#145274;color:#fff;cursor:pointer}
+button.secondary{background:#152e42;border-color:#3b5265}
+button:disabled{opacity:.4;cursor:not-allowed}
+.actions{display:flex;gap:9px;align-items:center;margin-top:9px;flex-wrap:wrap}
+#receipt{font:11px Consolas,monospace;color:#9dc2d8;white-space:pre-wrap;word-break:break-all}
+small{color:#91acbf}
+</style></head><body>
+<header><h1>LOCAL GPT <small>127.0.0.1:8772</small></h1>
+<p>Rozmowa lokalna na modelu GPT OSS. Ręczna inferencja — bez dostępu do narzędzi i wykonywania misji.</p>
+<div id="state" role="status">Łączenie z serwerem modelu…</div></header>
+<main id="thread">
+<div class="notice">ADVISORY / UNBOUND. Ta zakładka nie przejmuje automatycznie kontekstu Mission Control, ChatGPT SaaS ani roju. Do komunikacji związanej z misją użyj kanonicznego Model Chat w LPCL Panel, który nadaje conversation_id, epoch i osobne receipts.</div>
+<div id="empty">Wpisz wiadomość, aby rozpocząć lokalną rozmowę. Historia jest przechowywana tylko w tym oknie i nie jest synchronizowana automatycznie.</div>
+<div id="messages" aria-live="polite"></div><p id="receipt"></p>
+</main><footer><label for="prompt"><small>Wiadomość do Local GPT (maks. 8000 znaków)</small></label>
+<textarea id="prompt" maxlength="8000" placeholder="Zadaj pytanie modelowi lokalnemu…"></textarea>
+<div class="actions"><button id="send" type="button">Wyślij do Local GPT</button>
+<button id="check" class="secondary" type="button">Sprawdź model</button>
+<button id="clear" class="secondary" type="button">Wyczyść rozmowę</button>
+<small id="counter">0 / 8000</small></div></footer>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const history=[];let busy=false;
+function setState(s){$('state').textContent=s}
+function item(role,content){
+ const d=document.createElement('article');d.className='msg '+(role==='user'?'user':'assistant');
+ const title=document.createElement('div');title.className='heading';title.textContent=role==='user'?'Operator':'Local GPT';
+ const text=document.createElement('div');text.textContent=content;
+ d.append(title,text);$('messages').appendChild(d);
+ $('empty').hidden=true;d.scrollIntoView({block:'end'});return d;
+}
+function lock(on){busy=on;$('send').disabled=on;$('check').disabled=on;$('prompt').disabled=on}
+async function health(){
+ try{
+  const status=await window.lionLocal.status();
+  setState(status.state==='READY'?'Model gotowy: '+status.model_label+' • '+status.binding:
+    'Model niedostępny lub nieweryfikowalny • '+status.reason);
+ }catch{setState('Brak bezpiecznego połączenia z modelem')}
+}
+async function send(){
+ if(busy)return;
+ const prompt=$('prompt').value.trim();
+ if(!prompt||prompt.length>8000)return;
+ lock(true);setState('Model pracuje; żądanie nie zostanie ponowione automatycznie…');
+ const past=history.slice(-10).map(x=>({role:x.role,content:x.content}));
+ item('user',prompt);$('prompt').value='';$('counter').textContent='0 / 8000';
+ try{
+  const result=await window.lionLocal.send(prompt,past);
+  if(!result||result.authority_effect!=='NONE'||result.mission_binding!=='NOT_BOUND')throw Error('UNEXPECTED_PROVENANCE');
+  item('assistant',result.message);
+  history.push({role:'user',content:prompt},{role:'assistant',content:result.message});
+  while(history.length>10)history.splice(0,2);
+  $('receipt').textContent='Advisory receipt '+result.request_id+' • response SHA256 '+result.response_digest+
+   '\nŹródło '+result.model_label+' • '+result.observed_at+' • mission binding: NOT_BOUND';
+  setState('Odpowiedź lokalna odebrana. Nie zapisano jej jako artefaktu misji.');
+ }catch(error){
+  item('assistant','Nie otrzymano potwierdzonej odpowiedzi. Żądania nie ponowiono automatycznie.');
+  setState('Wynik niepewny / niedostępny: '+String(error?.message||error).slice(0,150));
+ }finally{lock(false);$('prompt').focus()}
+}
+$('send').addEventListener('click',send);
+$('check').addEventListener('click',health);
+$('clear').addEventListener('click',()=>{if(busy)return;history.length=0;$('messages').replaceChildren();$('empty').hidden=false;$('receipt').textContent='';setState('Lokalna historia usunięta tylko z UI')});
+$('prompt').addEventListener('input',()=>{$('counter').textContent=$('prompt').value.length+' / 8000'});
+$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();send()}});
+health();
+</script></body></html>
