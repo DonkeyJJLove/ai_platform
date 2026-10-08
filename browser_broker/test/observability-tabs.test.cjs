@@ -41,6 +41,12 @@ test('strict local URLs and preload IPC sender binding exist',()=>{
  assert(main.includes('preload:path.join(__dirname,\'observer-preload.cjs\')'));
  assert(main.includes('u.href.split(\'#\')[0]===localURL'));
 });
+test('renderer source pins enforce identical LF bytes on Git Windows and Linux',()=>{
+ const attrs=fs.readFileSync(path.join(__dirname,'..','.gitattributes'),'utf8');
+ assert.match(attrs,/^\*\.cjs text eol=lf$/m);
+ assert.match(attrs,/^\*\.html text eol=lf$/m);
+ assert(!attrs.includes('Start-LION-Browser-ISE.ps1'));
+});
 test('both local file pages are SHA pinned and script-syntax valid',()=>{
  assert(main.includes("overviewSha256='"+digest(overview)+"'"));
  assert(main.includes("localSha256='"+digest(local)+"'"));

@@ -36,6 +36,10 @@
       "sha256": "e67fc52b5bc3fa5b30dd92211a03434d7247151be9edbf874477aa818c1dd05f"
     },
     {
+      "path": "browser_broker/.gitattributes",
+      "sha256": "7d122966c494d88156f36f791f12a2020e99c5910b7a622a5bc677e6f4cb8279"
+    },
+    {
       "path": "browser_broker/DESKTOP_R4_RELEASE_NOTES.md",
       "sha256": "e8ae725f775f78ebc526fe61926109907e66b484eb9b21d20ccb40e690fba42c"
     },
@@ -85,7 +89,7 @@
     },
     {
       "path": "browser_broker/test/observability-tabs.test.cjs",
-      "sha256": "750a177b63ce0eb6a1f7f997d12f79139b6ab191a65c99fa126e89480310e1f0"
+      "sha256": "a9ca303c076f21bb3fc0a7e19b2135793cf1c18a68679a80189f603d0d9e8c06"
     },
     {
       "path": "browser_broker/test/r4-local-advisory.test.cjs",
@@ -384,7 +388,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "2697b6ecad36e81e2254d4d203fc5dd98d1334cd06c106f858bd359b1a7ef5b2",
+  "package_digest": "24dcbb704681cc6287f74a84c11592ef8491e61d01671085d751c75f6b2c0adf",
   "authority_effect": "NONE",
   "supersedes": "SOURCE_PACKAGE_MANIFEST_CCF_R2.json"
 }
