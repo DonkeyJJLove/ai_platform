@@ -1,0 +1,83 @@
+name: LION Merge Gate
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, reopened, synchronize, ready_for_review, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: lion-merge-gate-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  exact-currentness:
+    name: LION-MERGE-GATE-R1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout exact GitHub synthetic merge
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Bind actual checkout HEAD and tree
+        id: checkout
+        shell: bash
+        env:
+          EXPECTED_EXECUTION_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          actual_head="$(git rev-parse HEAD)"
+          actual_tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$actual_head" = "$EXPECTED_EXECUTION_SHA"
+          printf 'MERGE_GATE_EXECUTION_HEAD=%s\n' "$actual_head"
+          printf 'MERGE_GATE_EXECUTION_TREE=%s\n' "$actual_tree"
+          echo "head=$actual_head" >> "$GITHUB_OUTPUT"
+          echo "tree=$actual_tree" >> "$GITHUB_OUTPUT"
+
+      - name: Falsify PR binding and workflow integrity
+        run: python -m unittest cyber_lion.tests.test_lion_pr_merge_gate cyber_lion.tests.test_lion_workflow_homeostasis -v
+
+      - name: Validate exact live PR / synthetic parent chain / source truth
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+        run: |
+          python tools/lion_pr_merge_gate.py \
+            --repository . \
+            --event "$GITHUB_EVENT_PATH" \
+            --output "$RUNNER_TEMP/lion-merge-gate.json"
+
+      - name: Emit exact evidence SHA256
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -s "$RUNNER_TEMP/lion-merge-gate.json"; then
+            printf 'LION_MERGE_GATE_SHA256=%s\n' "$(sha256sum "$RUNNER_TEMP/lion-merge-gate.json" | awk '{print $1}')"
+          else
+            printf 'LION_MERGE_GATE_NO_RECEIPT=1\n'
+          fi
+          printf 'LION_MERGE_GATE_CHECKED_OUT_HEAD=%s\n' "${{ steps.checkout.outputs.head }}"
+          printf 'LION_MERGE_GATE_CHECKED_OUT_TREE=%s\n' "${{ steps.checkout.outputs.tree }}"
+
+      - name: Upload exact read-only gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-merge-gate-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/lion-merge-gate.json
+          if-no-files-found: warn
+          retention-days: 30
