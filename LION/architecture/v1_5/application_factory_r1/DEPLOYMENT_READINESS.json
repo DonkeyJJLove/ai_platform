@@ -1,0 +1,81 @@
+{
+  "authority_effect": "NONE",
+  "classification": "LOCAL_SOURCE_PACKAGE_TESTED; PUBLICATION_AND_PRIVILEGED_DEPLOYMENT_PENDING",
+  "current_terminal_state": "PUBLICATION_CANDIDATE_NOT_DEPLOYED_NOT_REGISTERED",
+  "deployment_package": {
+    "broker_update_owner": "lion_broker_update_provider.py; VALIDATE_UPDATE -> APPLY_UPDATE -> READ_UPDATE_RECEIPT",
+    "broker_update_required": true,
+    "concrete_effect_operation": "MISSION_CONTROL_V3_INSTALL",
+    "concrete_effect_requires_current_master": true,
+    "exact_hash_validation": "PASS",
+    "file_count": 91,
+    "isolated_package_import": "PASS",
+    "manifest": "LION/architecture/v1_5/application_factory_r1/DEPLOYMENT_PACKAGE_MANIFEST.json",
+    "operator_deployment_owner": "OPERATOR_INTERVENTION_DEPLOY (legacy-branch-bound; exact current-master rebind required)",
+    "package_root_import_test_count": 14,
+    "package_root_import_test_status": "PASS",
+    "staging_blocker": "EXISTING_STAGE_ROOT_IS_35_FILE_LEGACY_PACKAGE; NO OBSERVED_CURRENT_MASTER_STAGING_OWNER FOR 91_FILE_MANIFEST",
+    "staging_ready_on_authority_host": false
+  },
+  "execution_effect": "NONE",
+  "github_actions_observation": {
+    "bounded_publication_policy": "ONE_BRANCH_ONE_PR; NO_ISSUE_COMMENT_DISPATCH; NO_MANUAL_RERUN_SPAM; RECONCILE_GITHUB_ACTIONS_AFTER_FIRST_PUSH",
+    "pr_published_for_r623_or_application_factory": false,
+    "screenshot_date": "2026-10-07",
+    "workflow_definition_count": 26,
+    "workflow_run_history_indicator": "2,500+",
+    "workflow_trigger_risks": [
+      "multiple pull_request workflows",
+      "some workflows also trigger on push",
+      "three issue_comment workflows",
+      "some cancel-in-progress false"
+    ]
+  },
+  "live_runtime_observation": {
+    "authority_host": "host_f78ddce3275144e4",
+    "broker_update_socket": "present/active",
+    "canonical_mission_control_unit": "lion-mission-control.service",
+    "canonical_mission_control_unit_state": "active/running",
+    "effect_admission_socket": "present/active",
+    "health_8766": "PASS",
+    "host": "LION-AUTH-LAB",
+    "installed_effect_broker_sha256": "18796ba14575e9b4179fe19642cf1de98aa52628ff9ad17036f844b619d07316",
+    "live_package_root": "/var/lib/sentinelx/uploads/lion-mission-control-v3",
+    "live_package_root_present": true,
+    "locator_generation": "MISSION_CONTROL_V3",
+    "locator_port": 8766,
+    "observed_file_count_including_historical_files": 1263,
+    "observed_main_pid": 1347629,
+    "observed_staging_file_count": 35,
+    "operator_intervention_deploy_branch": "mission/r23-autonomy-execution-fabric",
+    "operator_intervention_stage_source": "LEGACY_BRANCH_FIXED_NOT_YET_REBOUND_TO_CURRENT_MASTER",
+    "readiness_32": "UNKNOWN_WORKER_OBSERVATIONS_MISSING",
+    "rollback_state": "EXACT_LIVE_PACKAGE_BACKUP_AND_OPERATOR_EFFECT_RECEIPT_REQUIRED",
+    "staging_root": "/var/lib/sentinelx/uploads/lion-mission-control-v3.stage-operator-intervention"
+  },
+  "post_merge_deployment_sequence": [
+    "Publish exact local linear source candidate as ONE branch and ONE PR; do not trigger issue_comment dispatch.",
+    "Run scoped CI and reconcile actual PR checks; fix only demonstrable failures.",
+    "Merge only after exact source/CI/operator gates. Reacquire exact merged master HEAD/TREE.",
+    "Validate updated exact broker bytes against installed broker SHA via existing broker-update VALIDATE_UPDATE; separate authority required for APPLY_UPDATE.",
+    "Stage all 91 exact master-sourced package files into canonical stage root via a separately admitted staging action; verify hash map and isolated import there.",
+    "Use existing OPERATOR_INTERVENTION_DEPLOY only after rebinding its legacy branch/source identity or equivalent current-master-bound executor; verify backup/rollback identity.",
+    "Read back active 8766 PID/release/source/package/health, process capability registry, operator 8767, DB integrity, broker receipts/thread delivery and worker readiness.",
+    "Regenerate Application Factory registration payload from exact deployed HEAD/TREE.",
+    "Register only through existing Mission Control; activation and full 32-worker deployment remain separately admitted."
+  ],
+  "remote_master": "b6cc132095deb268b2754d2afc0634aeac5a7ac4",
+  "repository_gate": {
+    "next_effect": "PUBLISH_EXACT_LINEAR_CANDIDATE_AS_BRANCH_AND_PR",
+    "reasons": [
+      "BoundedDeploymentBroker DeploymentRequest requires pr_number >= 1 and independently bound RepositoryCurrentnessEvidence.",
+      "MISSION_CONTROL_V3_INSTALL revalidates source_head/source_tree against current GitHub master before effect.",
+      "Local candidate stack is not remote master.",
+      "No R6.23/Application Factory R1 PR observed as of 2026-10-08 readback; local candidate is not remote master."
+    ],
+    "state": "BLOCKED_UNTIL_EXACT_BRANCH_PR_CI_AND_MASTER_INTEGRATION"
+  },
+  "schema": "lion.application-factory-deployment-readiness/v1",
+  "stack_head_before_deployment_package": "34cdc8a17fcd235807bee6340762839bc8a71fb0",
+  "stack_tree_before_deployment_package": "bc65b3bfec1a1f5e45bcdcd0cf916fc8a74a07a9"
+}

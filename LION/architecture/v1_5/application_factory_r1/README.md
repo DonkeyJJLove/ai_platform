@@ -60,3 +60,11 @@ There are two distinct deployment boundaries. First, the R6.18–R6.23 source an
 The material BUILD transition in the canonical process is `ACTION_REQUIRED`, `NON_IDEMPOTENT`, `RECONCILE_FIRST`, with zero automatic retries. Unknown material effect is therefore reconciled rather than blindly repeated. BUILDER and VERIFIER are separate local roles.
 
 No file in this package registers, activates, deploys, claims an assignment or writes a live artifact.
+
+## Deployment readiness
+
+`DEPLOYMENT_PACKAGE_MANIFEST.json` freezes the self-contained 8766 package closure. The current candidate package contains 91 exact-hashed files and passes isolated import from the staged package root.
+
+`DEPLOYMENT_READINESS.json` records the remaining publication gate. The concrete `MISSION_CONTROL_V3_INSTALL` effect revalidates its source envelope against current GitHub `master`, while the host deployment contract also requires a real PR/currentness evidence chain. Therefore this local candidate must be published, pass CI and be merged before the existing canonical 8766 installer may be used.
+
+After merge, exact deployed HEAD/TREE is reacquired, the package is restaged from merged bytes, the one-shot deployment is admitted (`retry=0`, reconcile-first), 8766 is read back, and only then is the mission registration payload regenerated. Registration and activation remain later separate actions.
