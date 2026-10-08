@@ -36,8 +36,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
-          printf 'CHECKED_HEAD=%s
-' "$EXPECTED_HEAD"
+          printf 'CHECKED_HEAD=%s\n' "$EXPECTED_HEAD"
           git rev-parse 'HEAD^{tree}'
       - name: Install locked dependencies without Electron downloads
         working-directory: browser_broker

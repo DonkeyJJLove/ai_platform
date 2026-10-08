@@ -167,6 +167,11 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertIn("node-version: '24'", workflow)
         self.assertIn('npm ci --ignore-scripts --no-audit --no-fund', workflow)
         self.assertIn('node --test', workflow)
+        node24_workflow = (
+            Path(__file__).resolve().parents[2]
+            / '.github' / 'workflows' / 'lion-desktop-r4-node24.yml'
+        ).read_text(encoding='utf-8')
+        self.assertIn('printf \'CHECKED_HEAD=%s\\n\' "$EXPECTED_HEAD"', node24_workflow)
         self.assertIn('working-directory: browser_broker', workflow)
 
     def test_matrix_is_exactly_t01_through_t40(self):

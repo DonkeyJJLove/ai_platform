@@ -5,7 +5,7 @@
   "files": [
     {
       "path": ".github/workflows/lion-desktop-r4-node24.yml",
-      "sha256": "915fefea371494fbf33265f6b64df1a2efc4ee7d464fbca4a50eef5ef93912b4"
+      "sha256": "73274d310ada57febabfeecac9d7e5eb82905d467454302c774db35cfe054e89"
     },
     {
       "path": ".github/workflows/lion-r24-whole-integration-closure.yml",
@@ -384,7 +384,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "9522a62e35863b9dcffdc2b046965966ecc805ffcc2cef8b6c64b070b52e3ff9",
+  "package_digest": "2697b6ecad36e81e2254d4d203fc5dd98d1334cd06c106f858bd359b1a7ef5b2",
   "authority_effect": "NONE",
   "supersedes": "SOURCE_PACKAGE_MANIFEST_CCF_R2.json"
 }
