@@ -437,6 +437,22 @@ class MaterialFleetLifecycleTests(unittest.TestCase):
         self.assertEqual(supplied, lifecycle._digest(body))
         self.assertEqual(r["authority_effect"], "NONE")
 
+    def test_readonly_query_dispatcher_rejects_unregistered_sql_without_db_write(self):
+        before = self.db.total_changes
+        with self.assertRaisesRegex(
+            lifecycle.FleetLifecycleProjectionError, "unregistered read-only projection query"
+        ):
+            lifecycle._one(
+                self.db,
+                "UPDATE missions SET state='COMPLETE' WHERE mission_id=?",
+                (MID,),
+            )
+        self.assertEqual(self.db.total_changes, before)
+        self.assertEqual(
+            self.db.execute("SELECT state FROM missions WHERE mission_id=?", (MID,)).fetchone()[0],
+            "RUNNING",
+        )
+
     def test_no_direct_docker_or_model_executor_in_projection_source(self):
         module = Path(lifecycle.__file__).read_text()
         self.assertNotIn("subprocess.run", module)

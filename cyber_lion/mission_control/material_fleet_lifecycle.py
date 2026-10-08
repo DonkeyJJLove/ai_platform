@@ -203,7 +203,29 @@ def _canonical_contract(row: Mapping[str, Any], *, mission_id: str, phase_id: st
 
 
 def _one(conn, query: str, arguments: tuple[Any, ...]) -> dict | None:
-    return _as_dict(conn.execute(query, arguments).fetchone())
+    """Exact allowlisted SELECTs only; no dynamically evaluated SQL string.
+
+    The effect inventory must be able to prove that this projection cannot
+    smuggle a write statement into the SQLite execution boundary.
+    """
+    if query == "SELECT * FROM missions WHERE mission_id=?":
+        row = conn.execute("SELECT * FROM missions WHERE mission_id=?", arguments).fetchone()
+    elif query == "SELECT * FROM mission_process_specs WHERE mission_id=?":
+        row = conn.execute("SELECT * FROM mission_process_specs WHERE mission_id=?", arguments).fetchone()
+    elif query == "SELECT * FROM mission_phase_execution_contracts WHERE mission_id=? AND phase_id=?":
+        row = conn.execute(
+            "SELECT * FROM mission_phase_execution_contracts WHERE mission_id=? AND phase_id=?",
+            arguments,
+        ).fetchone()
+    elif query == "SELECT * FROM mission_execution_drivers WHERE mission_id=?":
+        row = conn.execute("SELECT * FROM mission_execution_drivers WHERE mission_id=?", arguments).fetchone()
+    elif query == "SELECT * FROM mission_operator_control WHERE mission_id=?":
+        row = conn.execute("SELECT * FROM mission_operator_control WHERE mission_id=?", arguments).fetchone()
+    elif query == "SELECT * FROM mission_scheduler_state LIMIT 1":
+        row = conn.execute("SELECT * FROM mission_scheduler_state LIMIT 1", arguments).fetchone()
+    else:
+        raise FleetLifecycleProjectionError("unregistered read-only projection query")
+    return _as_dict(row)
 
 
 def project_lifecycle(
