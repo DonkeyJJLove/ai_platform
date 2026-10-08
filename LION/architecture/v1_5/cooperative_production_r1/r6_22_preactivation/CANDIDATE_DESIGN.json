@@ -1,0 +1,83 @@
+{
+  "affected_concepts": [
+    "capabilities",
+    "process_contract_plane",
+    "runtime"
+  ],
+  "authority_effect": "NONE",
+  "baseline": {
+    "branch": "candidate/cooperative-preactivation-r1",
+    "head": "245bd4b3fba745142b0358876153ef0ca3cb0846",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "c7d99780cbcba5398214c27ce7dfa68168765f94"
+  },
+  "candidate_digest": "505ef8f96c378df93544f347145b858f361b05947acfef1518072e1242299dea",
+  "candidate_id": "cooperative-preactivation-r6-22",
+  "candidate_scope": [
+    "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_PREACTIVATION_R6_22.md",
+    "LION/architecture/v1_5/cooperative_production_r1/README.md",
+    "cyber_lion/mission_control/cooperative_preactivation.py",
+    "cyber_lion/mission_control/cooperative_preactivation_bootstrap.py",
+    "cyber_lion/tests/test_cooperative_mission_control_wiring.py",
+    "cyber_lion/tests/test_cooperative_preactivation.py",
+    "tools/lion_mission_control_v3.py"
+  ],
+  "change_class": "CAPABILITY",
+  "dependency_ids": [
+    "R6.16",
+    "R6.17",
+    "R6.21"
+  ],
+  "evals_required": [
+    "eval:one-worker-preactivation-before-fleet-readiness"
+  ],
+  "evidence_refs": [
+    "source:mission-control-cooperative-driver",
+    "source:r6.17",
+    "source:r6.21",
+    "test:r6.22-regression-301"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "one qualification-only HELD WRITE can reach canonical READY evidence and a persisted one-worker qualification record before full-fleet readiness, while material production and verification remain gated",
+  "falsification_conditions": [
+    "preactivation capability is available while its exact provider is unbound",
+    "preactivation invokes full-fleet readiness before one-worker qualification",
+    "production or verification bypasses full-fleet readiness",
+    "qualification UNKNOWN automatically replays R6.17",
+    "qualification assignment is claimed by the preactivation step"
+  ],
+  "falsifiers": [
+    "falsifier:preactivation-provider-unbound",
+    "falsifier:production-readiness-bypass",
+    "falsifier:qualification-auto-replay"
+  ],
+  "layer_bindings": [
+    {
+      "concept": "capabilities",
+      "layers": [
+        "FLEET_AND_SWARM"
+      ]
+    },
+    {
+      "concept": "process_contract_plane",
+      "layers": [
+        "GOVERNED_SELF_IMPLEMENTATION"
+      ]
+    },
+    {
+      "concept": "runtime",
+      "layers": [
+        "TRUSTED_RUNTIME"
+      ]
+    }
+  ],
+  "motivation": "break the 32-worker bootstrap cycle by exposing exactly one non-effectful qualification capability backed by existing R6.21/R6.16/R6.17 owners while leaving production and verification readiness unchanged",
+  "risk_class": "GREEN",
+  "target_component": "single-worker cooperative preactivation before full-fleet readiness",
+  "tests_required": [
+    "test:cooperative-mission-control-wiring",
+    "test:cooperative-preactivation",
+    "test:cooperative-runtime-preparation-provider",
+    "test:cooperative-worker-qualification"
+  ]
+}

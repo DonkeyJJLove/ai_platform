@@ -17,7 +17,13 @@ class CooperativeMissionControlWiringTests(unittest.TestCase):
         self.assertIn("current[cooperative_prod.CAPABILITY_VERIFY]",source)
     def test_docker_binding_compiles_cooperative_handler_from_phase_contract(self):
         source=self.source()
-        self.assertIn("cooperative_classes={cooperative_prod.CAPABILITY_BOOTSTRAP,cooperative_prod.CAPABILITY_PRODUCTION,cooperative_prod.CAPABILITY_VERIFY}",source)
+        for capability in (
+            "cooperative_prod.CAPABILITY_BOOTSTRAP",
+            "cooperative_prod.CAPABILITY_PRODUCTION",
+            "cooperative_prod.CAPABILITY_VERIFY",
+            "cooperative_preactivation.CAPABILITY_CLASS",
+        ):
+            self.assertIn(capability, source)
         self.assertIn("handlers[prow['phase_id']]=cooperative if classes & cooperative_classes else generic",source)
     def test_generic_read_executor_does_not_own_cooperative_effects(self):
         tree=ast.parse(self.source())
@@ -43,6 +49,28 @@ class CooperativeMissionControlWiringTests(unittest.TestCase):
         )
         self.assertEqual(source.count("COOPERATIVE_MATERIALIZERS=CooperativeMaterializationRegistry()"),1)
         self.assertEqual(source.count("bootstrap_process_materializers("),1)
+
+    def test_preactivation_is_the_only_cooperative_path_before_full_fleet_readiness(self):
+        tree=ast.parse(self.source())
+        fn=next(
+            node for node in tree.body
+            if isinstance(node,ast.FunctionDef) and node.name=="drive_cooperative_once"
+        )
+        text=ast.unparse(fn)
+        self.assertLess(
+            text.index("cooperative_preactivation.CAPABILITY_ID"),
+            text.index("bootstrap_readiness"),
+        )
+        registry_fn=next(
+            node for node in tree.body
+            if isinstance(node,ast.FunctionDef) and node.name=="_process_capability_registry_current"
+        )
+        registry_text=ast.unparse(registry_fn)
+        self.assertIn("COOPERATIVE_PREACTIVATION.current() is not None",registry_text)
+        self.assertLess(
+            registry_text.index("COOPERATIVE_PREACTIVATION.current()"),
+            registry_text.index("bootstrap_readiness"),
+        )
 
     def test_live_stepper_requires_canonical_worker_provider_before_assignments(self):
         source=(ROOT/"cyber_lion/mission_control/cooperative_production.py").read_text(encoding="utf-8")
