@@ -140,6 +140,11 @@ class PrMergeGateTests(unittest.TestCase):
         self.assertEqual(len(actual["subject_digest"]), 64)
         self.assertGreater(actual["tracked_git_leaves"], 1000)
 
+    def test_workflow_uses_package_module_entrypoint(self):
+        source = (ROOT / ".github/workflows/lion-merge-gate.yml").read_text(encoding="utf-8")
+        self.assertIn("python -m tools.lion_pr_merge_gate", source)
+        self.assertNotIn("python tools/lion_pr_merge_gate.py", source)
+
     def test_no_merge_authority_or_automatic_effect(self):
         self.assertEqual(gate.SCHEMA, "lion.pr-merge-currentness-gate/v1")
         with tempfile.TemporaryDirectory() as td:
