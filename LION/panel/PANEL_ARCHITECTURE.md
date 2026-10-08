@@ -43,3 +43,16 @@ Remote SaaS content receives no Node.js authority. The Electron main process con
 ## R4 candidate — dual independent tab bars
 
 An **unmerged source successor**, not an as-is deployment claim, implements LEFT Mission Control/Cluster/System and RIGHT LPCL Panel/ChatGPT SaaS/Local GPT. The Electron main process retains sandboxed WebContentsView isolation; Local GPT is a dedicated file:// renderer with exact SHA pin and sender-checked IPC to 127.0.0.1:8772. A narrowly bounded read-model is displayed by Cluster and System. Stored Docker and federation HEADs remain explicitly snapshot-scoped. Separate CI/deployment readback is required before describing R4 as live.
+
+
+## R4 compact operator UX candidate
+
+The Electron LEFT tab for Mission Control is an intentionally small operator
+entry surface; detailed fleet telemetry belongs exclusively to Cluster and
+system/environment topology belongs to System. The RIGHT LPCL tab owns process
+source authoring, conversation binding and a normally collapsed mission
+selection drawer. Native tab deep links are constrained by the Electron main
+process to the explicit sibling tabs, not accepted from the ChatGPT SaaS
+renderer. Existing 8766/8780 API and backend registry ownership are preserved.
+Until the separately admitted Windows release is deployed and read back, these
+are CANDIDATE source semantics rather than observed production UI behavior.

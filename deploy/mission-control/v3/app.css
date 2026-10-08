@@ -55,3 +55,18 @@
 
 /* Mission liveness is telemetry, not decoration. Heartbeat animation is one-shot only. */
 .mc-liveness-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:7px;margin:10px 0}.mc-liveness-card{border:1px solid #2c4554;background:#0b151c;border-radius:7px;padding:8px;min-width:0}.mc-liveness-card .k{font-size:9px;color:#7fa7bb}.mc-liveness-card .v{font:12px/1.35 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}.mc-waiting-detail{border:1px solid #2f6576;background:#0b1b24;border-radius:8px;padding:9px 11px;margin:8px 0;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace}.mc-waiting-detail .waiting-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px 12px}.mc-waiting-detail b{color:#7fd4ef}.mc-liveness-line{margin-top:6px;font:10px/1.35 ui-monospace,SFMono-Regular,Consolas,monospace;color:#9db3c1}.mc-progress.live-executing{background:#12382f}.mc-progress.live-waiting{background:#123543}.mc-progress.live-blocked{background:#443718}.mc-progress.live-paused{background:#343a40}.mc-progress.live-stale{background:repeating-linear-gradient(135deg,#36171b 0,#36171b 7px,#201317 7px,#201317 14px)}.mc-progress.live-disconnected{background:repeating-linear-gradient(135deg,#3c1720 0,#3c1720 6px,#11161b 6px,#11161b 12px)}.mc-progress.live-complete{background:#17412f}.mc-progress.mc-aging{box-shadow:0 0 0 1px #c89a45 inset}.mc-progress.heartbeat-pulse{animation:mcHeartbeatFlash .45s ease-out 1}@keyframes mcHeartbeatFlash{0%{box-shadow:0 0 0 0 rgba(102,185,232,.75),0 0 18px rgba(102,185,232,.45)}100%{box-shadow:0 0 0 1px rgba(102,185,232,0),0 0 0 rgba(102,185,232,0)}}.mc-action-primary{border-color:#65b9d6!important;background:#15485b!important}
+
+
+/* R4: Mission Control is a lightweight navigator, not a duplicate Cluster/System. */
+.operator-tab-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin:8px 0}
+.operator-tab-links a{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:10px 12px;color:#daebf3;text-decoration:none;background:#122736;border:1px solid #416278;border-radius:10px;font-size:13px;font-weight:650;min-width:0}
+.operator-tab-links a:hover,.operator-tab-links a:focus-visible{border-color:#7bbddb;background:#1c374b;outline:2px solid transparent}
+.operator-tab-links a span{font-size:17px;line-height:1}
+.operator-tab-links a small{display:block;flex-basis:100%;font-size:10px;font-weight:400;color:#a8c0cc}
+.operator-tab-hint{margin:10px 0 13px;font-size:11px}
+.mc-full-inspection{border:1px solid #304657;border-radius:8px;margin:10px 0;padding:4px 10px}
+.mc-full-inspection>summary{cursor:pointer;font-size:11px;color:#aec4cf;padding:7px 1px}
+.mc-full-inspection>section{margin:12px 0}
+#summary.cards{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0}
+#summary.cards>*{flex:0 1 auto;min-width:0}
+@media(max-width:530px){.operator-tab-links{grid-template-columns:minmax(0,1fr)}}
