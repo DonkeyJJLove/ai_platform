@@ -1,0 +1,81 @@
+{
+  "affected_concepts": [
+    "capabilities",
+    "process_contract_plane",
+    "runtime"
+  ],
+  "authority_effect": "NONE",
+  "baseline": {
+    "branch": "candidate/cooperative-cross-model-artifact-r1",
+    "head": "40d2c6c74db0d4982825d1cba08861b5750cfccd",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "df187c7411ff8d98e41072c8524f72293323840f"
+  },
+  "candidate_digest": "04bb01f281318470fb261ba71fc06e78191243054294e07075a9e9f80fab4835",
+  "candidate_id": "cooperative-cross-model-artifact-r6-23",
+  "candidate_scope": [
+    "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_CROSS_MODEL_ARTIFACT_R6_23.md",
+    "LION/architecture/v1_5/cooperative_production_r1/README.md",
+    "cyber_lion/mission_control/control_plane_reconnaissance.py",
+    "cyber_lion/mission_control/cooperative_production.py",
+    "cyber_lion/tests/test_control_plane_reconnaissance.py",
+    "cyber_lion/tests/test_cooperative_production.py"
+  ],
+  "change_class": "CAPABILITY",
+  "dependency_ids": [
+    "CONTROL_PLANE_RECONNAISSANCE",
+    "COOPERATIVE_ARTIFACT_PRODUCTION",
+    "R6.22"
+  ],
+  "evals_required": [
+    "eval:cross-model-evidence-bound-artifact"
+  ],
+  "evidence_refs": [
+    "source:control-plane-reconnaissance",
+    "source:cooperative-production",
+    "source:r6.22",
+    "test:r6.23-regression-324"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "a cognitive recon phase can require complete LOCAL trajectories plus a responded SaaS advisory, persist one cross-model intelligence bundle, and bind subsequent local artifact generation and WRITE provenance to the exact bundle digest",
+  "falsification_conditions": [
+    "SaaS unavailable satisfies cross-model completion",
+    "WRITE provenance omits an available source intelligence digest",
+    "bundle digest changes after model generation but before WRITE and production continues",
+    "legacy missions without intelligence bundles stop working",
+    "partial cross-model bundle silently falls back to local-only behavior"
+  ],
+  "falsifiers": [
+    "falsifier:intelligence-digest-drift",
+    "falsifier:legacy-path-regression",
+    "falsifier:saas-missing-promoted-to-pass"
+  ],
+  "layer_bindings": [
+    {
+      "concept": "capabilities",
+      "layers": [
+        "FLEET_AND_SWARM"
+      ]
+    },
+    {
+      "concept": "process_contract_plane",
+      "layers": [
+        "GOVERNED_SELF_IMPLEMENTATION"
+      ]
+    },
+    {
+      "concept": "runtime",
+      "layers": [
+        "TRUSTED_RUNTIME"
+      ]
+    }
+  ],
+  "motivation": "bind the first material artifact to independently observed LOCAL and SaaS evidence by reusing CONTROL_PLANE_INTELLIGENCE_BUNDLE as an exact provenance parent while preserving legacy missions without that bundle",
+  "risk_class": "GREEN",
+  "target_component": "cross-model evidence bound cooperative artifact generation",
+  "tests_required": [
+    "test:control-plane-reconnaissance",
+    "test:cooperative-functional-acceptance",
+    "test:cooperative-production"
+  ]
+}

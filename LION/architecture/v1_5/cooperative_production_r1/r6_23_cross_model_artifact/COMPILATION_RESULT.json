@@ -1,0 +1,15 @@
+{
+  "authority_effect": "NONE",
+  "candidate_digest": "04bb01f281318470fb261ba71fc06e78191243054294e07075a9e9f80fab4835",
+  "compilation_digest": "cf8289bea777d057ee30b904f781ac84990bab12592a2f464c81ff8e61710c14",
+  "ends_before_admission": true,
+  "evolution_delta_digest": "5e252ff12b8d45aed5a2e4fd3bdf82890cf520f4e167d8d834b2a0d185599228",
+  "execution_effect": "NONE",
+  "formalization_manifest_digest": "916493dee128dd4d3de22c188fcbd480d46c0dd6aac412674e76a34762d1c00c",
+  "generated_artifacts_excluded_from_source_tree": true,
+  "required_formalization_set_digest": "25082e032ec0c25eca33b439d6fe88de4db35e57d217b7351fa7d4d05ffdd331",
+  "required_formalization_surfaces": 33,
+  "schema": "lion.cooperative-cross-model-artifact-r6.23-compilation/v1",
+  "source_tree": "df187c7411ff8d98e41072c8524f72293323840f",
+  "stacked_parent_head": "40d2c6c74db0d4982825d1cba08861b5750cfccd"
+}

@@ -202,6 +202,94 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         self.assertTrue(all(facts[x] for x in names[:-1]),facts);self.assertFalse(facts["SUCCESSOR_TERMINAL_VALIDATION"]);self.assertFalse(detail["successor_terminal"]["prior_phases_pass"])
         c.close()
 
+    def test_cross_model_completion_requires_local_and_responded_saas(self):
+        from unittest.mock import patch
+        c=self.conn()
+        head="1"*40;tree="2"*40
+        observations={"domains":{
+            "panel":{
+                "runtime":{"pid":1,"runtime_source_sha256":"a"*64,"gateway_source_sha256":"b"*64},
+                "repo":{"github_master":{"head":head,"tree":tree}},
+                "model":{"endpoint":"http://127.0.0.1:8772","health":"ok"},
+                "sources":{},
+                "source_features":{},
+            },
+            "mission_control":{
+                "mission":{"mission_id":"M","source_head":head,"source_tree":tree},
+                "runtime_identity":{},
+                "db":{"integrity":"ok"},
+                "preflight":{},
+                "driver":{},
+                "scheduler":{},
+                "contracts":[],
+            },
+            "broker":{},
+            "thread":{},
+            "dual":{},
+            "post_astra":{},
+            "recon_history":{},
+            "process_language":{},
+            "successor_lineage":{},
+            "docker_fleet":{},
+        }}
+        local_analysis={
+            "schema":cr.LOCAL_ANALYSIS_SCHEMA,
+            "trajectories":[
+                {"role":"PRIMARY_RECONSTRUCTION","raw_digest":"3"*64},
+                {"role":"ADVERSARIAL_FALSIFICATION","raw_digest":"4"*64},
+                {"role":"ALTERNATIVE_EXPLANATION","raw_digest":"5"*64},
+            ],
+        }
+        saas={
+            "state":"RESPONDED",
+            "response_digest":"6"*64,
+            "receipt_digest":"7"*64,
+        }
+        intel={
+            "bundle_digest":"8"*64,
+            "local_model_trajectories":[{"state":"PASS"}],
+            "saas_advisories":[{
+                "state":"RESPONDED",
+                "response_digest":"6"*64,
+                "receipt_digest":"7"*64,
+            }],
+        }
+        contract={"completion_predicates":[
+            "LOCAL_RECON_TRAJECTORIES_COMPLETE=PASS",
+            "SAAS_ADVISORY_RESPONSE_OBSERVED=PASS",
+            "CROSS_MODEL_INTELLIGENCE_BOUND=PASS",
+        ]}
+        patches=(
+            patch.object(cr,"_runtime_revision_terminal_evidence",return_value=None),
+            patch.object(cr,"_preflight_binding_terminal_evidence",return_value=None),
+            patch.object(cr,"_panel_projection_terminal_evidence",return_value=None),
+            patch.object(cr,"_broker_receipt_lineage_current",return_value=(True,{"missing":0,"orphan":0})),
+            patch.object(cr,"_lpcl11_compat_probe",return_value=True),
+            patch.object(cr,"_lpcl12_compat_probe",return_value=True),
+            patch.object(cr,"_prior_successor_phases_pass",return_value=(False,{})),
+        )
+        for item in patches:item.start();self.addCleanup(item.stop)
+        facts,_=cr.derive_facts(
+            c,"M","CROSS_MODEL_RECON",contract,observations,
+            artifacts={"CONTROL_PLANE_INTELLIGENCE_BUNDLE":intel},
+            baseline=None,local_analysis=local_analysis,saas_advisory=saas,
+        )
+        self.assertEqual(set(facts.values()),{True},facts)
+
+        facts,_=cr.derive_facts(
+            c,"M","CROSS_MODEL_RECON",contract,observations,
+            artifacts={"CONTROL_PLANE_INTELLIGENCE_BUNDLE":{
+                **intel,
+                "saas_advisories":[{"state":"WAITING_RESPONSES"}],
+            }},
+            baseline=None,local_analysis=local_analysis,
+            saas_advisory={"state":"UNAVAILABLE_OR_SESSION_MEDIATED"},
+        )
+        self.assertTrue(facts["LOCAL_RECON_TRAJECTORIES_COMPLETE"])
+        self.assertFalse(facts["SAAS_ADVISORY_RESPONSE_OBSERVED"])
+        self.assertFalse(facts["CROSS_MODEL_INTELLIGENCE_BOUND"])
+        c.close()
+
     def test_terminal_recipe_vocabulary_is_fully_materialized(self):
         contract={"currentness_requirements":["EXACT_GITHUB_MASTER","LIVE_8766_PACKAGE","LIVE_8780_RUNTIME","CURRENT_BROKER_DB"],"evidence_requirements":["EXACT_SOURCE_READBACK","RESTART_DURABILITY","BACKWARD_COMPATIBILITY","BROKER_TRANSPORT_READBACK"]}
         plan=cr.build_observation_plan(contract)
