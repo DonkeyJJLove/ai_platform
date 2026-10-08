@@ -96,6 +96,15 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
      const u=new URL(url);
      if(v===leftTabs&&u.protocol==='lion-left:'){event.preventDefault();selectLeftTab(u.hostname);return}
       if(v===rightTabs&&u.protocol==='lion-right:'){event.preventDefault();selectRightTab(u.hostname);return}
+     // Mission Control can deep-link only to the three declared native surfaces.
+     // Malformed or scope-widening custom URLs fail closed; remote SaaS has no such bridge.
+     if(v===mission&&(u.protocol==='lion-left:'||u.protocol==='lion-right:')){
+      event.preventDefault();
+      if(u.username||u.password||u.port||u.pathname||u.search||u.hash)return;
+      if(u.protocol==='lion-left:'&&['cluster','system'].includes(u.hostname))selectLeftTab(u.hostname);
+      else if(u.protocol==='lion-right:'&&u.hostname==='panel')selectRightTab('panel');
+      return;
+     }
      if(v===panel&&u.protocol==='lion-saas:'){
       event.preventDefault();
       const conversationId=decodeURIComponent(u.pathname.replace(/^\/+/,''));if(!conversationId)return;

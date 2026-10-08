@@ -23,3 +23,36 @@ The Cluster and System WebContentsView pages no longer reproduce the external ta
 ## Canonical SaaS broker receipt-only reconciliation (source candidate)
 
 The Intelligence menu offers an operator-triggered exact-receipt-only reconciliation of earlier externally sent requests. No resend occurs, even if Model Chat displays SAAS_QUEUED or a user-facing delivery timeout. The consumer must remain STOPPED and independently check request_id, response_digest, receipt_digest and authority_effect NONE on Mission Control. The batch is bounded to 32 and committed to local broker state as one write only after every receipt verifies; any missing receipt fails closed without local progress. New supervisor handoffs are not covered by this operation.
+
+
+## R4 compact operator navigation successor (source candidate, not deployed)
+
+The left Mission Control tab is now a compact operator portal. It shows only
+status and three native links: Cluster (workers and fleet), System (hosts,
+repositories, topology) and LPCL Panel (process/conversation). The historical
+full Mission Control page remains accessible under an explicitly collapsed
+compatibility inspection element; none of its legacy diagnostics or canonical
+Mission Control APIs are removed. The Electron main process routes only exact,
+path-free lion-left://cluster, lion-left://system and lion-right://panel
+URLs from the Mission Control WebContentsView. It rejects other schemes,
+destinations, paths, queries, fragments and credentials without effect. SaaS
+remote content cannot use the operator-only navigation branch.
+
+The canonical LPCL panel uses a 56px sidebar rail and an expandable mission
+drawer. An explicit view label distinguishes the operational and historical
+projections. Selecting a mission closes the drawer. The backend mission
+registry, active mission identities, archived SQLite snapshots and mission
+completion flags are unchanged. This is a UI navigation change, not a
+deletion, backend archive migration or authority transition.
+
+SaaS remains separately governed: a visible composer does not prove an MCP
+roundtrip. Current local broker backlog, expired session bindings and any
+SEND_UNKNOWN must be reconciled per request before operator-gated relay resume.
+This source change does not resend/cancel turns or bypass the backlog gate.
+
+Validation: isolated exact-source UI/HTML checks, native Windows Node 24 test
+suite, and an offline headless-Edge visual rendering are separate evidence
+classes. A file:// preview has no current Mission Control API and will show
+OFFLINE/DEGRADED even when its responsive layout is correct. Production visual
+acceptance requires a versioned Windows panel/desktop handoff and authenticated
+readback of the actual source bytes.

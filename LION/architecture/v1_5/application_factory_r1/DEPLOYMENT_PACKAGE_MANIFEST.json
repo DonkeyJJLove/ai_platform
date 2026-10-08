@@ -410,7 +410,7 @@
       "target": "mission_control_v3.py"
     },
     {
-      "sha256": "0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c",
+      "sha256": "f3c2351074e9a260063b6d3962bcd71b50f7ff48dd788cf4d18f9bab1816e0cf",
       "source": "deploy/mission-control/v3/app.css",
       "target": "static/app.css"
     },
@@ -425,7 +425,7 @@
       "target": "static/control-v3.js"
     },
     {
-      "sha256": "c08fa2840e317c69c868ffe4c1c992d3b0d364a4716ff567c5937e52a16dca9a",
+      "sha256": "9edd4ab6317273c499e11fdb9b79a894ab2b13bdb0ae32f36ab2c9df0950954a",
       "source": "deploy/mission-control/v3/index.html",
       "target": "static/index.html"
     },
