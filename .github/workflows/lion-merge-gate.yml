@@ -55,7 +55,7 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_EVENT_PATH: ${{ github.event_path }}
         run: |
-          python tools/lion_pr_merge_gate.py \
+          python -m tools.lion_pr_merge_gate \
             --repository . \
             --event "$GITHUB_EVENT_PATH" \
             --output "$RUNNER_TEMP/lion-merge-gate.json"
