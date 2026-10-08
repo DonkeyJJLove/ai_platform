@@ -106,6 +106,54 @@ class CanonicalConversationSaaSConsumer{
  }
  stop(reason='OPERATOR_STOP'){this.enabled=false;this.store.setSetting('canonical_consumer_enabled','false');this.state='STOPPED';this.lastDecision={stage:'STOPPED',reason}}
  resume(reason='OPERATOR_RESUME'){this.enabled=true;this.store.setSetting('canonical_consumer_enabled','true');this.state='WAITING_CANONICAL_REQUEST';this.lastDecision={stage:'RESUMED',reason}}
+ // Manual, paused-only reconciliation of ALREADY DELIVERED responses.
+ // No browser request, ingress, panel mutation or new external send.
+ async reconcileReceiptsOnly({limit=32}={}){
+  if(!Number.isSafeInteger(limit)||limit<1||limit>32)
+   throw Error('CANONICAL_RECEIPT_ONLY_BOUND_INVALID');
+  if(this.running||this.enabled)
+   throw Error('CANONICAL_RECEIPT_ONLY_REQUIRES_PAUSED_EXCLUSIVE_CONSUMER');
+  const unresolved=Object.entries(this.dispatchMap)
+   .filter(([,entry])=>entry&&UNRESOLVED_SEND_STATES.has(entry.state));
+  const outcome=(result,n=0)=>({
+   result,unresolved:unresolved.length-n,reconciled:n,
+   external_send_count:0,authority_effect:'NONE',consumer_state:'STOPPED'
+  });
+  if(unresolved.length>limit)return outcome('BLOCKED_RECEIPT_ONLY_BATCH_LIMIT');
+  if(unresolved.length===0)return outcome('PASS_ALREADY_RECONCILED');
+  this.running=true;
+  try{
+   const plans=[];
+   for(const [requestId,prior] of unresolved){
+    if(!/^saas-[A-Za-z0-9-]+$/.test(requestId))
+     return outcome('BLOCKED_RECEIPT_ONLY_REQUEST_ID');
+    const broker=await this.mc('/api/v3/saas-broker/requests/'+encodeURIComponent(requestId));
+    if(!receiptConfirmed(broker,requestId))
+     return outcome('BLOCKED_RECEIPT_ONLY_UNVERIFIED_RESPONSE');
+    if((prior.response_digest&&prior.response_digest!==broker.response_digest)||
+       (prior.receipt_digest&&prior.receipt_digest!==broker.receipt_digest))
+     return outcome('BLOCKED_RECEIPT_ONLY_DIGEST_CONFLICT');
+    plans.push([requestId,{
+     ...prior,state:'RECONCILED',
+     response_digest:broker.response_digest,
+     receipt_digest:broker.receipt_digest,
+     receipt_reconciliation:'EXACT_CANONICAL_BROKER_READBACK_NO_SEND',
+     observed_at:this.now()
+    }]);
+   }
+   const next={...this.dispatchMap};
+   for(const [id,item] of plans)next[id]=item;
+   // Exactly ONE local durable setting update after ALL remote receipts validate.
+   saveJson(this.store,'canonical_dispatch_map',next);
+   this.dispatchMap=next;
+   this.state='STOPPED';
+   this.lastDecision={stage:'EXACT_RECEIPTS_ONLY_RECONCILED',
+    count:plans.length,external_send_count:0,authority_effect:'NONE'};
+   return outcome('PASS_RECEIPT_ONLY_RECONCILED',plans.length);
+  }finally{
+   this.running=false;
+  }
+ }
  _persist(){
   this.store.setSetting('canonical_ingress_cursor',String(this.cursor));
   saveJson(this.store,'canonical_turn_map',this.turnMap);

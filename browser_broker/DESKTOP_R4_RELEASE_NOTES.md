@@ -15,3 +15,11 @@ Observed Windows-host history: an earlier local E0R4 isolated Electron on port 8
 This branch is intended as a stacked draft PR targeting the validated PR #431 branch. Merge/rebase order must be controlled: first integrate PR #431, then currentness-rebase this PR and recalculate truth subject carriers after all other source changes. Do not erase historical source-package manifests R1/R2; R3 is a separate exact-byte successor and is SOURCE_ONLY_NOT_DEPLOYMENT.
 
 Effect closure: NO new Mission Control, no R24 worker restart, no SaaS backlog changes, no release source deployment. An operator-authorized native handoff of exact source, single-writer 8780 verification, and observed six-tab status remain separate follow-on gates.
+
+## Operator UX / archival successor (source candidate)
+
+The Cluster and System WebContentsView pages no longer reproduce the external tabs as internal duplicates. Cluster exposes overview/workers/logs/artifacts; System exposes machines/repositories/dependencies. The System machine-role inventory distinguishes one WINDOWS-MOON physical control domain from MOON, LION-AUTH-LAB, LAB-UBUNTU and LAB-DEBIAN logical WSL environments; documented roles are not falsely marked live or independent physical hosts. Archive and reasoning-lineage tools are versioned separately, with a first 28-terminal-mission immutable snapshot executed on the current LION-AUTH-LAB DB. No active assignment, bridge or SaaS pending turn was retired by this source change.
+
+## Canonical SaaS broker receipt-only reconciliation (source candidate)
+
+The Intelligence menu offers an operator-triggered exact-receipt-only reconciliation of earlier externally sent requests. No resend occurs, even if Model Chat displays SAAS_QUEUED or a user-facing delivery timeout. The consumer must remain STOPPED and independently check request_id, response_digest, receipt_digest and authority_effect NONE on Mission Control. The batch is bounded to 32 and committed to local broker state as one write only after every receipt verifies; any missing receipt fails closed without local progress. New supervisor handoffs are not covered by this operation.

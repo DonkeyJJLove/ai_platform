@@ -42,7 +42,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   const mediatorKey=process.env.LION_MEDIATOR_KEY_FILE?fs.readFileSync(process.env.LION_MEDIATOR_KEY_FILE,'utf8').trim():null;
   store=new Store(path.join(dir,'broker.db'),PROJECT);store.recover();
   const overviewFile=path.join(__dirname,'..','observability-preview','LION_Cluster_System_Tabs_Preview.html');
-  const overviewSha256='850d756bf1bd37bd6d879dc0f9994b1e7bad1857dd90fabed3f267f075b92b96';
+  const overviewSha256='e80ed7f07087194f0b051738147e6bf43a314e3e1ef935899986fa86a63eae01';
   const localFile=path.join(__dirname,'..','local-gpt.html');
   const localSha256='642bd04bfc9f8e7bc59c2bdac94cf18cd8207f9fadfd6e92afe99743d2e51468';
   const pinned={'desktop-read-model.cjs':'002986161495e6ebb2ae95f1bb2d569d86582635965a2bd9c1c9a5b2f105d62c','local-advisory.cjs':'9ca8278b2f70435e71689723bfb8e749d73166a775abf20749ae8870aa36e987','fleet-carrier-read-model.cjs':'6aa301a6d435ac2a7c20e12e9dad8ba5168b77cacdab9e0aefc4acf84856ae7c','observer-preload.cjs':'d8be9fbf23c3208d455fd584792ac8e7753a87cdbbd4ec1ab38458975f1b978c','local-preload.cjs':'79bc4b5d86fa853b725b05e89ce37b65527e0da1c8f1a5895e42a5485bf61322'};
@@ -201,6 +201,22 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
     unresolved_count:unresolved.length,upstream_state:upstream.state,
     upstream_pending:upstream.pending_count,authority_effect:'NONE'};
   };
+  // Existing exact Mission Control receipts can be acknowledged locally
+  // WITHOUT restarting the automatic sender or issuing new SaaS messages.
+  const reconcileExistingSaaSReceipts=async()=>{
+   const before=await inspectSaaS();
+   try{
+    const result=await canonicalConsumer.reconcileReceiptsOnly({limit:32});
+    const after=await inspectSaaS();
+    await showInfo('Odpowiedzi SaaS — tylko rekonsyliacja',
+     'Bez ponowienia wysyłki SaaS. Zmiana dotyczy wyłącznie lokalnego ledgeru.\n'+
+     JSON.stringify({result,before,after},null,2));
+   }catch(error){
+    await showInfo('Odpowiedzi SaaS — NIEUZGODNIONE',
+      'Nie ponowiono żądania. Wynik UNKNOWN — przeprowadź niezależny odczyt ledgeru.\n'+
+      String(error?.name||'ERROR').slice(0,100));
+   }
+  };
   const safeResume=async()=>{
    const snapshot=await inspectSaaS();
    if(snapshot.unresolved_count||snapshot.upstream_pending!==0||snapshot.upstream_state==='UNAVAILABLE'){
@@ -237,6 +253,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
     {type:'separator'},
     {label:'Sprawdź lokalny model',click:async()=>showInfo('Local GPT',JSON.stringify(await localAdvisory.status(),null,2))},
     {label:'Stan canonical SaaS bridge',click:async()=>showInfo('SaaS / Model Chat',JSON.stringify(await inspectSaaS(),null,2))},
+    {label:'Rozlicz istniejące receipty SaaS (bez wysyłania)',click:reconcileExistingSaaSReceipts},
     {label:'Wznów relay po rozliczeniu turnów',click:safeResume},
     {label:'Wstrzymaj automatyczny relay',click:()=>canonicalConsumer?.stop('LOCAL_OPERATOR_MENU')},
     {label:'Przejdź do ChatGPT SaaS',click:()=>selectRightTab('saas')}

@@ -1,209 +1,219 @@
 <!doctype html>
-<html lang="pl">
-<head>
-<meta charset="utf-8">
+<html lang="pl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'">
-<title>LION • Cluster / System — obserwacja źródłowa</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; form-action 'none'; base-uri 'none'">
+<title>LION — operator read-only observability</title>
 <style>
 :root{color-scheme:dark;font-family:Segoe UI,Inter,Arial,sans-serif;background:#08131c;color:#e4f1fa}
-*{box-sizing:border-box}body{margin:0}header{padding:22px 28px;background:#0a1a29;border-bottom:1px solid #274b61}
-header h1{margin:0 0 4px;font-size:23px;letter-spacing:.03em}header p{margin:0;color:#90b0c6;font-size:13px}
-.tabbar{display:flex;gap:12px;padding:13px 26px;background:#081826;border-bottom:1px solid #31516a;position:sticky;top:0;z-index:1}
-.tabbar button{padding:10px 18px;border-radius:7px;border:1px solid #34566f;background:#10273a;color:#d0e4ef;cursor:pointer;font-size:14px}
-.tabbar button.active{background:#135276;border-color:#30a4e6;color:white}
-main{padding:22px 28px;max-width:1400px;margin:auto}
-.meta{font-size:12px;color:#a2b9cb;line-height:1.6;margin-bottom:16px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:14px 0 24px}
-.card{background:#102231;border:1px solid #26465c;border-radius:9px;padding:16px}
-.card .value{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;margin:5px 0}
-.card .caption{font-size:12px;color:#9ab5c7}
-section{background:#0e1e2d;border:1px solid #26465c;border-radius:10px;padding:18px;margin:18px 0}
-h2{font-size:17px;font-weight:600;margin:0 0 14px;color:#c3eaff}
-h3{font-size:14px;font-weight:600;color:#b5d6ea}
-.pill{display:inline-block;font-size:11px;padding:3px 8px;border:1px solid #405469;border-radius:20px;margin-left:8px}
-.good{color:#79d6ab}.warn{color:#f9c975}.muted{color:#9ab2c2}
-.tablewrap{overflow:auto;max-height:350px;border:1px solid #29475b;border-radius:6px}
-table{border-collapse:collapse;width:100%;font-size:12px}th{text-align:left;background:#172d3f;color:#a7c3d6;position:sticky;top:0}
-th,td{padding:9px 10px;border-bottom:1px solid #253b4d;vertical-align:top}tr:hover{background:#163247}
-code{font-size:12px;color:#8ad2ed;word-break:break-all}
-.log{font-family:Consolas,monospace;white-space:pre-wrap;word-break:break-word;font-size:11px;padding:7px 9px;border-bottom:1px solid #213545;color:#adcadd}
-a{color:#7dcfff;text-decoration:none}a:hover{text-decoration:underline}
-.notice{color:#e9c682;background:#2d271a;border:1px solid #6b5530;border-radius:7px;padding:12px 14px;font-size:12px;line-height:1.7}
-.row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
-input{padding:9px;border:1px solid #38566a;background:#091722;color:#e4f1fa;border-radius:6px;min-width:250px}
-footer{font-size:11px;color:#8295a5;padding:18px 28px;border-top:1px solid #244157}
-</style>
-</head>
-<body>
-<header><h1>LION OBSERVABILITY <span class="pill">SOURCE SNAPSHOT</span></h1>
-<p>Operator Desktop • podgląd materialnych workerów, misji, artefaktów i federacji</p></header>
-<div class="tabbar"><button id="clusterTab" class="active" type="button">Cluster / Logi / Artefakty</button>
-<button id="systemTab" type="button">System / 10 repozytoriów</button></div>
-<main><div id="provenance" class="meta"></div><div id="content"></div></main>
-<footer>Wariant demonstracyjny: dane są snapshotem, nie live-pollingiem. Żaden przycisk nie startuje workerów, nie wysyła SaaS ani nie przyznaje authority.</footer>
+*{box-sizing:border-box}body{margin:0}header{padding:18px 23px;background:#0a1a29;border-bottom:1px solid #26475c}
+header h1{margin:0 0 5px;font-size:19px;letter-spacing:.02em}header p{margin:0;color:#9eb8cb;font-size:12px;line-height:1.5}
+.subnav{display:flex;gap:8px;flex-wrap:wrap;padding:10px 22px;background:#0b1b29;border-bottom:1px solid #2c4f67;position:sticky;top:0;z-index:2}
+button{cursor:pointer;color:#dcf1fa;border:1px solid #315c77;background:#17384e;padding:8px 12px;border-radius:6px;font-size:12px}
+button.active{background:#17648d;border-color:#4bb4d8}button:disabled{opacity:.45;cursor:wait}
+main{margin:auto;max-width:1600px;padding:14px 22px}
+.meta{font-size:11px;color:#94b0c2;line-height:1.6;margin-bottom:10px;overflow-wrap:anywhere}
+.panel{background:#102332;border:1px solid #28506b;border-radius:9px;padding:15px;margin-bottom:15px}
+h2{font-size:16px;color:#c9eaff;margin:0 0 12px}h3{font-size:13px;color:#abdcf3;margin:12px 0 8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:9px;margin-bottom:12px}
+.card{background:#0c2030;border:1px solid #26465d;padding:12px;border-radius:7px}
+.card .value{font-size:22px;font-weight:600;overflow-wrap:anywhere}.card .key{font-size:11px;color:#a2c0d4}
+.card .desc{font-size:10px;color:#89a4b7;line-height:1.5}
+.warn{color:#e8c481}.good{color:#79d4ae}.muted{color:#9bb4c7}
+.notice{padding:12px;border-left:3px solid #ad8251;background:#28251d;border-radius:3px;font-size:12px;line-height:1.6;margin:8px 0 15px}
+.tablewrap{max-height:520px;overflow:auto;border:1px solid #27495c;border-radius:7px}
+table{border-collapse:collapse;width:100%;font-size:11px}
+th,td{text-align:left;vertical-align:top;border-bottom:1px solid #203e51;padding:8px;overflow-wrap:anywhere}
+th{position:sticky;top:0;background:#173246;color:#b2d8ea;z-index:1}tr:hover{background:#17334a}
+.log{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.5 Consolas,monospace;padding:7px;border-bottom:1px solid #244254}
+input{background:#081923;color:#d9ecf6;border:1px solid #375c71;border-radius:6px;padding:9px;max-width:100%;width:280px}
+footer{font-size:10px;color:#8aa1b3;padding:13px 22px;border-top:1px solid #244053}
+</style></head><body>
+<header><h1 id="modeTitle">LION CONTROL PLANE</h1><p id="modeSubtitle"></p></header>
+<nav id="subnav" class="subnav" aria-label="Funkcje wybranego widoku"></nav>
+<main><div id="provenance" class="meta"></div>
+<div class="panel">
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+    <strong id="refreshTitle">Odczyt źródłowy</strong><button id="refresh" type="button">Odśwież obserwację</button>
+  </div>
+  <p id="freshness" class="meta"></p>
+</div>
+<div id="content"></div>
+</main>
+<footer>MISSION AUTHORITY ≠ HEALTH ≠ SOURCE SNAPSHOT. Żaden widok nie uruchamia workerów, nie ponawia żądań SaaS i nie nadaje authority.</footer>
 <script id="observations" type="application/json">{"schema":"lion.desktop-observability-preview/v1","generated_at":"2026-10-08T16:54:01.369239+00:00","source_class":"MIXED_LIVE_OBSERVATIONS_AND_STORED_SOURCE_BOUND_READBACK","source_lines":{"docker":"MOON docker ps -a exact read at generated_at","mat12":"WINDOWS_MOON material worker health file read at generated_at","mission_control":"MOON 8766 GET /health and GET /api/v3/missions/recent","broker":"MOON 8766 GET /api/v3/saas-broker/status","bridge":"MOON 8780 GET /health via read-only bridge","artifacts":"LION-AUTH-LAB mission-control-v3.db query-only earlier 2026-10-08 (not live refreshed here)","federation":"10 independent GitHub default-branch commit observations earlier 2026-10-08","launch_log":"WINDOWS_MOON desktop launcher log read at generated_at"},"cluster":{"docker_total":94,"material_worker_count":32,"material_worker_states":{"exited":32},"workers":[{"name":"lion-r24-md001","state":"exited","id_prefix":"4d7d3e07e7bb","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md002","state":"exited","id_prefix":"353c9520504c","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md003","state":"exited","id_prefix":"4bb48aed2410","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md004","state":"exited","id_prefix":"042fa3e16beb","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md005","state":"exited","id_prefix":"0cfa6109ba58","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md006","state":"exited","id_prefix":"29e005eea024","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md007","state":"exited","id_prefix":"cc30bbb62063","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md008","state":"exited","id_prefix":"9d787744eed8","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md009","state":"exited","id_prefix":"d9bfcaf3260d","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md010","state":"exited","id_prefix":"a6a8e9f151ba","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md011","state":"exited","id_prefix":"4fa091ecdfc7","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md012","state":"exited","id_prefix":"2c8147c67e02","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md013","state":"exited","id_prefix":"34747bd2948c","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md014","state":"exited","id_prefix":"1f36d29c5365","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md015","state":"exited","id_prefix":"87b9bc9a8652","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md016","state":"exited","id_prefix":"c7d8e2dd2ce3","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md017","state":"exited","id_prefix":"da475402b10a","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md018","state":"exited","id_prefix":"dec43ebf67ed","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md019","state":"exited","id_prefix":"f9611512cb59","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md020","state":"exited","id_prefix":"f315dab95d99","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md021","state":"exited","id_prefix":"3fe57c00e592","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md022","state":"exited","id_prefix":"9b81e0784364","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md023","state":"exited","id_prefix":"34a099699829","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md024","state":"exited","id_prefix":"89a100b9b91e","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md025","state":"exited","id_prefix":"49041f295fee","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md026","state":"exited","id_prefix":"dfd2e6236bed","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md027","state":"exited","id_prefix":"e5768f88681a","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md028","state":"exited","id_prefix":"bf0dfeea35f6","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md029","state":"exited","id_prefix":"474cb759543b","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md030","state":"exited","id_prefix":"9fe2e8e4a4e0","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md031","state":"exited","id_prefix":"c4cd8f7bc72a","status":"Exited (137) 4 hours ago"},{"name":"lion-r24-md032","state":"exited","id_prefix":"203dd870bef8","status":"Exited (137) 4 hours ago"}],"logical_helpers":[{"name":"MAT01","state":"READY","pid":37368,"observed_at":"2026-10-08T16:54:00.295241+00:00"},{"name":"MAT02","state":"READY","pid":23304,"observed_at":"2026-10-08T16:54:00.297263+00:00"},{"name":"MAT03","state":"READY","pid":49480,"observed_at":"2026-10-08T16:54:00.295784+00:00"},{"name":"MAT04","state":"READY","pid":48928,"observed_at":"2026-10-08T16:54:00.378272+00:00"},{"name":"MAT05","state":"READY","pid":36464,"observed_at":"2026-10-08T16:54:00.382536+00:00"},{"name":"MAT06","state":"READY","pid":46432,"observed_at":"2026-10-08T16:54:00.385315+00:00"},{"name":"MAT07","state":"READY","pid":49776,"observed_at":"2026-10-08T16:54:00.378007+00:00"},{"name":"MAT08","state":"READY","pid":33440,"observed_at":"2026-10-08T16:54:00.385619+00:00"},{"name":"MAT09","state":"READY","pid":21908,"observed_at":"2026-10-08T16:54:00.385544+00:00"},{"name":"MAT10","state":"READY","pid":32192,"observed_at":"2026-10-08T16:54:00.380507+00:00"},{"name":"MAT11","state":"READY","pid":41236,"observed_at":"2026-10-08T16:54:00.383779+00:00"},{"name":"MAT12","state":"READY","pid":17416,"observed_at":"2026-10-08T16:54:00.384965+00:00"}],"mission_control":{"status":"ok","mission_id":"LION-COOPERATIVE-PRODUCTION-PILOT-R3","authority_effect":"NONE"},"missions_recent":[{"mission_id":"LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3","state":"STOPPED","runtime_state":"K3S_NOT_RUNNING","materialized":0,"ready":0},{"mission_id":"LION-COOPERATIVE-PRODUCTION-PILOT-R1","state":"AUTHORIZED","runtime_state":"NOT_STARTED","materialized":0,"ready":0},{"mission_id":"LION-COOPERATIVE-PRODUCTION-PILOT-R3","state":"REGISTERED","runtime_state":"NOT_STARTED","materialized":0,"ready":0},{"mission_id":"LION-R24-PROTOCOL-COGNITIVE-FANOUT-CANARY-R2","state":"COMPLETE","runtime_state":"CANARY_PASS_8_OF_8","materialized":4,"ready":4},{"mission_id":"LION-R24-OTP-PREDICATE-LIVE-DEPLOY-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"E3C-SUPERVISOR-ADAPTER-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"E3C-PR-CONSOLIDATION-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"LION-R23-DYNAMIC-76L32M-CANARY","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"LION-R23-MATERIAL-SANDBOX-CANARY","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"LION-AUTO-CF2269C51B8AB8A01AD9AC2A","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":32,"ready":32},{"mission_id":"LION-OPERATOR-SWARM-COMMUNICATION-TEST-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":0,"ready":0},{"mission_id":"LION-POST-ASTRA-SAAS-TRANSPORT-TRUTH-REACQUIRE-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":64,"ready":64},{"mission_id":"LION-CONTROL-PLANE-PANEL-BROKER-REPAIR-SUCCESSOR-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":64,"ready":64},{"mission_id":"LION-CONTROL-LPCL-PANEL-BROKER-RECON-AND-LANGUAGE-INTELLIGENCE-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":64,"ready":64},{"mission_id":"LION-GENERIC-LPCL-MISSION-EXECUTION-ADAPTER-REPAIR-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":64,"ready":64},{"mission_id":"LION-GLOBAL-DRIVER-BOOTSTRAP-128L64M-R1","state":"COMPLETE","runtime_state":"DRIVER_COMPLETE","materialized":64,"ready":64}],"saas_broker":{"state":"PENDING_HANDOFF","pending_count":4},"cognitive_bridge":{"status":"ok","authority_effect":"NONE"},"desktop":{"release":"E0_RECOVERY_R2","saas_auto_send":"PAUSED","browser_port":8794,"control_panel_port":8780},"launch_log_tail":["2026-10-08T11:33:15.6717790Z ELECTRON_START source=panel-master-b6cc132-r1 panel=8780 mc=8766","2026-10-08T11:33:17.1300418Z ELECTRON_READY pid=31040 focused=True","2026-10-08T16:09:40.9946835Z ERROR PANEL_8780_SOURCE_NOT_B6_RELEASE","2026-10-08T16:09:46.5489571Z ERROR PANEL_8780_SOURCE_NOT_B6_RELEASE","2026-10-08T16:09:59.1587922Z ERROR PANEL_8780_NOT_RUNNING","2026-10-08T16:11:24.9283811Z ERROR PANEL_8780_SOURCE_NOT_B6_RELEASE","2026-10-08T16:11:44.6138593Z ERROR PANEL_8780_SOURCE_NOT_B6_RELEASE","2026-10-08T16:25:57.9559881Z ERROR PANEL_8780_NOT_RUNNING","2026-10-08T16:41:02.0249249Z ELECTRON_START source=panel-master-e0e979d-r1 browser=RECOVERY_E0R2 SaaS=PAUSED panel=8780 mc=8766","2026-10-08T16:41:03.3862508Z ELECTRON_READY pid=43596 focused=True","2026-10-08T16:44:56.4613236Z VALIDATE_ONLY source=E0 browser=RECOVERY_R2 saas_auto_dispatch=PAUSED","2026-10-08T16:46:44.2024347Z ALREADY_RUNNING pid=43596 focused=True"],"historical_artifact_metadata":{"count":95,"type_counts":{"RECON_PHASE_SUMMARY":22,"RECON_EVIDENCE_BUNDLE":22,"PHASE_CURRICULUM_LESSON":13,"CONTROL_PLANE_RECON_BASELINE_PRE":13,"LOCAL_RECON_ANALYSIS":12,"PHASE_CURRICULUM_RUN":9,"SUCCESSOR_REPAIR_LPCL_PROPOSAL":1,"LANGUAGE_GAP_MATRIX":1,"CONTROL_PLANE_RECON_BASELINE_POST":1,"CONTROL_PLANE_INTELLIGENCE_BUNDLE":1},"application_factory_mission_artifact_count":0,"content_access":"NOT_EXPOSED_BY_PREVIEW"}},"federation":{"repository_count":10,"repositories":[{"name":"ai_platform","branch":"master","head_sha":"e0e979d5affca433743dc3eb2db8ed7cc7b40374","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"swarm","branch":"master","head_sha":"91b0a4174300b5efb3e6072b44ad323136a77337","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"HA2D","branch":"master","head_sha":"f41cd0f089b714c9474a1f11757fc8c9bbcf1358","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"mosaic_lab_pro.py","branch":"main","head_sha":"94c141c9f0bd8830bb9b93f11561056c629a5607","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"glitchlab","branch":"master","head_sha":"0afffd9ac6e0d346735615352fba9a43791cb017","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"hipotezy_nadawcze_LLM","branch":"main","head_sha":"25b432b7a57b83e0a97387bce4fce45eab5c15c9","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"chunk-chunk","branch":"master","head_sha":"b8327059360b675d01d091d70ef3eaef17ed1972","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"sbom","branch":"main","head_sha":"48aab54cc260bfbfea4881f7a6f264caef814440","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"SymulacjaKaskadySieciowej","branch":"main","head_sha":"0a9413f36ee8cf7684bcb77f42abcaffcf59a60d","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"},{"name":"writeups","branch":"master","head_sha":"adff63c38f2c83ab3f8d37e7e802d5209b59faad","ref_source":"GITHUB_DEFAULT_BRANCH_OBSERVED"}]},"status":"READ_ONLY_STATIC_SNAPSHOT_NOT_LIVE_TAB","authority_effect":"NONE","execution_effect":"NONE"}</script>
 <script>
 'use strict';
-const data=JSON.parse(document.getElementById('observations').textContent);
-const $=(t,cl,txt)=>{const x=document.createElement(t);if(cl)x.className=cl;if(txt!==undefined)x.textContent=String(txt);return x};
-const block=(parent,child)=>{parent.appendChild(child);return child};
-const cell=(row,tag,value)=>block(row,$(tag,'',value==null?'—':value));
-const createTable=(columns,records)=>{
- const outer=$('div','tablewrap'),table=block(outer,$('table'));
- const header=block(block(table,$('thead')),$('tr'));
- for(const c of columns)cell(header,'th',c[0]);
- const body=block(table,$('tbody'));
- for(const obj of records){const tr=block(body,$('tr'));for(const c of columns)cell(tr,'td',c[1](obj))}
- return outer;
-};
-const section=(title,root)=>{const el=block(root,$('section'));block(el,$('h2','',title));return el};
-const card=(title,value,desc,root)=>{
- const el=block(root,$('div','card'));
- block(el,$('div','caption',title));block(el,$('div','value',value));
- block(el,$('div','caption',desc));return el;
-};
-function renderCluster(target){
- const c=data.cluster;
- const stats=block(target,$('div','cards'));
- card('Docker MD',''+c.material_worker_count,(c.material_worker_states.exited||0)+' zaparkowanych',stats);
- card('Helpery MAT',''+c.logical_helpers.length,'osobna warstwa narzędzi',stats);
- card('Misje widoczne',''+c.missions_recent.length,'nie oznacza aktywnych wykonań',stats);
- card('Artefakty w ledgerze',''+c.historical_artifact_metadata.count,'0 dla Application Factory',stats);
- const note=block(target,$('div','notice','Dane nie dowodzą gotowości produkcyjnej. Workery MD są zaparkowane. Historyczne artefakty mają metadane, lecz pobieranie ich bajtów wymaga osobnego uwierzytelnionego API. SaaS auto-dispatch: PAUSED.'));
- const h=section('Kontrolery i źródła',target);
- for(const [name,v] of [
-  ['Mission Control 8766',c.mission_control.status],
-  ['Cognitive Bridge 8780',c.cognitive_bridge.status],
-  ['SaaS handoff',c.saas_broker.state],
-  ['SaaS pending',c.saas_broker.pending_count],
-  ['Desktop',c.desktop.release],
- ])block(h,$('p','',name+': '+String(v??'UNKNOWN')));
- const w=section('Materialne kontenery — 32',target);
- block(w,createTable([['Worker',r=>r.name],['Docker state',r=>r.state],['ID',r=>r.id_prefix],['Status',r=>r.status]],c.workers));
- const m=section('MAT helpery — logika i narzędzia',target);
- block(m,createTable([['Helper',r=>r.name],['Stan z heartbeat',r=>r.state],['PID',r=>r.pid],['Odczyt',r=>r.observed_at]],c.logical_helpers));
- const artifacts=section('Artefakty — aktualnie indeks metadanych',target);
- const types=Object.entries(c.historical_artifact_metadata.type_counts).sort((a,b)=>b[1]-a[1]).map(([name,count])=>({name,count}));
- block(artifacts,createTable([['Typ artefaktu',r=>r.name],['Liczba historycznych',r=>r.count]],types));
- block(artifacts,$('p','muted','CONTENT BYTES: NOT_EXPOSED_BY_PREVIEW — brak ścieżki pobierania i powiązania z Application Factory.'));
- const mission=section('Misje z Mission Control',target);
- block(mission,createTable([['Mission ID',r=>r.mission_id],['Stan',r=>r.state],['Runtime',r=>r.runtime_state],['Materialized / Ready',r=>String(r.materialized)+' / '+String(r.ready)]],c.missions_recent));
- const logs=section('Log uruchamiania Desktop — tylko bezpieczny wycinek',target);
- for(const s of c.launch_log_tail)block(logs,$('div','log',s));
- block(logs,$('p','muted','Przegląd pełnych logów workera i artefaktów nie jest jeszcze podłączony do uwierzytelnionego read-modelu.'));
-}
-function renderSystem(target){
- const f=data.federation;
- const stats=block(target,$('div','cards'));
- card('Repozytoria federacji',f.repository_count,'źródło: GitHub default branch',stats);
- card('Kontrola zmian','SOURCE ONLY','brak możliwości merge w podglądzie',stats);
- const n=block(target,$('div','notice','To nie jest subskrypcja GitHub ani automatyczna synchronizacja. Pokazano SHA zaobserwowane podczas przygotowania snapshotu. Ich aktualność należy ponownie sprawdzić przed zależnym efektem.'));
- const s=section('Federation Source Vector — 10 repozytoriów',target);
- const inp=block(s,$('input'));inp.type='search';inp.placeholder='Filtruj repozytorium';
- const host=block(s,$('div'));host.style.marginTop='12px';
- function redraw(){
-  host.replaceChildren();
-  const chosen=f.repositories.filter(x=>x.name.toLowerCase().includes(inp.value.trim().toLowerCase()));
-  const tab=createTable([['Repozytorium',r=>r.name],['Gałąź',r=>r.branch],['HEAD',r=>r.head_sha],['Klasa',r=>r.ref_source]],chosen);
-  host.appendChild(tab);
-  for(const record of chosen){
-   const p=block(host,$('p','muted'));
-   const a=block(p,$('a','',record.name+' · GitHub commit'));
-   a.href='https://github.com/DonkeyJJLove/'+encodeURIComponent(record.name)+'/commit/'+record.head_sha;
-   a.target='_blank';a.rel='noopener noreferrer';
-  }
+const snapshot=JSON.parse(document.getElementById('observations').textContent);
+const mode=location.hash==='#system'?'system':'cluster';
+const subtabs=mode==='cluster'
+ ?[['overview','Przegląd'],['workers','Workery'],['logs','Logi'],['artifacts','Artefakty']]
+ :[['machines','Maszyny'],['repositories','Repozytoria'],['dependencies','Zależności']];
+let active=subtabs[0][0],current=null,busy=false;
+const $=id=>document.getElementById(id);
+const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n};
+const add=(parent,child)=>{parent.appendChild(child);return child};
+const text=(p,s,cls='muted')=>add(p,node('p',cls,s));
+const panel=(p,title)=>{const n=add(p,node('section','panel'));add(n,node('h2','',title));return n};
+function table(p,cols,rows){
+ const box=add(p,node('div','tablewrap')),tab=add(box,node('table'));
+ const thead=add(add(tab,node('thead')),node('tr'));
+ for(const col of cols)add(thead,node('th','',col[0]));
+ const tbody=add(tab,node('tbody'));
+ for(const item of rows){
+  const row=add(tbody,node('tr'));
+  for(const col of cols)add(row,node('td','',col[1](item)??'—'));
  }
- inp.addEventListener('input',redraw);redraw();
+ return box;
 }
-function choose(which){
- document.getElementById('clusterTab').classList.toggle('active',which==='cluster');
- document.getElementById('systemTab').classList.toggle('active',which==='system');
- const target=document.getElementById('content');target.replaceChildren();
- document.getElementById('provenance').textContent=
-  'Snapshot '+data.generated_at+' · '+data.source_class+' · authority_effect=NONE · '+(which==='cluster'?'MOON / Windows / WSL':'GitHub / federation');
- if(which==='cluster')renderCluster(target);else renderSystem(target);
+function cards(p,items){
+ const wrap=add(p,node('div','cards'));
+ for(const [key,val,desc] of items){
+  const c=add(wrap,node('div','card'));
+  add(c,node('div','key',key));add(c,node('div','value',val));
+  add(c,node('div','desc',desc));
+ }
 }
-document.getElementById('clusterTab').addEventListener('click',()=>choose('cluster'));
-document.getElementById('systemTab').addEventListener('click',()=>choose('system'));
-choose(location.hash==='#system'?'system':'cluster');
-const liveRefresh=document.createElement('section');
-const liveTitle=document.createElement('h2');liveTitle.textContent='Bieżący odczyt kanoniczny — źródła i synchronizacja';
-const liveStamp=document.createElement('p');liveStamp.className='muted';
-const liveStatus=document.createElement('div');
-const liveButton=document.createElement('button');liveButton.type='button';liveButton.textContent='Odśwież teraz';
-liveRefresh.append(liveTitle,liveStamp,liveButton,liveStatus);
-document.getElementById('content').prepend(liveRefresh);
-let lastObservation=null,refreshPending=false;
+const live=()=>current?.schema==='lion.operator-read-model/v1'&&current.authority_effect==='NONE'?current:null;
+const safeValue=v=>v===null||v===undefined?'UNKNOWN':String(v);
+function missionRows(){
+ const l=live();
+ return l?.missions||snapshot.cluster.missions_recent||[];
+}
+function renderOverview(p){
+ const l=live(),endpoint=l?.endpoints||{};
+ cards(p,[
+  ['Mission Control',safeValue(endpoint.mission_control||snapshot.cluster.mission_control.status),'GET owner health'],
+  ['LPCL / Model Chat',safeValue(endpoint.panel||'UNKNOWN'),'stan kontrolera, nie proof transportu'],
+  ['Local GPT',safeValue(endpoint.model||'UNKNOWN'),'HTTP health, nie przyjęcie fazy'],
+  ['SaaS broker',safeValue(endpoint.broker_state||snapshot.cluster.saas_broker.state),'brak trwałej odpowiedzi ≠ pełna awaria'],
+  ['SaaS pending',safeValue(endpoint.broker_pending??snapshot.cluster.saas_broker.pending_count),'nie ponawiaj bez receipt'],
+  ['Misje',missionRows().length,'w tym nieaktywne']
+ ]);
+ text(p,'Aktualna diagnostyka to read-model, nie admission ani dowód wykonania misji.');
+ const ms=panel(p,'Misje — wskaźnik procesu');
+ table(ms,[['Misja',x=>x.mission_id],['Stan',x=>x.state],['Runtime',x=>x.runtime_state],['M / Ready',x=>safeValue(x.materialized)+' / '+safeValue(x.ready)]],missionRows());
+}
+function renderWorkers(p){
+ const observedFleet=live()?.material_workers||{};
+ const valid=observedFleet.carrier_digest_verified===true;
+ const rows=Array.isArray(observedFleet.workers)&&observedFleet.workers.length?observedFleet.workers:snapshot.cluster.workers;
+ cards(p,[
+  ['MD',''+rows.length,valid?'Odczyt ze zweryfikowanego nośnika':'Snapshot starszego odczytu'],
+  ['Currentness',safeValue(observedFleet.currentness||'STORED_ONLY'),'czas obserwacji: '+safeValue(observedFleet.observation_time||snapshot.generated_at)],
+  ['Runtime',safeValue(observedFleet.observed_runtime_state||'UNKNOWN'),'nie oznacza mission execution'],
+  ['Provider','NOT_ATTESTED','Nie przyznaje authority'],
+ ]);
+ const explain=panel(p,'Nośnik aktualności floty');
+ text(explain,'Źródło '+safeValue(observedFleet.source||'STORED_SNAPSHOT_NOT_LIVE_DOCKER')+
+  ' · carrier digest '+(valid?'ZWERYFIKOWANY':'BRAK POTWIERDZENIA')+
+  ' · '+safeValue(observedFleet.currentness)+' · ready '+safeValue(observedFleet.ready)+
+  '/'+safeValue(observedFleet.materialized)+
+  ' · provider/admission NIEPOTWIERDZONE'+(observedFleet.reason?' · '+observedFleet.reason:''));
+ table(explain,[['Worker',w=>w.worker_id||w.name],['Kontener',w=>w.container_state||w.state],
+  ['Ready',w=>w.ready===true?'TAK':'NIE'],['Heartbeat',w=>w.heartbeat_observed_at||w.observed_at],
+  ['ID',w=>w.container_id_prefix||w.id_prefix]],rows);
+ const mat=panel(p,'MAT helpers — inna klasa niż MD');
+ table(mat,[['MAT',w=>w.name],['State',w=>w.state],['PID',w=>w.pid],['Źródło',w=>w.observed_at]],snapshot.cluster.logical_helpers||[]);
+ text(mat,'MAT helper ≠ Docker MD. Zapis heartbeat z wcześniejszego snapshotu, nie aktualna certyfikacja wykonawcy.');
+}
+function renderLogs(p){
+ const logs=panel(p,'Logi — ograniczony odczyt launchera');
+ const values=live()?.logs?.lines||snapshot.cluster.launch_log_tail||[];
+ for(const item of values)add(logs,node('div','log',item));
+ text(logs,'Nie jest to przegląd wszystkich logów workerów. Wymagany odrębny, uwierzytelniony read-model z Mission Control / MAT; renderer nie otrzymuje dostępu do systemu plików.');
+}
+function renderArtifacts(p){
+ const a=snapshot.cluster.historical_artifact_metadata;
+ cards(p,[['Archiwalne metadane',a.count,'snapshot, nie aktualna produkcja'],['Nowe artefakty misji','UNKNOWN','wymagany odczyt canonical mission ledger']]);
+ const s=panel(p,'Indeks historycznych typów');
+ const rows=Object.entries(a.type_counts).sort((x,y)=>y[1]-x[1]).map(([kind,total])=>({kind,total}));
+ table(s,[['Typ',x=>x.kind],['Liczba',x=>x.total]],rows);
+ text(s,'Bajty i download artefaktów: NOT_EXPOSED_BY_READ_MODEL. Archiwum misji znajduje się u właściciela Mission Control i wymaga osobnego endpointu oraz prawidłowego odczytu.');
+}
+const machines=[
+ {id:'WINDOWS-MOON',type:'PHYSICAL_HOST',role:'Fizyczna domena sterowania; GPU i natywne Local GPT 8772, panel 8780, LION Desktop',domain:'WINDOWS-MOON',status:'LOOPBACK_ENDPOINT_OBSERVATION_ONLY'},
+ {id:'MOON',type:'WSL2 / logical',role:'Observer/konsument i środowisko Docker 32 MD; źródła Git i aktualność floty',domain:'WINDOWS-MOON',status:'SOURCE_PLUS_FLEET_CARRIER'},
+ {id:'LION-AUTH-LAB',type:'WSL2 / logical',role:'Mission Control 8766, kanoniczna baza, receipts i archiwum dowodowe',domain:'WINDOWS-MOON',status:'MC_API_HEALTH_OBSERVED'},
+ {id:'LAB-DEBIAN',type:'WSL2 / logical',role:'LAB_BOUNDED_PRODUCER; środowisko ograniczonego wykonania',domain:'WINDOWS-MOON',status:'DOCUMENTED_NOT_LIVE_REACQUIRED'},
+ {id:'LAB-UBUNTU',type:'WSL2 / logical',role:'LAB_INDEPENDENT_VERIFIER; logiczna rola niezależnej weryfikacji',domain:'WINDOWS-MOON',status:'DOCUMENTED_NOT_LIVE_REACQUIRED'},
+];
+function renderMachines(p){
+ cards(p,[['Fizyczne domeny','1','Wspólna domena Windows-MOON'],['Środowiska w mapie',machines.length,'1 fizyczny + 4 logiczne'],['Wersja obserwacji','MIXED','role historyczne, endpointy live']]);
+ const s=panel(p,'Maszyny, środowiska i ich funkcje');
+ table(s,[['Tożsamość',x=>x.id],['Klasa',x=>x.type],['Funkcja',x=>x.role],['Domena fizyczna',x=>x.domain],['Dowód',x=>x.status]],machines);
+ add(s,node('div','notice','MOON, LAB-DEBIAN, LAB-UBUNTU i LION-AUTH-LAB są odrębnymi tożsamościami logicznymi WSL. Nie dowodzą czterech niezależnych domen awarii. Źródło ról: docs/HOSTS_AND_LABS.md; stan live tylko przy wskazanych endpointach.'));
+}
+function renderRepositories(p){
+ const rs=live()?.repos?.repositories||snapshot.federation.repositories;
+ const s=panel(p,'Federacja — zapisane HEAD-y (nie live GitHub)');
+ const filter=add(s,node('input'));filter.type='search';filter.placeholder='Znajdź repozytorium';
+ text(s,'STORED_GITHUB_HEADS_NOT_LIVE · HEAD-y ze snapshotu '+safeValue(live()?.repos?.snapshot_at||snapshot.generated_at)+
+ ' · pobierz świeży Git-currentness przed consequential effect.');
+ const holder=add(s,node('div'));holder.style.marginTop='10px';
+ function draw(){
+  holder.replaceChildren();
+  const keep=rs.filter(x=>String(x.name).toLowerCase().includes(filter.value.trim().toLowerCase()));
+  table(holder,[['Repozytorium',x=>x.name],['Gałąź',x=>x.branch],
+    ['HEAD',x=>x.head_sha],['Źródło',x=>x.ref_source||'STORED_SOURCE']],keep);
+ }
+ filter.addEventListener('input',draw);draw();
+}
+function renderDependencies(p){
+ const links=[
+  ['WINDOWS-MOON','Local GPT 8772','Natywny model','HTTP health; model inference/mission binding osobne'],
+  ['WINDOWS-MOON','LPCL Panel 8780','Kanoniczny Model Chat','Właściciel rozmów/binding'],
+  ['LION-AUTH-LAB','Mission Control 8766','Misje i phase contracts','Brak drivera w REGISTERED pilot ≠ workery wykonują'],
+  ['MOON WSL','Docker MD 32','Flota materialna','Carrier READY ≠ runtime admission'],
+  ['LAB-DEBIAN','LAB-UBUNTU','Producer / verifier','Role logiczne, test E2E nieudowodniony'],
+  ['ChatGPT SaaS','Canonical broker','Zewnętrzny handoff','PENDING_HANDOFF ≠ RECEIPT_RECONCILED']
+ ];
+ const s=panel(p,'Funkcjonalne zależności');
+ table(s,[['Producent',x=>x[0]],['Odbiorca',x=>x[1]],['Funkcja',x=>x[2]],['Granica dowodu',x=>x[3]]],links);
+ add(s,node('div','notice','Źródłowa mapa nie jest runtime topology atestation. Statusy są rozdzielone: źródło, health, binding, authority, material effect, receipt i weryfikacja.'));
+}
+function render(){
+ const content=$('content');content.replaceChildren();
+ $('provenance').textContent=(mode==='cluster'?'CLUSTER / MOON material execution':'SYSTEM / hosts + federation')+
+  ' · source snapshot '+snapshot.generated_at+
+  ' · live '+(live()?live().observed_at:'UNAVAILABLE')+' · authority NONE';
+ if(mode==='cluster'){
+  ({overview:renderOverview,workers:renderWorkers,logs:renderLogs,artifacts:renderArtifacts})[active](content);
+ }else{
+  ({machines:renderMachines,repositories:renderRepositories,dependencies:renderDependencies})[active](content);
+ }
+ const nav=$('subnav');nav.replaceChildren();
+ for(const [key,label] of subtabs){
+  const button=add(nav,node('button',key===active?'active':'',label));
+  button.type='button';button.setAttribute('aria-current',key===active?'page':'false');
+  button.addEventListener('click',()=>{active=key;render()});
+ }
+}
 async function refreshLive(){
- if(refreshPending)return;
- refreshPending=true;liveButton.disabled=true;
+ if(busy)return;
+ busy=true;$('refresh').disabled=true;
  try{
+  if(!window.lionObserver)throw Error('READ_MODEL_PRELOAD_MISSING');
   const value=await window.lionObserver.snapshot();
-  if(value?.schema!=='lion.operator-read-model/v1'||value.authority_effect!=='NONE')throw Error('READ_MODEL_IDENTITY_INVALID');
-  lastObservation=value;
-  liveStamp.textContent='Odczyt '+value.observed_at+' • '+value.data_class+' • authority NONE';
-  liveStatus.replaceChildren();
-  const cards=document.createElement('div');cards.className='cards';
-  for(const [key,val] of [
-   ['Mission Control',value.endpoints.mission_control],
-   ['LPCL / Model Chat',value.endpoints.panel],
-   ['Local GPT',value.endpoints.model],
-   ['SaaS broker',value.endpoints.broker_state],
-   ['SaaS pending',value.endpoints.broker_pending],
-   ['Misje widoczne',value.missions.length],
-  ])card(key,String(val??'UNKNOWN'),'odczyt bieżący; nie oznacza dopuszczenia efektów',cards);
-  liveStatus.appendChild(cards);
-  const info=document.createElement('p');info.className='muted';
-  const observedFleet=value.material_workers||{};
-  const workerStamp=observedFleet.observation_time||observedFleet.snapshot_at||'UNKNOWN';
-  info.textContent='Workery: '+String(observedFleet.source||'UNKNOWN')+
-   ', aktualność '+String(observedFleet.currentness||'UNKNOWN')+
-   ', obserwacja '+workerStamp+
-   '. Repozytoria: snapshot '+String(value.repos.snapshot_at||'UNKNOWN')+
-   '. Odczyt nie daje authority ani admission.';
-  liveStatus.appendChild(info);
-  if(value.scope==='cluster'){
-   const fleetHead=document.createElement('h3');fleetHead.textContent='Flota MD — kanoniczny nośnik aktualności';
-   liveStatus.appendChild(fleetHead);
-   const fleetExplanation=document.createElement('p');fleetExplanation.className='muted';
-   fleetExplanation.textContent='Źródło: '+String(observedFleet.source||'UNKNOWN')+
-    ' • '+String(observedFleet.currentness||'UNKNOWN')+
-    ' • digest: '+(observedFleet.carrier_digest_verified===true?'ZWERYFIKOWANY':'BRAK POTWIERDZENIA')+
-    ' • stan: '+String(observedFleet.observed_runtime_state||'UNKNOWN')+
-    ' • ready: '+String(observedFleet.ready??'—')+'/'+String(observedFleet.materialized??'—')+
-    ' • provider/admission: NIEPOTWIERDZONE'+
-    (observedFleet.reason?' • '+String(observedFleet.reason):'');
-   liveStatus.appendChild(fleetExplanation);
-   if(Array.isArray(observedFleet.workers)&&observedFleet.workers.length){
-    liveStatus.appendChild(createTable([
-     ['Worker',w=>w.worker_id||w.name],['Kontener',w=>w.container_state||w.state],
-     ['Gotowość z nośnika',w=>w.ready===true?'TAK':'NIE'],
-     ['Heartbeat',w=>w.heartbeat_observed_at||'—'],
-     ['Id kontenera',w=>w.container_id_prefix||w.id_prefix||'—'],
-    ],observedFleet.workers));
-   }
-   const title=document.createElement('h3');title.textContent='Aktualne misje (GET /api/v3/missions/recent)';
-   liveStatus.appendChild(title);
-   liveStatus.appendChild(createTable([['Misja',x=>x.mission_id],['Stan',x=>x.state],['Runtime',x=>x.runtime_state],['M / R',x=>x.materialized+' / '+x.ready]],value.missions));
-   const logHead=document.createElement('h3');logHead.textContent='Logi Desktop — aktualny, ograniczony odczyt';liveStatus.appendChild(logHead);
-   for(const line of value.logs.lines){const node=document.createElement('div');node.className='log';node.textContent=line;liveStatus.appendChild(node);}
-  }else{
-   const heading=document.createElement('h3');heading.textContent='Stan federacji: HEAD-y zapisane przy '+value.repos.snapshot_at;
-   liveStatus.appendChild(heading);
-   liveStatus.appendChild(createTable([['Repozytorium',x=>x.name],['Ref',x=>x.branch],['HEAD',x=>x.head_sha]],value.repos.repositories));
-   const note=document.createElement('p');note.className='muted';
-   note.textContent='Automatyczne odświeżanie dotyczy tylko kontrolerów live. Repozytoria wymagają ponownego GitHub-currentness przed zmianą.';
-   liveStatus.appendChild(note);
-  }
- }catch(e){
-  liveStamp.textContent='Bieżący read-model niedostępny: '+String(e?.message||e).slice(0,120);
- }finally{refreshPending=false;liveButton.disabled=false}
+  if(value?.schema!=='lion.operator-read-model/v1'||value.authority_effect!=='NONE')
+   throw Error('READ_MODEL_PROVENANCE_MISMATCH');
+  current=value;
+  $('freshness').textContent='Odczyt '+value.observed_at+
+   ' · '+value.data_class+' · CURRENTNESS depends on each source; no authority.';
+ }catch(error){
+  $('freshness').textContent='Bieżący read-model niedostępny: '+
+   String(error?.message||error).slice(0,120)+'; wyświetlany snapshot jest historyczny.';
+ }finally{
+  busy=false;$('refresh').disabled=false;render();
+ }
 }
-liveButton.addEventListener('click',refreshLive);
+$('modeTitle').textContent=mode==='cluster'?'LION CLUSTER — wykonawcy i dowody':'LION SYSTEM — maszyny i architektura';
+$('modeSubtitle').textContent=mode==='cluster'
+ ?'Material MD / MAT, logi i artefakty; bez przeskakiwania do SYSTEM'
+ :'Środowiska, funkcje, fizyczne domeny, federacja i zależności; bez przeskakiwania do CLUSTER';
+$('refreshTitle').textContent='Odczyt kanoniczny — '+(mode==='cluster'?'wykonanie':'federacja');
+$('refresh').addEventListener('click',refreshLive);
 window.addEventListener('lion-refresh',refreshLive);
+render();
 if(window.lionObserver){refreshLive();setInterval(refreshLive,30000);}
-else liveStamp.textContent='Live read-model niepołączony — poniżej widoczny wyłącznie historyczny snapshot.';
-
-</script>
-</body></html>
+else $('freshness').textContent='Brak read-modelu; historyczny snapshot dostępny wyłącznie do przeglądania.';
+</script></body></html>

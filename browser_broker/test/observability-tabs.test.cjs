@@ -84,6 +84,36 @@ test('expanded menu implements actual navigation and guarded SaaS relay',()=>{
   assert(main.includes("label:'"+group+"'"));
  assert(main.includes("snapshot.unresolved_count||snapshot.upstream_pending!==0"));
  assert(main.includes("canonicalConsumer?.resume('LOCAL_OPERATOR_MENU_EXACT_BOUNDED')"));
+ assert(main.includes('Rozlicz istniejące receipty SaaS (bez wysyłania)'));
+ assert(main.includes('canonicalConsumer.reconcileReceiptsOnly({limit:32})'));
  assert(main.includes('selectLeftTab(\'cluster\')'));
  assert(main.includes('selectRightTab(\'local\')'));
+});
+
+test('external Cluster/System tabs have domain-specific internal functions instead of duplicate navigation',()=>{
+ assert(overview.includes("const mode=location.hash==='#system'?'system':'cluster'"));
+ assert(overview.includes("['overview','Przegląd']"));
+ assert(overview.includes("['workers','Workery']"));
+ assert(overview.includes("['logs','Logi']"));
+ assert(overview.includes("['artifacts','Artefakty']"));
+ assert(overview.includes("['machines','Maszyny']"));
+ assert(overview.includes("['repositories','Repozytoria']"));
+ assert(overview.includes("['dependencies','Zależności']"));
+ assert(!overview.includes('id="clusterTab"')&&!overview.includes('id="systemTab"'));
+});
+test('System inventories logical environments and one shared physical failure domain',()=>{
+ const nodes=['WINDOWS-MOON','MOON','LION-AUTH-LAB','LAB-DEBIAN','LAB-UBUNTU'];
+ for(const n of nodes)assert(overview.includes(n),n);
+ assert(overview.includes("['Fizyczne domeny','1'"));
+ assert(overview.includes('DOCUMENTED_NOT_LIVE_REACQUIRED'));
+ assert(overview.includes('WSL2 / logical'));
+ assert(overview.includes('Domena fizyczna'));
+ assert(overview.includes('docs/HOSTS_AND_LABS.md'));
+ assert(!overview.includes('AUTORIZE_HOST_BY_MEMBERSHIP'));
+});
+test('subtabs preserve source currentness, do not mutate broker or load model tools',()=>{
+ assert(overview.includes('window.lionObserver.snapshot()'));
+ assert(overview.includes("value.authority_effect!=='NONE'"));
+ for(const disallowed of ['innerHTML','fetch(','docker stop','Stop-Process','lion_complete_turn'])assert(!overview.includes(disallowed));
+ assert(overview.includes('NOT_EXPOSED_BY_READ_MODEL'));
 });

@@ -56,7 +56,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertEqual(result["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(result["authority_effect"], "NONE")
         self.assertEqual(result["source_bytes"], "GIT_INDEX_BLOB")
-        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R3.json"))
+        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R4.json"))
 
     def test_source_successor_retains_historical_ccf_manifest_immutably(self):
         import subprocess
@@ -72,7 +72,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         ).stdout
         self.assertEqual(original.read_bytes(), tracked)
         source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R2.json")
+        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R3.json")
         self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(source["authority_effect"], "NONE")
 
@@ -103,6 +103,22 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
             ".github/workflows/lion-desktop-r4-node24.yml",
         }
         self.assertTrue(required.issubset(paths), sorted(required - paths))
+        self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
+        self.assertEqual(source["authority_effect"], "NONE")
+
+    def test_r4_archive_sources_and_operator_machine_navigation_are_pinned(self):
+        source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding='utf-8'))
+        paths = {x["path"] for x in source["files"]}
+        owners = {
+            "tools/lion_mission_evidence_archive_r1.py",
+            "tools/lion_reasoning_lineage_journal_r1.py",
+            "cyber_lion/tests/test_lion_mission_evidence_archive_r1.py",
+            "cyber_lion/tests/test_lion_reasoning_lineage_journal_r1.py",
+            "LION/architecture/v1_5/MISSION_EVIDENCE_ARCHIVE_R1.md",
+            "LION/panel/PANEL_OBSERVABILITY.md",
+            "browser_broker/observability-preview/LION_Cluster_System_Tabs_Preview.html",
+        }
+        self.assertTrue(owners.issubset(paths), sorted(owners-paths))
         self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(source["authority_effect"], "NONE")
 
