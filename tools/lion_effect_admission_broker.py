@@ -1802,6 +1802,9 @@ def mission_control_v3_stage_current_master(request:dict[str,Any])->dict[str,Any
  if set(request)!={"schema_version","request_id","operation","source_head","source_tree"}:
   raise Deny("MISSION_CONTROL_V3_STAGE_FIELD_SET")
  head,tree=_mission_control_v3_source_envelope(request)
+ prior_receipt=(MISSION_CONTROL_V3_DEPLOY_STATE/"receipts"/(request["request_id"]+".stage.json"))
+ if prior_receipt.exists():
+  raise Deny("MISSION_CONTROL_V3_STAGE_REQUEST_REPLAY")
  checkout=_mission_control_v3_checkout_current_master(head,tree)
  try:
   result=mission_control_v3_materialize_stage_from_checkout(
@@ -2237,6 +2240,7 @@ def handle(
                 "MISSION64_RESTART_ONE",
                 "MISSION64_VALIDATE",
                 "MISSION64_STOP",
+                "MISSION_CONTROL_V3_STAGE_CURRENT_MASTER",
                 "MISSION_CONTROL_V3_INSTALL",
                 "OPERATOR_INTERVENTION_DEPLOY",
                 "EPOCH3_M64_PRECHECK",
@@ -2356,6 +2360,9 @@ def handle(
         return read_evidence(
             target
         )
+
+    if operation == "MISSION_CONTROL_V3_STAGE_CURRENT_MASTER":
+        return mission_control_v3_stage_current_master(request)
 
     if operation == "MISSION_CONTROL_V3_INSTALL":
         return mission_control_v3_install(request)
