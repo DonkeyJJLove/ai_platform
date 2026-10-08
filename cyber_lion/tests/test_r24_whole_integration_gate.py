@@ -158,6 +158,17 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertFalse(result["match"])
         self.assertTrue(any(x["path"] == "<classification>" for x in result["mismatches"]))
 
+    def test_r24_integration_runs_node24_desktop_suite_on_candidate(self):
+        workflow = (
+            Path(__file__).resolve().parents[2]
+            / '.github' / 'workflows' / 'lion-r24-whole-integration-closure.yml'
+        ).read_text(encoding='utf-8')
+        self.assertIn('actions/setup-node@v4', workflow)
+        self.assertIn("node-version: '24'", workflow)
+        self.assertIn('npm ci --ignore-scripts --no-audit --no-fund', workflow)
+        self.assertIn('node --test', workflow)
+        self.assertIn('working-directory: browser_broker', workflow)
+
     def test_matrix_is_exactly_t01_through_t40(self):
         value = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
         tests = value["tests"]

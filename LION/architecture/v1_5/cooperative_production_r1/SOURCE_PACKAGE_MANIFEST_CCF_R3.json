@@ -9,7 +9,7 @@
     },
     {
       "path": ".github/workflows/lion-r24-whole-integration-closure.yml",
-      "sha256": "6d0bfe7c266dcd37e175f26eea2ade774b4309a31d8aa1d2a8c00fd1d296ca6e"
+      "sha256": "7670bb1542c25b37495743196694063f1d309b28c9604efb5758d65c4165e6b3"
     },
     {
       "path": "LION/panel/PANEL_ARCHITECTURE.md",
@@ -384,7 +384,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "d945616f38e00d1323d91fa64f7a0ce3b702ccbc32e962bff1da284f16550df8",
+  "package_digest": "40f3646190998363c4c16207177daa71400ea19f9ba6390c9f63584d6303730d",
   "authority_effect": "NONE",
   "supersedes": "SOURCE_PACKAGE_MANIFEST_CCF_R2.json"
 }
