@@ -21,7 +21,7 @@
     },
     {
       "path": "LION/panel/PANEL_ARCHITECTURE.md",
-      "sha256": "2e7caa48a0b2822fce2794da98675255ebab0b3ae5f9238fe821f1f69e88f261"
+      "sha256": "4fe7b9859bdbec92a872a7a5d2e10dd449f20ef79ff89bcf5a20aac618b37d7e"
     },
     {
       "path": "LION/panel/PANEL_OBSERVABILITY.md",
@@ -53,7 +53,7 @@
     },
     {
       "path": "browser_broker/DESKTOP_R4_RELEASE_NOTES.md",
-      "sha256": "96f39d6dd4dc64cb05506a511190942a7e80b655712b8710b6f89c0f6ea60a44"
+      "sha256": "32ec7c1237a4cce8e07d25891d4d89b76b11e46c0c93c3938f7926ee69d058bd"
     },
     {
       "path": "browser_broker/README.md",
@@ -97,7 +97,7 @@
     },
     {
       "path": "browser_broker/src/main.cjs",
-      "sha256": "bbfe06a6829d202b60584f7ec9f4a4f8d531593f14a0f244830e356c829cac8e"
+      "sha256": "92eb824da4180dd5676ae79c9cc232b2bacc13c9a1beffac962a481adb8b34ee"
     },
     {
       "path": "browser_broker/src/observer-preload.cjs",
@@ -141,7 +141,7 @@
     },
     {
       "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
-      "sha256": "864c2c36cbb7d424f65ee3128d92f789203a2ec436d96e6d722de6fbd6739ce7"
+      "sha256": "c03bc89a8025615df51387b82822a0e10ea167eba0d501d013a16312eee534d4"
     },
     {
       "path": "cyber_lion/contracts/action_ir.py",
@@ -341,7 +341,7 @@
     },
     {
       "path": "deploy/mission-control/v3/app.css",
-      "sha256": "0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c"
+      "sha256": "f3c2351074e9a260063b6d3962bcd71b50f7ff48dd788cf4d18f9bab1816e0cf"
     },
     {
       "path": "deploy/mission-control/v3/app.js",
@@ -353,7 +353,7 @@
     },
     {
       "path": "deploy/mission-control/v3/index.html",
-      "sha256": "c08fa2840e317c69c868ffe4c1c992d3b0d364a4716ff567c5937e52a16dca9a"
+      "sha256": "9edd4ab6317273c499e11fdb9b79a894ab2b13bdb0ae32f36ab2c9df0950954a"
     },
     {
       "path": "deploy/mission-control/v3/passive.js",
@@ -432,7 +432,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "b65d3e0bc6cb870f333d54ca52d1d428a1ce81bdb86263cc941a6d6b0dc000cb",
+  "package_digest": "d2d00b62b070c1ef0b6982a554f804489f15dc360b98bbc3c756f8df8d5cb79e",
   "authority_effect": "NONE",
   "supersedes": "SOURCE_PACKAGE_MANIFEST_CCF_R3.json"
 }
