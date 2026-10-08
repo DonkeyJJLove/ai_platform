@@ -71,7 +71,7 @@ function createReadModel({root,fetcher=fetch,readFs=fs,now=()=>new Date()}){
   const workerSnapshot=Array.isArray(stored.cluster?.workers)?stored.cluster.workers.slice(0,32):[];
   const repoSnapshot=Array.isArray(stored.federation?.repositories)?stored.federation.repositories.slice(0,20):[];
   const modelData=Array.isArray(live.models?.data)?live.models.data.slice(0,2).map(x=>({
-   label:path.basename(String(x.id||'unknown')).slice(0,120),
+   label:path.win32.basename(String(x.id||'unknown')).slice(0,120),
   })):[];
   return {
    schema:'lion.operator-read-model/v1',scope,

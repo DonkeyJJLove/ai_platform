@@ -65,7 +65,7 @@
     },
     {
       "path": "browser_broker/src/desktop-read-model.cjs",
-      "sha256": "14298f4b56c0c51bd0a67528d60049d0309b60c9f25375288c8798231ff62df8"
+      "sha256": "a058a3ce9be2ad5d073488a2bf4c534947b6c7e6725d83113392d2e3dd4e28e0"
     },
     {
       "path": "browser_broker/src/local-advisory.cjs",
@@ -77,7 +77,7 @@
     },
     {
       "path": "browser_broker/src/main.cjs",
-      "sha256": "fe4dbfb2cff7bb7b3a28f7a6fbb9372ff35dae82e8cd8f116e7a75ac8e961c5a"
+      "sha256": "0e030f23d5b02bfac6b22eb059f195730200221c985e2842258afe88b6135e58"
     },
     {
       "path": "browser_broker/src/observer-preload.cjs",
@@ -93,7 +93,7 @@
     },
     {
       "path": "browser_broker/test/r4-read-model.test.cjs",
-      "sha256": "a75a9a6bf3a7be4b5543e1e7a16d4b26d508ff537685b533bb771f3a03f9801a"
+      "sha256": "9b5b069ef11a6ed66184401c0ad23bd0f4ac174602107460a2364a939e96a3d2"
     },
     {
       "path": "browser_broker/test/sentinelx-transport.test.cjs",
@@ -384,7 +384,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "40f3646190998363c4c16207177daa71400ea19f9ba6390c9f63584d6303730d",
+  "package_digest": "9522a62e35863b9dcffdc2b046965966ecc805ffcc2cef8b6c64b070b52e3ff9",
   "authority_effect": "NONE",
   "supersedes": "SOURCE_PACKAGE_MANIFEST_CCF_R2.json"
 }

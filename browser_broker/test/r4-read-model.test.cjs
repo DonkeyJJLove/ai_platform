@@ -46,6 +46,16 @@ test('live model sanitizes Mission Control, broker and model observations',async
   assert(d.logs.lines.some(line=>line==='[REDACTED_SECRET_BEARING_LINE]'));
  }finally{f.cleanup()}
 });
+test('model label strips POSIX paths as well as Windows separators',async()=>{
+ const f=fixture({fetcher:async url=>{
+  if(url.endsWith('/v1/models'))return response({data:[{id:'/srv/private/models/gpt-linux.gguf'}]});
+  return response({status:'ok'});
+ }});
+ try{
+  const d=await f.model.observe('cluster');
+  assert.equal(d.model_names[0].label,'gpt-linux.gguf');
+ }finally{f.cleanup()}
+});
 test('system repo SHA remains stored, not falsely live after refresh',async()=>{
  const f=fixture();
  try{

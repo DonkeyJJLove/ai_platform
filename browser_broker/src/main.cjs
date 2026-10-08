@@ -45,7 +45,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   const overviewSha256='0b863ccaa0ba0118e761d21253b560b1f6665239ca6d84fb7718d666c67ae12a';
   const localFile=path.join(__dirname,'..','local-gpt.html');
   const localSha256='642bd04bfc9f8e7bc59c2bdac94cf18cd8207f9fadfd6e92afe99743d2e51468';
-  const pinned={'desktop-read-model.cjs':'14298f4b56c0c51bd0a67528d60049d0309b60c9f25375288c8798231ff62df8','local-advisory.cjs':'9ca8278b2f70435e71689723bfb8e749d73166a775abf20749ae8870aa36e987','observer-preload.cjs':'d8be9fbf23c3208d455fd584792ac8e7753a87cdbbd4ec1ab38458975f1b978c','local-preload.cjs':'79bc4b5d86fa853b725b05e89ce37b65527e0da1c8f1a5895e42a5485bf61322'};
+  const pinned={'desktop-read-model.cjs':'a058a3ce9be2ad5d073488a2bf4c534947b6c7e6725d83113392d2e3dd4e28e0','local-advisory.cjs':'9ca8278b2f70435e71689723bfb8e749d73166a775abf20749ae8870aa36e987','observer-preload.cjs':'d8be9fbf23c3208d455fd584792ac8e7753a87cdbbd4ec1ab38458975f1b978c','local-preload.cjs':'79bc4b5d86fa853b725b05e89ce37b65527e0da1c8f1a5895e42a5485bf61322'};
   for(const [name,expected] of Object.entries(pinned)){
    const f=path.join(__dirname,name);
    if(!fs.existsSync(f)||require('./contract.cjs').hash(fs.readFileSync(f))!==expected)
