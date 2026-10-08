@@ -8,6 +8,7 @@ on:
       - "LION/architecture/v1_4/federation_current_vector.json"
       - "LION/architecture/v1_5/**"
       - "tools/lion_r24_whole_integration_gate.py"
+      - "requirements/edge-yoke.txt"
       - ".github/workflows/cyber-lion-contracts.yml"
   push:
     branches: ["master"]
@@ -17,6 +18,7 @@ on:
       - "LION/architecture/v1_4/federation_current_vector.json"
       - "LION/architecture/v1_5/**"
       - "tools/lion_r24_whole_integration_gate.py"
+      - "requirements/edge-yoke.txt"
       - ".github/workflows/cyber-lion-contracts.yml"
 run-name: "Cyber-Lion Core · CURRENTNESS_CARRIER_CLOSURE · ${{ github.ref_name }}"
 concurrency:
