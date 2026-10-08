@@ -32,3 +32,6 @@ Subsequent source candidates advance beyond the initial R1 carrier boundary with
 [R6.18 process bootstrap](COOPERATIVE_PROCESS_BOOTSTRAP_R6_18.md) supplies the missing fail-closed Mission Control process-composition install path for the existing cooperative materializer registry. Default mode remains UNBOUND; no authority, assignment or runtime effect is created by source integration.
 
 [R6.19 functional acceptance](COOPERATIVE_FUNCTIONAL_ACCEPTANCE_R6_19.md) updates the historical R6.17 fixture to current scheduler storage and proves the isolated chain R6.16 release → R6.17 qualification → current scheduler claim → material write → distinct MD002 verification. This is functional source acceptance, not live deployment acceptance. The live R24 fleet remains a separately observed state.
+
+
+[R6.20 runtime preparer](COOPERATIVE_RUNTIME_PREPARER_R6_20.md) adds the missing prepare-only composition edge from exact HELD cooperative WRITE + existing Action/PDP/provisioning/sandbox evidence into `CooperativeRuntimeContext`. It delegates admission to the existing `RuntimeAdmissionEngine.admit_bound_action(...)`, exposes no execution surface, and feeds the existing R6.16 materializer through an immutable prepared-context source.
