@@ -8,7 +8,7 @@ from hashlib import sha256
 import argparse,json,re
 from pathlib import Path
 DOMAIN=b"LION/WORKFLOW-HOMEOSTASIS/1\0"
-CRITICAL={"bandit-security.yml","lion-r22c-full-symbol-census.yml","lion-rag32-validate.yml","lion-git-logical-tree.yml","lion-workflow-homeostasis.yml"}
+CRITICAL={"bandit-security.yml","lion-r22c-full-symbol-census.yml","lion-rag32-validate.yml","lion-git-logical-tree.yml","lion-workflow-homeostasis.yml","lion-merge-gate.yml"}
 OBSERVATION_WORKFLOWS={"lion-code-perception-observation.yml","lion-group-channel.yml"}
 LIVE_PROOF_WORKFLOWS={"f009-live-runtime-proof.yml"}
 
