@@ -144,8 +144,18 @@ class PhaseControlTests(unittest.TestCase):
     def _real_atomic_action(self, *, fail_receipt):
         from tools import lion_mission_control_compat, lion_mission_lifecycle_db
         from cyber_lion.mission_control import execution_driver
-        with patch.dict(sys.modules, {'mission_control_compat': lion_mission_control_compat}):
+        # Keep newly imported modules in sys.modules: patch.dict would restore
+        # the entire module table on exit and split exact registry class identity
+        # on the second test invocation.
+        previous = sys.modules.get('mission_control_compat')
+        sys.modules['mission_control_compat'] = lion_mission_control_compat
+        try:
             service = importlib.import_module('tools.lion_mission_control_v3')
+        finally:
+            if previous is None:
+                sys.modules.pop('mission_control_compat', None)
+            else:
+                sys.modules['mission_control_compat'] = previous
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)/'atomic.db'
             def connect():
