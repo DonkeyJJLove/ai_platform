@@ -197,6 +197,24 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
             missing_runtime="formalization closure, parent serialization and post-integration projection/currentness regeneration remain open; compiler stops before admission",
             next_minimal_gap="serialize accepted source through the existing Formalization Kernel and close required non-carrier surfaces before carrier-last rebinding",
         ),
+        _partial(
+            "ProjectRealityProjection",
+            "cyber_lion/architecture_projection/project_reality.py",
+            missing_runtime="live Git/Mission Control/conversation/currentness collectors are not yet composed into one ProjectRealitySnapshot producer",
+            next_minimal_gap="bind existing source/runtime/currentness observations into ProjectRealitySnapshot without creating a second truth store",
+        ),
+        _partial(
+            "ProjectClaimProjection",
+            "cyber_lion/architecture_projection/project_reality.py",
+            missing_runtime="Mental Matrix narrative/visual consumers are not yet wired; projection reuses SemanticAtom and EnterpriseGraph DATA_PROVENANCE rather than a second graph database",
+            next_minimal_gap="expose the source-bound claim projection to read-only narrative/visual and Architecture Studio consumers",
+        ),
+        _partial(
+            "EvolutionFitnessStandard",
+            "cyber_lion/architecture_projection/evolution_fitness.py",
+            missing_runtime="ProjectRealityAdapter exists on the candidate source, but live collectors and Mission Program authoring are not yet bound",
+            next_minimal_gap="feed candidate-specific ProjectReality gates/pressures into mission authoring and the first closed artifact-loop successor",
+        ),
         _target(
             "ArchitectureStudio",
             missing_runtime="interactive Electron architecture graph explorer/composer and formalization-impact preview are not implemented",

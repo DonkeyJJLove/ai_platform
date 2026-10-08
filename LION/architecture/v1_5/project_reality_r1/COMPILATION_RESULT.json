@@ -1,0 +1,16 @@
+{
+  "architecture_model_digest": "96e012a21dad084fe65257a81d2292d50145fef722ddc0ed1f1a7cafae9e14e5",
+  "authority_effect": "NONE",
+  "candidate_digest": "b671f67875a38d982c8a60a647ca60e87e5962631846d89c97a8e261392bedaf",
+  "compilation_digest": "edbc7001f30777999a68333b138b47f4d8e417d9dd071474bd7714f22a482980",
+  "ends_before_admission": true,
+  "evolution_delta_digest": "f2398200d2d719162cf33f731115900ea29cd5e6e33d1fd8ac904880b13831af",
+  "execution_effect": "NONE",
+  "formalization_manifest_digest": "4c47d9ff299da48c3eb2272e58bd023fe0452eb621e8a851d513e28590d9888b",
+  "generated_artifacts_excluded_from_source_tree": true,
+  "required_formalization_set_digest": "bff40f5193190af809ccf1a986f00ac1f060db6fbb7b7c76adcec2f45192b4f8",
+  "required_formalization_surfaces": 36,
+  "schema": "lion.project-reality-evolution-compilation/v1",
+  "source_tree": "4c58045909a9e1d4fe46d80f61f35d843ed5c65f",
+  "stacked_parent_head": "7e943f24958fbedc0933c4a145b3cadc55b2153a"
+}

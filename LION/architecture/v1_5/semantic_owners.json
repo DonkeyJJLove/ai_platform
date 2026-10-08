@@ -95,7 +95,9 @@
       "secondary": [
         "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
         "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
-        "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json"
+        "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
+        "cyber_lion/architecture_projection/project_reality.py",
+        "LION/architecture/v1_5/PROJECT_REALITY_EVOLUTION_PATH_R1.json"
       ]
     },
     {
@@ -255,6 +257,9 @@
       "primary": "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
       "secondary": [
         "LION/architecture/v1_5/ROADMAP_RECONCILIATION.json",
+        "LION/architecture/v1_5/PROJECT_REALITY_EVOLUTION_PATH_R1.json",
+        "LION/standards/LION_EVOLUTION_FITNESS_STANDARD.json",
+        "cyber_lion/architecture_projection/evolution_fitness.py",
         "AI_NATIVE_ROADMAP.md"
       ]
     },

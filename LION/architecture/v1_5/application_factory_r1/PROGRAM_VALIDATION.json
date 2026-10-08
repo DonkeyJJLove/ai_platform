@@ -1,0 +1,94 @@
+{
+  "authority_effect": "NONE",
+  "canonical_run_digest": "fede7e8593cc2c71efc7daa9476ab5500f958a3afe1a5fd02e586c7795dac870",
+  "contract_digests": [
+    "5ceb06fd781854413848b5e3282639088e494610a1819f2ab04395afa3e4448f",
+    "f0537bd8d7dc6dd15837ac91f36e6445257147eb43e5f3bc28e7534f5d3e7214",
+    "e8ae8ad863113df8aac2b98761de767736ed6252b0e3c4d4f16e24aafef0b189",
+    "dd832417eb66b1ee311c488702dae2fe4acf6f2c27d048c351ff39459a04edff",
+    "3459d4f40ca7cc971042e40d0ab70fa6f168821263d9003eb690f10a079079e7"
+  ],
+  "execution_effect": "NONE",
+  "mission_id": "LION-APPLICATION-FACTORY-CROSS-MODEL-R1",
+  "panel_lpcl_digest": "19603183f95f3cd50923682a64a63fb03941eb7b5de315e3f90968ba528d7e46",
+  "phase_count": 5,
+  "preflight_without_runtime_registry": {
+    "authority_closure": "PASS",
+    "bound_count": 0,
+    "capability_closure": "PARTIAL",
+    "contract_count": 5,
+    "currentness_closure": "PASS",
+    "dynamic_count": 5,
+    "evidence_closure": "PASS",
+    "invalid_count": 0,
+    "mission_readiness": "WAITING_FOR_CAPABILITIES",
+    "phase_count": 5,
+    "phases": [
+      {
+        "binding_mode": "DYNAMIC",
+        "capability_classes": [
+          "CONTROL_PLANE_RECONNAISSANCE"
+        ],
+        "contract_digest": "5ceb06fd781854413848b5e3282639088e494610a1819f2ab04395afa3e4448f",
+        "contract_source": "DECLARED",
+        "effect_ceiling": "NONE",
+        "matching_capabilities": [],
+        "phase_id": "CROSS_MODEL_RECON",
+        "state": "VALID_UNBOUND_WAITING"
+      },
+      {
+        "binding_mode": "DYNAMIC",
+        "capability_classes": [
+          "COOPERATIVE_WORKER_PREACTIVATION"
+        ],
+        "contract_digest": "f0537bd8d7dc6dd15837ac91f36e6445257147eb43e5f3bc28e7534f5d3e7214",
+        "contract_source": "DECLARED",
+        "effect_ceiling": "NONE",
+        "matching_capabilities": [],
+        "phase_id": "PREACTIVATE_BUILDER",
+        "state": "VALID_UNBOUND_WAITING"
+      },
+      {
+        "binding_mode": "DYNAMIC",
+        "capability_classes": [
+          "COOPERATIVE_ARTIFACT_BOOTSTRAP"
+        ],
+        "contract_digest": "e8ae8ad863113df8aac2b98761de767736ed6252b0e3c4d4f16e24aafef0b189",
+        "contract_source": "DECLARED",
+        "effect_ceiling": "NONE",
+        "matching_capabilities": [],
+        "phase_id": "FULL_FLEET_PROVIDER_READINESS",
+        "state": "VALID_UNBOUND_WAITING"
+      },
+      {
+        "binding_mode": "DYNAMIC",
+        "capability_classes": [
+          "COOPERATIVE_ARTIFACT_PRODUCTION"
+        ],
+        "contract_digest": "dd832417eb66b1ee311c488702dae2fe4acf6f2c27d048c351ff39459a04edff",
+        "contract_source": "DECLARED",
+        "effect_ceiling": "BOUNDED_MATERIAL",
+        "matching_capabilities": [],
+        "phase_id": "BUILD_CROSS_MODEL_ARTIFACT",
+        "state": "VALID_UNBOUND_WAITING"
+      },
+      {
+        "binding_mode": "DYNAMIC",
+        "capability_classes": [
+          "COOPERATIVE_ARTIFACT_VERIFY"
+        ],
+        "contract_digest": "3459d4f40ca7cc971042e40d0ab70fa6f168821263d9003eb690f10a079079e7",
+        "contract_source": "DECLARED",
+        "effect_ceiling": "NONE",
+        "matching_capabilities": [],
+        "phase_id": "VERIFY_CROSS_MODEL_ARTIFACT",
+        "state": "VALID_UNBOUND_WAITING"
+      }
+    ],
+    "preflight_digest": "ffc745f929dfd605c4a1b8c3938588002777d69c380ad0aa01193564910fa6cb",
+    "schema": "lion.mission-execution-preflight/v1",
+    "unbound_count": 5
+  },
+  "schema": "lion.application-factory-program-validation/v1",
+  "semantic_equivalence": "PASS"
+}

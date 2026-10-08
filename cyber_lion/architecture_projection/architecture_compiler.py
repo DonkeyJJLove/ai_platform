@@ -24,11 +24,20 @@ from cyber_lion.contracts.formalization_registry import FormalizationRegistry
 from .flows import ARCHITECTURE_LAYERS, canonical_flows
 from .formalization import RequiredFormalizationSet, derive_required_formalization_set
 from .full_architecture import FullArchitectureModel
+from .evolution_fitness import (
+    DEFAULT_POLICY,
+    EvolutionFitnessCandidate,
+    EvolutionFitnessOptimizer,
+    EvolutionFitnessPolicy,
+    EvolutionFitnessSelection,
+    EvolutionPressure,
+)
 
 _SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$")
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 _CANDIDATE_DOMAIN = b"LION/ARCHITECTURE-CANDIDATE-DESIGN/1\0"
 _COMPILATION_DOMAIN = b"LION/ARCHITECTURE-COMPILATION/1\0"
+_OPTIMIZED_COMPILATION_DOMAIN = b"LION/EVOLUTION-OPTIMIZED-ARCHITECTURE-COMPILATION/1\0"
 _GLOBAL_CHANGE_CLASSES = frozenset({"ARCHITECTURE_CONCEPT", "MIXED_ARCHITECTURE", "SEMANTIC_OWNER", "FLOW"})
 _EFFECT_METHOD_NAMES = frozenset({"authorize","admit","execute","write","push","merge","deploy","release","schedule","dispatch"})
 
@@ -162,12 +171,88 @@ class ArchitectureCompilationResult:
         return self
 
 
+@dataclass(frozen=True)
+class FitnessSelectedArchitectureCompilation:
+    selection: EvolutionFitnessSelection
+    compilation: ArchitectureCompilationResult
+    authority_effect: str = "NONE"
+    execution_effect: str = "NONE"
+    result_digest: str = ""
+
+    def compute_digest(self) -> str:
+        payload = {
+            "selection_digest": self.selection.selection_digest,
+            "selected_candidate_id": self.selection.selected_candidate_id,
+            "compilation_digest": self.compilation.compilation_digest,
+            "authority_effect": self.authority_effect,
+            "execution_effect": self.execution_effect,
+        }
+        return sha256(_OPTIMIZED_COMPILATION_DOMAIN + _bytes(payload)).hexdigest()
+
+    def validate(self) -> "FitnessSelectedArchitectureCompilation":
+        if self.authority_effect != "NONE" or self.execution_effect != "NONE":
+            raise ArchitectureCompilerError("fitness-selected compilation cannot carry authority/effect")
+        self.compilation.validate()
+        if self.result_digest and self.result_digest != self.compute_digest():
+            raise ArchitectureCompilerError("fitness-selected compilation digest mismatch")
+        return self
+
+
 class ArchitectureCompiler:
     @classmethod
     def assert_no_effect_surface(cls) -> None:
         for name in _EFFECT_METHOD_NAMES:
             if hasattr(cls, name):
                 raise ArchitectureCompilerError(f"effect surface present: {name}")
+
+    def compile_selected(
+        self,
+        *,
+        candidates: Tuple[CandidateDesign, ...],
+        fitness_candidates: Tuple[EvolutionFitnessCandidate, ...],
+        architecture: FullArchitectureModel,
+        registry: FormalizationRegistry,
+        semantic_owners: Mapping[str, str],
+        current_head: str,
+        current_tree: str,
+        pressures: Tuple[EvolutionPressure, ...] = (),
+        fitness_policy: EvolutionFitnessPolicy = DEFAULT_POLICY,
+    ) -> FitnessSelectedArchitectureCompilation:
+        """Select one eligible critical-path design, then use the existing compiler."""
+        self.assert_no_effect_surface()
+        if type(candidates) is not tuple or not candidates:
+            raise ArchitectureCompilerError("candidate set must be non-empty tuple")
+        validated = tuple(candidate.validate() for candidate in candidates)
+        ids = tuple(candidate.candidate_id for candidate in validated)
+        if ids != tuple(sorted(set(ids))):
+            raise ArchitectureCompilerError("candidate designs must be sorted unique by candidate_id")
+        fitness_ids = tuple(candidate.candidate_id for candidate in fitness_candidates)
+        if fitness_ids != ids:
+            raise ArchitectureCompilerError("fitness/design candidate identity mismatch")
+        if not _SHA40.fullmatch(current_head) or not _SHA40.fullmatch(current_tree):
+            raise ArchitectureCompilerError("exact current HEAD/TREE required")
+        for candidate in validated:
+            if (candidate.baseline.head, candidate.baseline.tree) != (current_head, current_tree):
+                raise ArchitectureCompilerError("candidate baseline is stale or substituted")
+
+        selection = EvolutionFitnessOptimizer().select(
+            fitness_candidates,
+            pressures=pressures,
+            policy=fitness_policy,
+        )
+        selected = {candidate.candidate_id: candidate for candidate in validated}[
+            selection.selected_candidate_id
+        ]
+        compilation = self.compile(
+            candidate=selected,
+            architecture=architecture,
+            registry=registry,
+            semantic_owners=semantic_owners,
+            current_head=current_head,
+            current_tree=current_tree,
+        )
+        result = FitnessSelectedArchitectureCompilation(selection, compilation)
+        return replace(result, result_digest=result.compute_digest()).validate()
 
     def compile(
         self, *, candidate: CandidateDesign, architecture: FullArchitectureModel,

@@ -828,6 +828,28 @@ def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contr
         "SUCCESSOR_ARTIFACT_GAP_CLASSIFIED":bool(language_art),
         "LPCL_NEXT_VERSION_DECISION_SUPPORTED":bool(language_art and (language_art.get("decision") or language_art.get("recommended_control_language"))),
         "CONTROL_PLANE_INTELLIGENCE_BUNDLE_PRESENT":bool(intel_art),
+        "LOCAL_RECON_TRAJECTORIES_COMPLETE":bool(
+            local_analysis
+            and local_analysis.get("trajectories")
+            and all(bool(item.get("raw_digest")) for item in local_analysis.get("trajectories") or [])
+        ),
+        "SAAS_ADVISORY_RESPONSE_OBSERVED":bool(
+            saas_advisory
+            and saas_advisory.get("state") == "RESPONDED"
+            and saas_advisory.get("response_digest")
+            and saas_advisory.get("receipt_digest")
+        ),
+        "CROSS_MODEL_INTELLIGENCE_BOUND":bool(
+            intel_art
+            and intel_art.get("bundle_digest")
+            and intel_art.get("local_model_trajectories")
+            and any(
+                item.get("state") == "RESPONDED"
+                and item.get("response_digest")
+                and item.get("receipt_digest")
+                for item in intel_art.get("saas_advisories") or []
+            )
+        ),
         "ALL_FINDINGS_EVIDENCE_BOUND":bool(intel_art and intel_art.get("claim_to_evidence")),
         "UNKNOWN_ITEMS_EXPLICIT":bool(intel_art is not None and isinstance(intel_art.get("unknowns"),list)),
         "ROOT_CAUSE_CANDIDATES_RANKED":bool(intel_art and intel_art.get("root_cause_candidates")),

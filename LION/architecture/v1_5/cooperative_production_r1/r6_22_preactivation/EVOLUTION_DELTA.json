@@ -1,0 +1,38 @@
+{
+  "authority_effect": "NONE",
+  "candidate_scope": [
+    "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_PREACTIVATION_R6_22.md",
+    "LION/architecture/v1_5/cooperative_production_r1/README.md",
+    "cyber_lion/mission_control/cooperative_preactivation.py",
+    "cyber_lion/mission_control/cooperative_preactivation_bootstrap.py",
+    "cyber_lion/tests/test_cooperative_mission_control_wiring.py",
+    "cyber_lion/tests/test_cooperative_preactivation.py",
+    "tools/lion_mission_control_v3.py"
+  ],
+  "delta_digest": "3ce6699f92d3dea631273ee1932a56910a72bdb0c7173d3ed1a10bfd332cf875",
+  "delta_id": "architecture:505ef8f96c378df93544f347",
+  "dependency_ids": [
+    "R6.16",
+    "R6.17",
+    "R6.21"
+  ],
+  "evidence_refs": [
+    "source:mission-control-cooperative-driver",
+    "source:r6.17",
+    "source:r6.21",
+    "test:r6.22-regression-301"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "one qualification-only HELD WRITE can reach canonical READY evidence and a persisted one-worker qualification record before full-fleet readiness, while material production and verification remain gated",
+  "falsification_conditions": [
+    "preactivation capability is available while its exact provider is unbound",
+    "preactivation invokes full-fleet readiness before one-worker qualification",
+    "production or verification bypasses full-fleet readiness",
+    "qualification UNKNOWN automatically replays R6.17",
+    "qualification assignment is claimed by the preactivation step"
+  ],
+  "motivation": "break the 32-worker bootstrap cycle by exposing exactly one non-effectful qualification capability backed by existing R6.21/R6.16/R6.17 owners while leaving production and verification readiness unchanged",
+  "risk_class": "GREEN",
+  "schema_version": "1.0.0",
+  "target_component": "single-worker cooperative preactivation before full-fleet readiness"
+}

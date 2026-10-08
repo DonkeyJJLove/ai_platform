@@ -1,0 +1,37 @@
+{
+  "authority_effect": "NONE",
+  "candidate_scope": [
+    "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_RUNTIME_PREPARER_R6_20.md",
+    "LION/architecture/v1_5/cooperative_production_r1/README.md",
+    "cyber_lion/enterprise/cooperative_runtime_preparer.py",
+    "cyber_lion/tests/test_cooperative_runtime_preparer.py"
+  ],
+  "delta_digest": "c5685140def2c177e1921178d0d63c3d14f6f541de89ec80753a291c86e5e2de",
+  "delta_id": "architecture:942fde6343c87ac434d8f5ba",
+  "dependency_ids": [
+    "R22I",
+    "R6.16",
+    "R6.18",
+    "R6.19"
+  ],
+  "evidence_refs": [
+    "source:r22i-admit-bound-action",
+    "source:r6.16",
+    "source:r6.19",
+    "test:r6.20-r6.16-current-storage"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "one exact HELD WRITE receives a canonical CooperativeRuntimeContext, repeated context reads do not replay admission, and existing R6.16 produces provider evidence plus the canonical HELD-to-READY transition without writing artifact bytes",
+  "falsification_conditions": [
+    "DENY prepares a context",
+    "R6.20 direct path writes artifact bytes",
+    "non-HELD assignment is accepted",
+    "prepared source re-runs runtime admission",
+    "proposal target or payload substitution is accepted",
+    "provisioning/dispatch/runtime substitution is accepted"
+  ],
+  "motivation": "bind one exact HELD cooperative WRITE assignment to existing Action/PDP/runtime-admission/provisioning/sandbox owners and supply an immutable context source to R6.16 without creating a new authority or executor",
+  "risk_class": "GREEN",
+  "schema_version": "1.0.0",
+  "target_component": "prepare-only cooperative runtime context composition"
+}

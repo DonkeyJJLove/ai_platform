@@ -1,0 +1,15 @@
+{
+  "authority_effect": "NONE",
+  "candidate_digest": "020cb284c2403e821a60af178bfa6178a27f3c20a6c029a5b47e266f8921bf9d",
+  "compilation_digest": "ad4b9d56b725ccc2b8e931cb30ab9302fd60393ce0962bcedd93b39f2f96cbd4",
+  "ends_before_admission": true,
+  "evolution_delta_digest": "0632b7c21ad63e01495b492f66e5378714f8d391a30c94e433d553e541de59b3",
+  "execution_effect": "NONE",
+  "formalization_manifest_digest": "62e9cc096b756eea2bfcdb606935e67dcca792d33003e973ab0eb22f99d2ebeb",
+  "generated_artifacts_excluded_from_source_tree": true,
+  "required_formalization_set_digest": "ce05fa8c01693e164d09448424d01b6d011dc11c757fafd374b03c49736a96a6",
+  "required_formalization_surfaces": 36,
+  "schema": "lion.application-factory-r1-compilation/v1",
+  "source_tree": "b03c87ef835b0f64a60e5acf9d2bd7baf55b35f0",
+  "stacked_parent_head": "c530417415c158dfc769b85f9648ec0c65d57b98"
+}

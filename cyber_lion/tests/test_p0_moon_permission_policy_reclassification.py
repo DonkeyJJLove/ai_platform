@@ -5,11 +5,13 @@ from tools.p0_effect_taxonomy import EffectTaxonomyReconciler
 from tools.p0_moon_attack_registry import PERMISSION_SURFACE
 from tools.p0_moon_permission_policy_reclassification import OS_REPLACE_SURFACE,PRE_EFFECT,REHOMED,boundary_matrix,materialize_policy_v2_readiness,policy_v2
 REPO="DonkeyJJLove/ai_platform"
+from cyber_lion.tests.p0_historical_inventory import pinned_p0_inventory
+
 def current():
-    root=Path(__file__).resolve().parents[2];src={}
-    for p in subprocess.check_output(["git","ls-files"],cwd=root,text=True).splitlines():
-        if (p.startswith("cyber_lion/") and p.endswith(".py") and "/tests/" not in f"/{p}") or (p.startswith(".github/workflows/") and p.endswith((".yml",".yaml"))):src[p]=(root/p).read_text()
-    rev=subprocess.check_output(["git","rev-parse","HEAD"],cwd=root,text=True).strip();tree=subprocess.check_output(["git","rev-parse","HEAD^{tree}"],cwd=root,text=True).strip();raw=EffectSurfaceScanner().scan(repository=REPO,revision=rev,tree_digest=tree,sources=src);inv,report,_=EffectTaxonomyReconciler().reconcile(raw_inventory=raw,sources=src);return root,inv,report
+    """Legacy test-local alias: exact historical P0 source, not current checkout."""
+    root = Path(__file__).resolve().parents[2]
+    inv, report = pinned_p0_inventory(root)
+    return root, inv, report
 class PermissionPolicyReclassificationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):cls.root,cls.inv,cls.tax=current();cls.mappings,cls.policy,cls.closure,cls.carrier,cls.report=materialize_policy_v2_readiness(inventory=cls.inv,taxonomy_report=cls.tax,repo_root=cls.root)

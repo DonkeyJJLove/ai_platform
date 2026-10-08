@@ -1,0 +1,15 @@
+{
+  "architecture_model_digest": "391c27eaae2c9bace68ff4a8907600dd25aed552389ee07e33bc6cd68cf62f36",
+  "authority_effect": "NONE",
+  "candidate_digest": "68feb5c7a56ff86c7555459f79ac73808320f1b9ee8c02842e6c63fd7dd250a7",
+  "compilation_digest": "746826c7fe196e47d3dbc81eb2ca76efd05f10c7f106f9b67dfd87c1ab14ba44",
+  "ends_before_admission": true,
+  "evolution_delta_digest": "7fef135eb41db788afdf7510a5b9c3a989a4e5ad15d94c4f63959f1e3cac8541",
+  "execution_effect": "NONE",
+  "formalization_manifest_digest": "71e3e1d758b701979e774dc4e1683f47d73497f2f1bf113ca396258150718eb3",
+  "generated_artifacts_excluded_from_source_tree": true,
+  "required_formalization_set_digest": "bfade250bc0440b2f27525656d7aed1f4d38e45e6397b139c34e4b3bbbb4b031",
+  "schema": "lion.dynamic-evolution-fitness-compilation/v1",
+  "source_head": "b6cc132095deb268b2754d2afc0634aeac5a7ac4",
+  "source_tree": "92acd3916ed5cad62bfa3c5ffd0d282885b76005"
+}

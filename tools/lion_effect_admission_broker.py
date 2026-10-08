@@ -1655,7 +1655,11 @@ def e3_handle(req):
 
 
 MISSION_CONTROL_V3_ROOT=Path("/var/lib/sentinelx/uploads/lion-mission-control-v3")
-MISSION_CONTROL_V3_REQUIRED_SHA256={"mission_control_v3.py":"6a5c2fbc38d675a2e68b45b601ea00074505d2c8a679dd616067fa23068e50f9","mission_control_compat.py":"f584066806fd190ff4f1752ab464e0d245172a56789f7852f0ed0df0e2fe93d0","lion_mission_lifecycle_db.py":"0ca42b937a21c498e9016e3f255ee796b30268ccff3dea642a468e293814a35a","lion_saas_session_bridge.py":"4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7","lion_saas_broker.py":"a8d35ac62e93fa0054dd8aad367ec55f98b576faa3d503340c867b5de761da8b","lion_firefox_broker_relay.py":"be178c21e5f5ee8cffb7afa2b902fd622351f4dca84bc0f2384f1cb6ac7daf03","lion_operator_gateway.py":"0a19c0f169e33e863e956013d46899805305407272319251fa478a56243e2279","lion_operator_client.py":"3171b674986015dc1c0e2ba5fa8907c669f1f655c0f0f7e6cecfe6bd7fc3ec0b","lion_operator_provision.py":"b8486fc03be70baabb0801a2a02d068152208afc10ea5cc626d567266e23154a","lion_operator_containment_helper.py":"378c1b36cc2ad3008cb17ad882039af9fd4ad49b3b3b41a2143a5c3615b705d8","systemd/lion-operator-control.service":"48087f928e38a693852603c1f95ada80635bc13bc58da6b7a9b03aee0fbfd700","cyber_lion/contracts/operator_intervention.py":"71894ed53a54bec256a6065c751d03cdd2dfbc2e784a9157bb3a8d3c0e9d953e","cyber_lion/mission_control/operator_control.py":"694ca04ba6f7ff19375a3d378eb7d4bc17d16c82afa784bd28a85713f431a697","cyber_lion/mission_control/operator_swarm_session.py":"1f473ba8e935412e8491734f1de72d73d02934517275953502cffb08e0060ef8","cyber_lion/mission_control/model_calls.py":"f5dea5c27eb0903134e6d72b775794d6dd0f7303d6ee2fc56a6097b618e334b7","cyber_lion/contracts/mission_contract_profiles.py":"285baa010c458f01232649fde3510ac705e18692c6e13d0e2039bc35f083c580","cyber_lion/contracts/phase_execution_contract.py":"2fdb1d0443bca3cd2f216338aa5d8f09febe9d6c9f35e562c24b3799cd36ecb6","cyber_lion/contracts/cognitive_continuity.py":"5a19dd7d12034f502c527ae9121f942640930e85b97949528dd0d63af6609b20","cyber_lion/contracts/action_ir.py":"ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8","cyber_lion/process_language/lpcl.py":"355af5b4073378adc4cc35254de4fc59ed6371fa125b3ffd27070a09ecad4b91","cyber_lion/mission_control/__init__.py":"8d83b68f7ef8047dc9448bbd9ea0335a5a427fd6d6a3b2707c77a90d76f0448c","cyber_lion/mission_control/execution_driver.py":"b666feb64277895b1861ab341caae1aa0acc09d463e396c75e5aa8797746dd5f","cyber_lion/mission_control/execution_driver_contract.py":"aa5c7390960c835968b72eb28be76b8e2e5d0e83bc9d66fe01fdc5bd13f79821","cyber_lion/mission_control/dual_result_join.py":"7ce631308f4150525330a56421c55353906d49ad2217206fa4d7ff314bb8139f","cyber_lion/mission_control/global_scheduler.py":"70742f0173d8965d4d190a3da52ede0261024547bb4babc51e55b31f300fd73f","cyber_lion/mission_control/mission_reconciliation.py":"69066f4ef61bd3f7283c8077d20059f102ddc1291fc824edbd418993580e31ea","cyber_lion/mission_control/control_plane_reconnaissance.py":"5ad1dcb85ce17bfd9ecccfbc1f132e3e6fd42295de147f9323f07c9150196564","cyber_lion/mission_control/cooperative_materialization_registry.py":"6f9093422b1a1fc6657d916ff6b31b9a497dd66dfca03df95b667c424ffdb1f6","cyber_lion/mission_control/cooperative_production.py":"1c32383ac58d2edcb6f2b4c1a192a9a04e34472a02114459c6c0d89fb9c1dac5","cyber_lion/mission_control/cooperative_readiness.py":"c7fd62ee216d23b5fffba80b4e0a47f32b467293146d5793a3e44d7e2b7841e1","cyber_lion/mission_control/cooperative_artifacts.py":"bc84a9fe3cbd3892477c948101bc7c02b6126e7c04af1b918a28696f0de6fe6d","cyber_lion/mission_control/supervisor_projection.py":"d6ffc5c07caf5db6e4040c38962987c3c0c6effb2bfb022e88373c71e773fb80","cyber_lion/mission_control/runtime_projection.py":"9a6d9d62c25bbc4a3c15aeb1731223fc7c08e62bf8099717a9c58e85aab0ed24","cyber_lion/mission_control/phase_control.py":"89372056bf7668edc473b0b0dc04433d376dca3e041499fc0b4e6a52f69c319e","static/index.html":"c08fa2840e317c69c868ffe4c1c992d3b0d364a4716ff567c5937e52a16dca9a","static/app.css":"0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c","static/app.js":"3baea82b0e2c8ae4d9b0eca36be2f7c755462b245e59c092adec47d85934ff9d","static/passive.js":"4d1ee6e0fafd2467c6c65c8ce69079e403a4464a57a37dc8de14447a67db1465","static/control-v3.js":"e7aaa6c32251df70079eb6af838e6c541f0835928d90ce06376cc22fe9041de0"}
+MISSION_CONTROL_V3_STAGE_ROOT=Path("/var/lib/sentinelx/uploads/lion-mission-control-v3.stage-current-master")
+MISSION_CONTROL_V3_DEPLOY_STATE=STATE_ROOT/"mission-control-v3-deployment"
+MISSION_CONTROL_V3_STAGE_IDENTITY=".lion-stage-identity.json"
+MISSION_CONTROL_V3_REQUIRED_SHA256={"cyber_lion/contracts/action_ir.py":"ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8","cyber_lion/contracts/action_proposal_context.py":"b03a67a25ebee4dd2010002e33559d0f0b10baf9201c1750234794e1995ef97e","cyber_lion/contracts/action_proposal_projection.py":"9e41151578fb1d56588f1a061442ccb8a641bd0f25e4cbf37a6aa02a5a570da7","cyber_lion/contracts/action_runtime_binding.py":"5d08a7395b9d841fcbe1fa80a9394e7d97619fa4cfd6479ca2ee3d8a9a521a16","cyber_lion/contracts/builder_process_launch.py":"5b3e13cd3ae5228d8f4111c99d8282a93ddd9b7ac8cafc20ea701e05ca82fb21","cyber_lion/contracts/cognitive_continuity.py":"5a19dd7d12034f502c527ae9121f942640930e85b97949528dd0d63af6609b20","cyber_lion/contracts/enterprise_graph.py":"669b595200ae82639fd9934e3b2ff58f1c99db7836d288d66a3bd1d98c1c168d","cyber_lion/contracts/executor_provisioning.py":"a0b5035e633a869ac6b510f718751bd1c6502f532394ad54d3f470e19983a157","cyber_lion/contracts/executor_sandbox.py":"53a35d6ccdd4f5207b5617454bf867047c78e1029e977f8b318ca7841184d8f5","cyber_lion/contracts/mission_contract_profiles.py":"285baa010c458f01232649fde3510ac705e18692c6e13d0e2039bc35f083c580","cyber_lion/contracts/operator_intervention.py":"71894ed53a54bec256a6065c751d03cdd2dfbc2e784a9157bb3a8d3c0e9d953e","cyber_lion/contracts/phase_execution_contract.py":"2fdb1d0443bca3cd2f216338aa5d8f09febe9d6c9f35e562c24b3799cd36ecb6","cyber_lion/contracts/policy_gate.py":"0f344c74deff44fb5924ef6baa3416719e7458fa5aa3a7ad66bd75894f9ba34d","cyber_lion/contracts/process_ir.py":"be76382240e6ac0f874e122583a12340c5f92d0a92c3ced3ca6e9e23e3297529","cyber_lion/contracts/repository_maintenance_sandbox.py":"884894f071aab6d06bd9dc271348e9a3aeb1bfbce458b9182345535909099804","cyber_lion/contracts/runtime_currentness.py":"19cdb8f256b6aaf0e132aa0dea304cbfcde1958b7292b6f4744e4fe17719119e","cyber_lion/contracts/runtime_enforcement.py":"def310ff94cecbd98da16771b728ad81bc8304757416092811b748bda5fdeff0","cyber_lion/contracts/runtime_execution.py":"7ec7add190f19893a5486b0bc2a6dec221a55e97d99cd7c7424261b82a505fdf","cyber_lion/contracts/swarm_status.py":"ea6240ee37766d846cbad0f775b66d3f17ed2cf74436639f8bcbec202c1508cf","cyber_lion/enterprise/authority_grant.py":"05745e2f2c5da34fb46a36ee96f74b4bfbbf7708666dcd0530d04d140687bb00","cyber_lion/enterprise/authority_source.py":"00421095169e36746b439ab9b17c0a2bd04f016a6c59b256f9795e976e8f823a","cyber_lion/enterprise/authority_source_adapter.py":"f9df79b8dbf967dbb836f2b2346da7f77f9ae99dae10d780007122e5aef35079","cyber_lion/enterprise/authority_verification.py":"5ce8648e578cd25df2d7b9aea812c41c7776a33ba5310190f810c61dd55046cf","cyber_lion/enterprise/control_plane.py":"a575c69d1de1a35e2c7e7067ac4a5d228ca2e5b249546dbba3da55ab7f6e37eb","cyber_lion/enterprise/cooperative_context_resolver.py":"84c669b7eaef07250e770135d91aa328c5b18c30ca7404da677dd5a24489a0a6","cyber_lion/enterprise/cooperative_control_plane_materializer.py":"5f2fb77183cae45d9e0b7071d5dcb55d211d36a96cf94b58926b033d68846da6","cyber_lion/enterprise/cooperative_dependency_provider.py":"35d7609382682a6ccf6323fe0f5468987060afe89f4203ee7b5986f70c946abb","cyber_lion/enterprise/cooperative_provider_materialization.py":"b10f9689fe8beb0071ca448e66239d2318c430eeeec3a5b7a61b743158e558a5","cyber_lion/enterprise/cooperative_runtime_composition.py":"7fbc60740e8e23bd29dfb7729ca4a8073966ec053c99289195935fdb8d94f91d","cyber_lion/enterprise/cooperative_runtime_evidence_exporter.py":"3e0e174f513baaad18c2a69fb54eb067b7f696d11c012617b69efbc45f004e86","cyber_lion/enterprise/cooperative_runtime_evidence_sources.py":"5cbd0642e751aced9660b765f7d667bbfd2c27f83b24f3c82a4652275bc9d6ef","cyber_lion/enterprise/cooperative_runtime_preparation_provider.py":"7cd30cec01a01b7da1fa912828ac109fe07d4301dc4b50c8a17c56de21695a89","cyber_lion/enterprise/cooperative_runtime_preparer.py":"f83358e848ccbc477490a6884a07ea5dad71b0fae2f9d0c6b52e9205b0c93201","cyber_lion/enterprise/cooperative_runtime_root.py":"834055f1f7de29a9cff02b8c749e204a8b5f247130ae825060331e0343671e20","cyber_lion/enterprise/cooperative_runtime_writer.py":"1a2bc1d2a6d6465905a714ecec97d653750c0df97560269a81921798d81eb7c3","cyber_lion/enterprise/executor_sandbox.py":"26a5b2e31cc96dca90023c2e871ad950efd019174b50ea6fbbbb46c5e1dfdebe","cyber_lion/enterprise/live_authority_admission.py":"66116735855668e2fe5af0760c985bf41b63cac6605d0c80e78111ac53488f39","cyber_lion/enterprise/models.py":"e342492b276b2e43875519749154106b51712d3983f22912013f7b381343d45a","cyber_lion/enterprise/persistent_authority_state.py":"5e79eca835a3ff772f1f06c65dc394207223a9718b5eff06157ea60d1623369f","cyber_lion/enterprise/policy_gate.py":"4c5acc3573a6043b8202ff207a3155713ce1a5faa54af454129ddbd4045dc4d2","cyber_lion/enterprise/runtime_currentness.py":"69c5c2a8f4ce620ce1a6f8c89d85afd2e19104d12afa8b6514900e7e92271a36","cyber_lion/enterprise/runtime_enforcement.py":"a77497e312ac9450ea7c8f46d7c8e8ceb433f81450646e1766d6731cc280b086","cyber_lion/enterprise/runtime_execution.py":"d04c90d6c661a30e42e38b7d37f822f826e0fb720d5a72c4794a57211dc3f484","cyber_lion/enterprise/swarm_status_projection.py":"95d4868287a86e5527ddd998ffb00055d197fde02b4665e25105c776cfd27559","cyber_lion/enterprise/trusted_control_plane_providers.py":"e5d42ef3ba8b3e0a9ec973aef1082d15d5d34dae4d8b26754a556fe51f74a055","cyber_lion/enterprise/trusted_control_plane_service.py":"6e0e16842817c86fdcff4caaf6cc1f7477a4b88a3a51b0406664ffcb3fb505fa","cyber_lion/mission_control/__init__.py":"8d83b68f7ef8047dc9448bbd9ea0335a5a427fd6d6a3b2707c77a90d76f0448c","cyber_lion/mission_control/artifact_transfer.py":"1bee7f17dd0bffd88d89436f16b50b9811a2ff37ffae42971a64260475a578ba","cyber_lion/mission_control/control_plane_reconnaissance.py":"c44a30d3505aba200c000a72e4bb6129d76ad0dc3136a1a0a7ffe250bb3ebc7c","cyber_lion/mission_control/cooperative_artifacts.py":"bc84a9fe3cbd3892477c948101bc7c02b6126e7c04af1b918a28696f0de6fe6d","cyber_lion/mission_control/cooperative_materialization_registry.py":"6f9093422b1a1fc6657d916ff6b31b9a497dd66dfca03df95b667c424ffdb1f6","cyber_lion/mission_control/cooperative_preactivation.py":"45c082d45e024e43edc62e2f5f555d11eb1c8f2438e66ae1686a865f76c2245a","cyber_lion/mission_control/cooperative_preactivation_bootstrap.py":"7c9252ca92ad0f0f08d42fc9d5d2b9e0cafc1dff87e0527e1a81214ae489afbb","cyber_lion/mission_control/cooperative_process_bootstrap.py":"067ea3d9e8b04ace11e709f60951649d97d759efda20846565aa5407b31935c8","cyber_lion/mission_control/cooperative_production.py":"19cea3dd4e32ce4cb88963799113a93d70ecb372fa6ea11ed68493ab05b6c450","cyber_lion/mission_control/cooperative_readiness.py":"c7fd62ee216d23b5fffba80b4e0a47f32b467293146d5793a3e44d7e2b7841e1","cyber_lion/mission_control/cooperative_worker_bootstrap.py":"6840116fb24f36033f02deea3cb482468f69cdcfbd62209b02e017cce64d9717","cyber_lion/mission_control/cooperative_worker_runtime.py":"0df864ba28771c073d3c887ad82862806d83c454f26f14100eafca89f8ba12d7","cyber_lion/mission_control/dual_result_join.py":"7ce631308f4150525330a56421c55353906d49ad2217206fa4d7ff314bb8139f","cyber_lion/mission_control/execution_driver.py":"b666feb64277895b1861ab341caae1aa0acc09d463e396c75e5aa8797746dd5f","cyber_lion/mission_control/execution_driver_contract.py":"aa5c7390960c835968b72eb28be76b8e2e5d0e83bc9d66fe01fdc5bd13f79821","cyber_lion/mission_control/global_scheduler.py":"70742f0173d8965d4d190a3da52ede0261024547bb4babc51e55b31f300fd73f","cyber_lion/mission_control/lpcl_runtime_selection.py":"3804b73c8d12378538f4e3c51897c557c4d3220003ff74d54f9a78386730bff1","cyber_lion/mission_control/mission_reconciliation.py":"69066f4ef61bd3f7283c8077d20059f102ddc1291fc824edbd418993580e31ea","cyber_lion/mission_control/model_calls.py":"f5dea5c27eb0903134e6d72b775794d6dd0f7303d6ee2fc56a6097b618e334b7","cyber_lion/mission_control/operator_control.py":"694ca04ba6f7ff19375a3d378eb7d4bc17d16c82afa784bd28a85713f431a697","cyber_lion/mission_control/operator_swarm_session.py":"1f473ba8e935412e8491734f1de72d73d02934517275953502cffb08e0060ef8","cyber_lion/mission_control/phase_control.py":"89372056bf7668edc473b0b0dc04433d376dca3e041499fc0b4e6a52f69c319e","cyber_lion/mission_control/runtime_projection.py":"9a6d9d62c25bbc4a3c15aeb1731223fc7c08e62bf8099717a9c58e85aab0ed24","cyber_lion/mission_control/supervisor_projection.py":"d6ffc5c07caf5db6e4040c38962987c3c0c6effb2bfb022e88373c71e773fb80","cyber_lion/process_language/lpcl.py":"355af5b4073378adc4cc35254de4fc59ed6371fa125b3ffd27070a09ecad4b91","lion_firefox_broker_relay.py":"be178c21e5f5ee8cffb7afa2b902fd622351f4dca84bc0f2384f1cb6ac7daf03","lion_mission_lifecycle_db.py":"0ca42b937a21c498e9016e3f255ee796b30268ccff3dea642a468e293814a35a","lion_operator_client.py":"3171b674986015dc1c0e2ba5fa8907c669f1f655c0f0f7e6cecfe6bd7fc3ec0b","lion_operator_containment_helper.py":"378c1b36cc2ad3008cb17ad882039af9fd4ad49b3b3b41a2143a5c3615b705d8","lion_operator_gateway.py":"0a19c0f169e33e863e956013d46899805305407272319251fa478a56243e2279","lion_operator_provision.py":"b8486fc03be70baabb0801a2a02d068152208afc10ea5cc626d567266e23154a","lion_saas_broker.py":"a8d35ac62e93fa0054dd8aad367ec55f98b576faa3d503340c867b5de761da8b","lion_saas_session_bridge.py":"4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7","mission_control_compat.py":"f584066806fd190ff4f1752ab464e0d245172a56789f7852f0ed0df0e2fe93d0","mission_control_v3.py":"4dab86001b26f6be1474cd5113a8d59ed2c53ee29d2b522babcbb66c6b067b63","static/app.css":"0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c","static/app.js":"3baea82b0e2c8ae4d9b0eca36be2f7c755462b245e59c092adec47d85934ff9d","static/control-v3.js":"e7aaa6c32251df70079eb6af838e6c541f0835928d90ce06376cc22fe9041de0","static/index.html":"c08fa2840e317c69c868ffe4c1c992d3b0d364a4716ff567c5937e52a16dca9a","static/passive.js":"4d1ee6e0fafd2467c6c65c8ce69079e403a4464a57a37dc8de14447a67db1465","systemd/lion-operator-control.service":"48087f928e38a693852603c1f95ada80635bc13bc58da6b7a9b03aee0fbfd700","tools/lion_cooperative_worker_adapter.py":"ce1b178e79297ea286bbc0118c65133b8265aff8ae4ff8926de36e6c21c88cda","tools/lion_mission_lifecycle_db.py":"0ca42b937a21c498e9016e3f255ee796b30268ccff3dea642a468e293814a35a","tools/lion_saas_broker.py":"a8d35ac62e93fa0054dd8aad367ec55f98b576faa3d503340c867b5de761da8b","tools/lion_saas_session_bridge.py":"4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"}
+MISSION_CONTROL_V3_SOURCE_MAP={"cyber_lion/contracts/action_ir.py":"cyber_lion/contracts/action_ir.py","cyber_lion/contracts/action_proposal_context.py":"cyber_lion/contracts/action_proposal_context.py","cyber_lion/contracts/action_proposal_projection.py":"cyber_lion/contracts/action_proposal_projection.py","cyber_lion/contracts/action_runtime_binding.py":"cyber_lion/contracts/action_runtime_binding.py","cyber_lion/contracts/builder_process_launch.py":"cyber_lion/contracts/builder_process_launch.py","cyber_lion/contracts/cognitive_continuity.py":"cyber_lion/contracts/cognitive_continuity.py","cyber_lion/contracts/enterprise_graph.py":"cyber_lion/contracts/enterprise_graph.py","cyber_lion/contracts/executor_provisioning.py":"cyber_lion/contracts/executor_provisioning.py","cyber_lion/contracts/executor_sandbox.py":"cyber_lion/contracts/executor_sandbox.py","cyber_lion/contracts/mission_contract_profiles.py":"cyber_lion/contracts/mission_contract_profiles.py","cyber_lion/contracts/operator_intervention.py":"cyber_lion/contracts/operator_intervention.py","cyber_lion/contracts/phase_execution_contract.py":"cyber_lion/contracts/phase_execution_contract.py","cyber_lion/contracts/policy_gate.py":"cyber_lion/contracts/policy_gate.py","cyber_lion/contracts/process_ir.py":"cyber_lion/contracts/process_ir.py","cyber_lion/contracts/repository_maintenance_sandbox.py":"cyber_lion/contracts/repository_maintenance_sandbox.py","cyber_lion/contracts/runtime_currentness.py":"cyber_lion/contracts/runtime_currentness.py","cyber_lion/contracts/runtime_enforcement.py":"cyber_lion/contracts/runtime_enforcement.py","cyber_lion/contracts/runtime_execution.py":"cyber_lion/contracts/runtime_execution.py","cyber_lion/contracts/swarm_status.py":"cyber_lion/contracts/swarm_status.py","cyber_lion/enterprise/authority_grant.py":"cyber_lion/enterprise/authority_grant.py","cyber_lion/enterprise/authority_source.py":"cyber_lion/enterprise/authority_source.py","cyber_lion/enterprise/authority_source_adapter.py":"cyber_lion/enterprise/authority_source_adapter.py","cyber_lion/enterprise/authority_verification.py":"cyber_lion/enterprise/authority_verification.py","cyber_lion/enterprise/control_plane.py":"cyber_lion/enterprise/control_plane.py","cyber_lion/enterprise/cooperative_context_resolver.py":"cyber_lion/enterprise/cooperative_context_resolver.py","cyber_lion/enterprise/cooperative_control_plane_materializer.py":"cyber_lion/enterprise/cooperative_control_plane_materializer.py","cyber_lion/enterprise/cooperative_dependency_provider.py":"cyber_lion/enterprise/cooperative_dependency_provider.py","cyber_lion/enterprise/cooperative_provider_materialization.py":"cyber_lion/enterprise/cooperative_provider_materialization.py","cyber_lion/enterprise/cooperative_runtime_composition.py":"cyber_lion/enterprise/cooperative_runtime_composition.py","cyber_lion/enterprise/cooperative_runtime_evidence_exporter.py":"cyber_lion/enterprise/cooperative_runtime_evidence_exporter.py","cyber_lion/enterprise/cooperative_runtime_evidence_sources.py":"cyber_lion/enterprise/cooperative_runtime_evidence_sources.py","cyber_lion/enterprise/cooperative_runtime_preparation_provider.py":"cyber_lion/enterprise/cooperative_runtime_preparation_provider.py","cyber_lion/enterprise/cooperative_runtime_preparer.py":"cyber_lion/enterprise/cooperative_runtime_preparer.py","cyber_lion/enterprise/cooperative_runtime_root.py":"cyber_lion/enterprise/cooperative_runtime_root.py","cyber_lion/enterprise/cooperative_runtime_writer.py":"cyber_lion/enterprise/cooperative_runtime_writer.py","cyber_lion/enterprise/executor_sandbox.py":"cyber_lion/enterprise/executor_sandbox.py","cyber_lion/enterprise/live_authority_admission.py":"cyber_lion/enterprise/live_authority_admission.py","cyber_lion/enterprise/models.py":"cyber_lion/enterprise/models.py","cyber_lion/enterprise/persistent_authority_state.py":"cyber_lion/enterprise/persistent_authority_state.py","cyber_lion/enterprise/policy_gate.py":"cyber_lion/enterprise/policy_gate.py","cyber_lion/enterprise/runtime_currentness.py":"cyber_lion/enterprise/runtime_currentness.py","cyber_lion/enterprise/runtime_enforcement.py":"cyber_lion/enterprise/runtime_enforcement.py","cyber_lion/enterprise/runtime_execution.py":"cyber_lion/enterprise/runtime_execution.py","cyber_lion/enterprise/swarm_status_projection.py":"cyber_lion/enterprise/swarm_status_projection.py","cyber_lion/enterprise/trusted_control_plane_providers.py":"cyber_lion/enterprise/trusted_control_plane_providers.py","cyber_lion/enterprise/trusted_control_plane_service.py":"cyber_lion/enterprise/trusted_control_plane_service.py","cyber_lion/mission_control/__init__.py":"cyber_lion/mission_control/__init__.py","cyber_lion/mission_control/artifact_transfer.py":"cyber_lion/mission_control/artifact_transfer.py","cyber_lion/mission_control/control_plane_reconnaissance.py":"cyber_lion/mission_control/control_plane_reconnaissance.py","cyber_lion/mission_control/cooperative_artifacts.py":"cyber_lion/mission_control/cooperative_artifacts.py","cyber_lion/mission_control/cooperative_materialization_registry.py":"cyber_lion/mission_control/cooperative_materialization_registry.py","cyber_lion/mission_control/cooperative_preactivation.py":"cyber_lion/mission_control/cooperative_preactivation.py","cyber_lion/mission_control/cooperative_preactivation_bootstrap.py":"cyber_lion/mission_control/cooperative_preactivation_bootstrap.py","cyber_lion/mission_control/cooperative_process_bootstrap.py":"cyber_lion/mission_control/cooperative_process_bootstrap.py","cyber_lion/mission_control/cooperative_production.py":"cyber_lion/mission_control/cooperative_production.py","cyber_lion/mission_control/cooperative_readiness.py":"cyber_lion/mission_control/cooperative_readiness.py","cyber_lion/mission_control/cooperative_worker_bootstrap.py":"cyber_lion/mission_control/cooperative_worker_bootstrap.py","cyber_lion/mission_control/cooperative_worker_runtime.py":"cyber_lion/mission_control/cooperative_worker_runtime.py","cyber_lion/mission_control/dual_result_join.py":"cyber_lion/mission_control/dual_result_join.py","cyber_lion/mission_control/execution_driver.py":"cyber_lion/mission_control/execution_driver.py","cyber_lion/mission_control/execution_driver_contract.py":"cyber_lion/mission_control/execution_driver_contract.py","cyber_lion/mission_control/global_scheduler.py":"cyber_lion/mission_control/global_scheduler.py","cyber_lion/mission_control/lpcl_runtime_selection.py":"cyber_lion/mission_control/lpcl_runtime_selection.py","cyber_lion/mission_control/mission_reconciliation.py":"cyber_lion/mission_control/mission_reconciliation.py","cyber_lion/mission_control/model_calls.py":"cyber_lion/mission_control/model_calls.py","cyber_lion/mission_control/operator_control.py":"cyber_lion/mission_control/operator_control.py","cyber_lion/mission_control/operator_swarm_session.py":"cyber_lion/mission_control/operator_swarm_session.py","cyber_lion/mission_control/phase_control.py":"cyber_lion/mission_control/phase_control.py","cyber_lion/mission_control/runtime_projection.py":"cyber_lion/mission_control/runtime_projection.py","cyber_lion/mission_control/supervisor_projection.py":"cyber_lion/mission_control/supervisor_projection.py","cyber_lion/process_language/lpcl.py":"cyber_lion/process_language/lpcl.py","lion_firefox_broker_relay.py":"tools/lion_firefox_broker_relay.py","lion_mission_lifecycle_db.py":"tools/lion_mission_lifecycle_db.py","lion_operator_client.py":"tools/lion_operator_client.py","lion_operator_containment_helper.py":"tools/lion_operator_containment_helper.py","lion_operator_gateway.py":"tools/lion_operator_gateway.py","lion_operator_provision.py":"tools/lion_operator_provision.py","lion_saas_broker.py":"tools/lion_saas_broker.py","lion_saas_session_bridge.py":"tools/lion_saas_session_bridge.py","mission_control_compat.py":"tools/lion_mission_control_compat.py","mission_control_v3.py":"tools/lion_mission_control_v3.py","static/app.css":"deploy/mission-control/v3/app.css","static/app.js":"deploy/mission-control/v3/app.js","static/control-v3.js":"deploy/mission-control/v3/control-v3.js","static/index.html":"deploy/mission-control/v3/index.html","static/passive.js":"deploy/mission-control/v3/passive.js","systemd/lion-operator-control.service":"deploy/systemd/lion-operator-control.service","tools/lion_cooperative_worker_adapter.py":"tools/lion_cooperative_worker_adapter.py","tools/lion_mission_lifecycle_db.py":"tools/lion_mission_lifecycle_db.py","tools/lion_saas_broker.py":"tools/lion_saas_broker.py","tools/lion_saas_session_bridge.py":"tools/lion_saas_session_bridge.py"}
 MISSION_CONTROL_V3_PATH=MISSION_CONTROL_V3_ROOT/"mission_control_v3.py"
 MISSION_CONTROL_V3_SHA256=MISSION_CONTROL_V3_REQUIRED_SHA256["mission_control_v3.py"]
 MISSION_CONTROL_V3_DROPIN=Path("/etc/systemd/system/lion-mission-control.service.d/99-v3-control.conf")
@@ -1681,38 +1685,267 @@ def mission_control_v3_package_identity_at(root:Path)->dict[str,str]:
   observed[name]=actual
  return observed
 
+
 def mission_control_v3_package_identity()->dict[str,str]:
  return mission_control_v3_package_identity_at(MISSION_CONTROL_V3_ROOT)
 
-def mission_control_v3_install(request:dict[str,Any])->dict[str,Any]:
- head,tree,_=mission64_require_envelope(request,worker=False);mission64_verify_current(head,tree)
- package_identity=mission_control_v3_package_identity()
- MISSION_CONTROL_V3_DROPIN.parent.mkdir(parents=True,exist_ok=True)
- current=MISSION_CONTROL_V3_DROPIN.read_bytes() if MISSION_CONTROL_V3_DROPIN.is_file() else None
- if current is not None:
-  backup=MISSION64_STATE/"mission-control-backups"/("99-v3-control."+sha256(current)+"."+datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")+".bak");backup.parent.mkdir(parents=True,exist_ok=True);backup.write_bytes(current);os.chmod(backup,0o400)
- raw=MISSION_CONTROL_V3_DROPIN_TEXT.encode();fd,tmpname=tempfile.mkstemp(prefix=".99-v3-control.",suffix=".tmp",dir=str(MISSION_CONTROL_V3_DROPIN.parent));tmp=Path(tmpname)
+
+def _mission_control_v3_source_envelope(request:dict[str,Any])->tuple[str,str]:
+ compact={"schema_version","request_id","operation","source_head","source_tree"}
+ if set(request)==compact:
+  head=require_hex40(request.get("source_head"),"source_head")
+  tree=require_hex40(request.get("source_tree"),"source_tree")
+ else:
+  # Backward-compatible admission for the historical Mission64 envelope.
+  head,tree,_=mission64_require_envelope(request,worker=False)
+ mission64_verify_current(head,tree)
+ return head,tree
+
+
+def _mission_control_v3_safe_rel(value:str,label:str)->Path:
+ if not isinstance(value,str) or not value or value.startswith("/") or "\x00" in value:
+  raise Deny(label)
+ rel=Path(value)
+ if any(part in {"",".",".."} for part in rel.parts):
+  raise Deny(label)
+ return rel
+
+
+def _mission_control_v3_atomic_copy(src:Path,dst:Path)->None:
+ if not src.is_file() or src.is_symlink():raise Deny("MISSION_CONTROL_V3_SOURCE_FILE:"+str(src))
+ dst.parent.mkdir(parents=True,exist_ok=True)
+ fd,tmpname=tempfile.mkstemp(prefix="."+dst.name+".",suffix=".tmp",dir=str(dst.parent));tmp=Path(tmpname)
  try:
-  with os.fdopen(fd,"wb") as h:h.write(raw);h.flush();os.fsync(h.fileno())
-  os.chmod(tmp,0o644);os.replace(tmp,MISSION_CONTROL_V3_DROPIN)
+  with src.open("rb") as inp,os.fdopen(fd,"wb") as out:
+   shutil.copyfileobj(inp,out);out.flush();os.fsync(out.fileno())
+  os.chmod(tmp,src.stat().st_mode & 0o777)
+  os.replace(tmp,dst)
  finally:
   if tmp.exists():tmp.unlink()
- for argv in (["/bin/systemctl","daemon-reload"],["/bin/systemctl","restart",MISSION_CONTROL_V3_UNIT]):
-  proc=subprocess.run(argv,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=False,check=False,timeout=60)
-  if proc.returncode!=0:raise Deny("MISSION_CONTROL_V3_SYSTEMD:"+(proc.stderr or proc.stdout).decode("utf-8","replace")[-2000:])
- import time as _time
- end=_time.time()+20;loc=None
- while _time.time()<end:
-  active=subprocess.run(["/bin/systemctl","is-active","--quiet",MISSION_CONTROL_V3_UNIT],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=False).returncode==0
-  if active and MISSION_CONTROL_V3_LOCATOR.is_file():
+
+
+def mission_control_v3_materialize_stage_from_checkout(
+ checkout:Path,stage_root:Path,*,source_head:str,source_tree:str,request_id:str
+)->dict[str,Any]:
+ head=require_hex40(source_head,"source_head");tree=require_hex40(source_tree,"source_tree")
+ require_hex64(request_id,"request_id")
+ if not checkout.is_dir() or checkout.is_symlink():raise Deny("MISSION_CONTROL_V3_CHECKOUT_ROOT")
+ parent=stage_root.parent;parent.mkdir(parents=True,exist_ok=True)
+ tmp=Path(tempfile.mkdtemp(prefix="."+stage_root.name+".",dir=str(parent)))
+ old_backup=None
+ try:
+  for target_name,source_name in sorted(MISSION_CONTROL_V3_SOURCE_MAP.items()):
+   target_rel=_mission_control_v3_safe_rel(target_name,"MISSION_CONTROL_V3_TARGET_PATH")
+   source_rel=_mission_control_v3_safe_rel(source_name,"MISSION_CONTROL_V3_SOURCE_PATH")
+   src=checkout/source_rel
+   dst=tmp/target_rel
+   _mission_control_v3_atomic_copy(src,dst)
+  package_identity=mission_control_v3_package_identity_at(tmp)
+  package_digest=sha256(canonical(package_identity))
+  identity={
+   "schema":"lion.mission-control-v3-stage/v1",
+   "request_id":request_id,
+   "source_head":head,
+   "source_tree":tree,
+   "package_digest":package_digest,
+   "file_count":len(package_identity),
+   "staged_at":now(),
+   "authority_effect":"BOUNDED_PACKAGE_STAGING",
+   "runtime_effect":"NONE",
+  }
+  atomic_json(tmp/MISSION_CONTROL_V3_STAGE_IDENTITY,identity)
+  if stage_root.exists():
+   backup_dir=MISSION_CONTROL_V3_DEPLOY_STATE/"stage-backups"
+   backup_dir.mkdir(parents=True,exist_ok=True)
+   old_backup=backup_dir/(stage_root.name+"."+request_id+"."+datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
+   os.replace(stage_root,old_backup)
+  try:
+   os.replace(tmp,stage_root)
+  except Exception:
+   if old_backup is not None and old_backup.exists() and not stage_root.exists():
+    os.replace(old_backup,stage_root)
+   raise
+  return {
+   "staged":True,
+   "stage_root":str(stage_root),
+   "source_head":head,
+   "source_tree":tree,
+   "package_digest":package_digest,
+   "package_identity":package_identity,
+   "file_count":len(package_identity),
+   "previous_stage_backup":str(old_backup) if old_backup else None,
+   "authority_effect":"BOUNDED_PACKAGE_STAGING",
+   "runtime_effect":"NONE",
+  }
+ finally:
+  if tmp.exists():shutil.rmtree(tmp,ignore_errors=True)
+
+
+def _mission_control_v3_checkout_current_master(head:str,tree:str)->Path:
+ td=Path(tempfile.mkdtemp(prefix="lion-mission-control-v3-stage-source-"))
+ try:
+  run(["/usr/bin/git","init",str(td)],timeout=30)
+  run(["/usr/bin/git","-C",str(td),"remote","add","origin",MISSION64_MASTER_REPO],timeout=30)
+  run(["/usr/bin/git","-C",str(td),"fetch","--no-tags","--depth=1","origin",f"refs/heads/{MISSION64_MASTER_BRANCH}"],timeout=180)
+  actual_head=run(["/usr/bin/git","-C",str(td),"rev-parse","FETCH_HEAD"],capture=True,timeout=30).stdout.decode().strip()
+  actual_tree=run(["/usr/bin/git","-C",str(td),"rev-parse","FETCH_HEAD^{tree}"],capture=True,timeout=30).stdout.decode().strip()
+  if (actual_head,actual_tree)!=(head,tree):
+   raise Deny("MISSION_CONTROL_V3_STAGE_SOURCE_DRIFT:"+actual_head+":"+actual_tree)
+  run(["/usr/bin/git","-C",str(td),"checkout","--detach","FETCH_HEAD"],timeout=60)
+  return td
+ except Exception:
+  shutil.rmtree(td,ignore_errors=True)
+  raise
+
+
+def mission_control_v3_stage_current_master(request:dict[str,Any])->dict[str,Any]:
+ if set(request)!={"schema_version","request_id","operation","source_head","source_tree"}:
+  raise Deny("MISSION_CONTROL_V3_STAGE_FIELD_SET")
+ head,tree=_mission_control_v3_source_envelope(request)
+ prior_receipt=(MISSION_CONTROL_V3_DEPLOY_STATE/"receipts"/(request["request_id"]+".stage.json"))
+ if prior_receipt.exists():
+  raise Deny("MISSION_CONTROL_V3_STAGE_REQUEST_REPLAY")
+ checkout=_mission_control_v3_checkout_current_master(head,tree)
+ try:
+  result=mission_control_v3_materialize_stage_from_checkout(
+   checkout,MISSION_CONTROL_V3_STAGE_ROOT,
+   source_head=head,source_tree=tree,request_id=request["request_id"],
+  )
+ finally:
+  shutil.rmtree(checkout,ignore_errors=True)
+ receipt={
+  "schema":"lion.mission-control-v3-stage-receipt/v1",
+  "request_id":request["request_id"],
+  "operation":request["operation"],
+  "source_head":head,
+  "source_tree":tree,
+  "package_digest":result["package_digest"],
+  "observed_at":now(),
+  "authority_effect":"BOUNDED_PACKAGE_STAGING",
+  "runtime_effect":"NONE",
+ }
+ receipt["receipt_digest"]=sha256(canonical(receipt))
+ atomic_json(MISSION_CONTROL_V3_DEPLOY_STATE/"receipts"/(request["request_id"]+".stage.json"),receipt)
+ return {**result,"control_receipt":receipt}
+
+
+def _mission_control_v3_stage_readback(head:str,tree:str)->tuple[dict[str,str],dict[str,Any]]:
+ package=mission_control_v3_package_identity_at(MISSION_CONTROL_V3_STAGE_ROOT)
+ identity_path=MISSION_CONTROL_V3_STAGE_ROOT/MISSION_CONTROL_V3_STAGE_IDENTITY
+ if not identity_path.is_file():raise Deny("MISSION_CONTROL_V3_STAGE_IDENTITY_MISSING")
+ try:identity=json.loads(identity_path.read_text(encoding="utf-8"))
+ except Exception as exc:raise Deny("MISSION_CONTROL_V3_STAGE_IDENTITY_INVALID") from exc
+ expected_digest=sha256(canonical(package))
+ if (
+  identity.get("schema")!="lion.mission-control-v3-stage/v1"
+  or identity.get("source_head")!=head
+  or identity.get("source_tree")!=tree
+  or identity.get("package_digest")!=expected_digest
+  or identity.get("file_count")!=len(package)
+ ):
+  raise Deny("MISSION_CONTROL_V3_STAGE_IDENTITY_DRIFT")
+ return package,identity
+
+
+def _mission_control_v3_deploy_receipt(request:dict[str,Any],result:dict[str,Any],kind:str)->dict[str,Any]:
+ receipt={
+  "schema":"lion.mission-control-v3-deployment-receipt/v1",
+  "request_id":request["request_id"],
+  "operation":request["operation"],
+  "kind":kind,
+  "source_head":request.get("source_head"),
+  "source_tree":request.get("source_tree"),
+  "result_digest":sha256(canonical(result)),
+  "observed_at":now(),
+  "authority_effect":"BOUNDED_MISSION_CONTROL_DEPLOYMENT",
+ }
+ receipt["receipt_digest"]=sha256(canonical(receipt))
+ atomic_json(MISSION_CONTROL_V3_DEPLOY_STATE/"receipts"/(request["request_id"]+".deploy.json"),receipt)
+ return receipt
+
+
+def mission_control_v3_install(request:dict[str,Any])->dict[str,Any]:
+ head,tree=_mission_control_v3_source_envelope(request)
+ stage_identity,stage_meta=_mission_control_v3_stage_readback(head,tree)
+ if not MISSION_CONTROL_V3_ROOT.exists():
+  MISSION_CONTROL_V3_ROOT.mkdir(parents=True,exist_ok=False)
+ backup=MISSION_CONTROL_V3_DEPLOY_STATE/"deploy-backups"/request["request_id"]
+ if backup.exists():raise Deny("MISSION_CONTROL_V3_DEPLOY_REQUEST_REPLAY")
+ backup.mkdir(parents=True,exist_ok=False)
+ package_existed={}
+ dropin_existed=False
+ service_was_active=False
+ rollback_errors=[]
+ try:
+  service_was_active=_systemctl_exact("is-active","--quiet",MISSION_CONTROL_V3_UNIT,check=False).returncode==0
+  for name in sorted(MISSION_CONTROL_V3_REQUIRED_SHA256):
+   live=MISSION_CONTROL_V3_ROOT/name
+   package_existed[name]=_backup_optional(live,backup/"package"/name)
+  dropin_existed=_backup_optional(MISSION_CONTROL_V3_DROPIN,backup/"systemd"/MISSION_CONTROL_V3_DROPIN.name)
+  for name in sorted(MISSION_CONTROL_V3_REQUIRED_SHA256):
+   _live_package_copy(MISSION_CONTROL_V3_STAGE_ROOT/name,MISSION_CONTROL_V3_ROOT/name)
+  live_identity=mission_control_v3_package_identity()
+  if live_identity!=stage_identity:raise Deny("MISSION_CONTROL_V3_LIVE_STAGE_IDENTITY_MISMATCH")
+
+  MISSION_CONTROL_V3_DROPIN.parent.mkdir(parents=True,exist_ok=True)
+  drop_src=backup/"new-mission-control-dropin";drop_src.write_bytes(MISSION_CONTROL_V3_DROPIN_TEXT.encode())
+  _atomic_copy_file(drop_src,MISSION_CONTROL_V3_DROPIN,0o644)
+  _systemctl_exact("daemon-reload")
+  _systemctl_exact("restart",MISSION_CONTROL_V3_UNIT)
+  health=_wait_health(_mission_control_health,MISSION_CONTROL_V3_UNIT)
+  locator=None
+  if MISSION_CONTROL_V3_LOCATOR.is_file():
+   locator=json.loads(MISSION_CONTROL_V3_LOCATOR.read_text(encoding="utf-8"))
+  if not isinstance(locator,dict) or locator.get("port")!=8766 or locator.get("generation")!="MISSION_CONTROL_V3":
+   raise Deny("MISSION_CONTROL_V3_LOCATOR_READBACK")
+  db_path=MISSION_CONTROL_V3_ROOT/"mission-control-v3.db"
+  db_integrity=_sqlite_integrity(db_path) if db_path.is_file() else "NOT_PRESENT"
+  if db_path.is_file() and db_integrity!="ok":raise Deny("MISSION_CONTROL_V3_DB_INTEGRITY")
+  result={
+   "installed":True,
+   "unit":MISSION_CONTROL_V3_UNIT,
+   "port":8766,
+   "source_head":head,
+   "source_tree":tree,
+   "source_sha256":live_identity["mission_control_v3.py"],
+   "package_identity":live_identity,
+   "package_digest":sha256(canonical(live_identity)),
+   "stage_package_digest":stage_meta["package_digest"],
+   "dropin_sha256":sha256_file(MISSION_CONTROL_V3_DROPIN),
+   "locator":locator,
+   "health":health,
+   "db_integrity":db_integrity,
+   "rollback_backup":str(backup),
+   "authority_effect":"BOUNDED_MISSION_CONTROL_DEPLOYMENT",
+  }
+  result["control_receipt"]=_mission_control_v3_deploy_receipt(request,result,"PASS")
+  return result
+ except Exception as exc:
+  for name,existed in package_existed.items():
    try:
-    loc=json.loads(MISSION_CONTROL_V3_LOCATOR.read_text(encoding="utf-8"))
-    if loc.get("port")==8766 and loc.get("generation")=="MISSION_CONTROL_V3":break
-   except Exception:pass
-  _time.sleep(.25)
- else:raise Deny("MISSION_CONTROL_V3_NOT_READY")
- result={"installed":True,"unit":MISSION_CONTROL_V3_UNIT,"port":8766,"source_sha256":package_identity["mission_control_v3.py"],"package_identity":package_identity,"package_digest":sha256(canonical(package_identity)),"dropin_sha256":sha256(raw),"locator":loc}
- result.update(mission64_receipt(request,result));return result
+    target=MISSION_CONTROL_V3_ROOT/name
+    if existed:_live_package_copy(backup/"package"/name,target)
+    elif target.exists():target.unlink()
+   except Exception as rb:rollback_errors.append(name+":"+type(rb).__name__)
+  try:_restore_optional(backup/"systemd"/MISSION_CONTROL_V3_DROPIN.name,MISSION_CONTROL_V3_DROPIN,dropin_existed)
+  except Exception as rb:rollback_errors.append("dropin:"+type(rb).__name__)
+  try:_systemctl_exact("daemon-reload")
+  except Exception as rb:rollback_errors.append("daemon-reload:"+type(rb).__name__)
+  if service_was_active:
+   try:_systemctl_exact("restart",MISSION_CONTROL_V3_UNIT)
+   except Exception as rb:rollback_errors.append("service-restart:"+type(rb).__name__)
+  rollback={
+   "schema":"lion.mission-control-v3-deployment-rollback/v1",
+   "request_id":request["request_id"],
+   "source_head":head,
+   "source_tree":tree,
+   "failure":type(exc).__name__+":"+str(exc),
+   "rollback_errors":rollback_errors,
+   "observed_at":now(),
+   "authority_effect":"BOUNDED_MISSION_CONTROL_DEPLOYMENT",
+  }
+  atomic_json(backup/"rollback.json",rollback)
+  raise Deny("MISSION_CONTROL_V3_INSTALL_FAILED:"+type(exc).__name__+":"+str(exc)+":rollback_errors="+str(len(rollback_errors))) from exc
 
 
 
@@ -2007,6 +2240,7 @@ def handle(
                 "MISSION64_RESTART_ONE",
                 "MISSION64_VALIDATE",
                 "MISSION64_STOP",
+                "MISSION_CONTROL_V3_STAGE_CURRENT_MASTER",
                 "MISSION_CONTROL_V3_INSTALL",
                 "OPERATOR_INTERVENTION_DEPLOY",
                 "EPOCH3_M64_PRECHECK",
@@ -2126,6 +2360,9 @@ def handle(
         return read_evidence(
             target
         )
+
+    if operation == "MISSION_CONTROL_V3_STAGE_CURRENT_MASTER":
+        return mission_control_v3_stage_current_master(request)
 
     if operation == "MISSION_CONTROL_V3_INSTALL":
         return mission_control_v3_install(request)

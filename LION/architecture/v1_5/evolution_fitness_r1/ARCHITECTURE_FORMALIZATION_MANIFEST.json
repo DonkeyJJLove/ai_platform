@@ -1,0 +1,173 @@
+{
+  "affected_concepts": [
+    "architecture",
+    "architecture_knowledge",
+    "formalization",
+    "roadmap"
+  ],
+  "authority_effect": "NONE",
+  "baseline": {
+    "branch": "master",
+    "head": "b6cc132095deb268b2754d2afc0634aeac5a7ac4",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "92acd3916ed5cad62bfa3c5ffd0d282885b76005"
+  },
+  "change_class": "ARCHITECTURE_CONCEPT",
+  "currentness_invalidations": [],
+  "discoverability": {
+    "bootstrap_routes": [],
+    "max_reads_to_owner": 1,
+    "probe_questions": []
+  },
+  "evals_required": [
+    "eval:evolution-fitness-generativity",
+    "eval:evolution-fitness-hard-gates",
+    "eval:evolution-fitness-pressure"
+  ],
+  "execution_effect": "NONE",
+  "falsifiers": [
+    "falsifier:dynamic-pressure-hard-gate-bypass",
+    "falsifier:fitness-design-identity-mismatch",
+    "falsifier:no-authority-bypass",
+    "falsifier:pareto-dominance"
+  ],
+  "formalization_updates": [
+    {
+      "artifact_id": "architecture-projection",
+      "operation": "VALIDATE_ONLY",
+      "reason": "compiler preview requires explicit formalization classification before source mutation"
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "operation": "VALIDATE_ONLY",
+      "reason": "compiler preview requires explicit formalization classification before source mutation"
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "operation": "VALIDATE_ONLY",
+      "reason": "compiler preview requires explicit formalization classification before source mutation"
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "operation": "VALIDATE_ONLY",
+      "reason": "compiler preview requires explicit formalization classification before source mutation"
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "operation": "VALIDATE_ONLY",
+      "reason": "compiler preview requires explicit formalization classification before source mutation"
+    },
+    {
+      "artifact_id": "event-state-catalog",
+      "operation": "VALIDATE_ONLY",
+      "reason": "compiler preview requires explicit formalization classification before source mutation"
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "operation": "VALIDATE_ONLY",
+      "reason": "compiler preview requires explicit formalization classification before source mutation"
+    },
+    {
+      "artifact_id": "gap-projection",
+      "operation": "VALIDATE_ONLY",
+      "reason": "compiler preview requires explicit formalization classification before source mutation"
+    },
+    {
+      "artifact_id": "rag-routing",
+      "operation": "VALIDATE_ONLY",
+      "reason": "compiler preview requires explicit formalization classification before source mutation"
+    },
+    {
+      "artifact_id": "semantic-owners",
+      "operation": "VALIDATE_ONLY",
+      "reason": "compiler preview requires explicit formalization classification before source mutation"
+    }
+  ],
+  "layer_bindings": [
+    {
+      "concept": "architecture",
+      "layers": [
+        "ARCHITECTURE_PROJECTION"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "architecture_knowledge",
+      "layers": [
+        "ARCHITECTURE_PROJECTION"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "formalization",
+      "layers": [
+        "ARCHITECTURE_PROJECTION"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "roadmap",
+      "layers": [
+        "EVOLUTIONARY_EPOCH"
+      ],
+      "new_top_level_layer_required": false
+    }
+  ],
+  "manifest_digest": "71e3e1d758b701979e774dc4e1683f47d73497f2f1bf113ca396258150718eb3",
+  "manifest_id": "afm-preview:68feb5c7a56ff86c7555459f",
+  "migration": {
+    "compatibility_adapter": null,
+    "exit_condition": "formalization preview classified without source mutation",
+    "steps": [
+      "validate candidate through existing formalization owner"
+    ]
+  },
+  "rag_delta": {
+    "record_ids": [],
+    "required": false,
+    "retrieval_probes": []
+  },
+  "rollback": {
+    "compatibility_adapter": null,
+    "exit_condition": "no repository or runtime effect remains",
+    "steps": [
+      "discard unadmitted compiler preview"
+    ]
+  },
+  "schema_id": "lion.architecture-formalization-manifest/v1",
+  "semantic_owner_delta": [
+    {
+      "concept": "architecture",
+      "operation": "VALIDATE_ONLY",
+      "primary": "cyber_lion/architecture_projection/full_architecture.py",
+      "secondary": []
+    },
+    {
+      "concept": "architecture_knowledge",
+      "operation": "VALIDATE_ONLY",
+      "primary": "cyber_lion/architecture_projection/architecture_knowledge.py",
+      "secondary": []
+    },
+    {
+      "concept": "formalization",
+      "operation": "VALIDATE_ONLY",
+      "primary": "cyber_lion/contracts/formalization_registry.py",
+      "secondary": []
+    },
+    {
+      "concept": "roadmap",
+      "operation": "VALIDATE_ONLY",
+      "primary": "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+      "secondary": []
+    }
+  ],
+  "source_evolution_delta": {
+    "digest": "7fef135eb41db788afdf7510a5b9c3a989a4e5ad15d94c4f63959f1e3cac8541",
+    "ref": "compiler:architecture:68feb5c7a56ff86c7555459f"
+  },
+  "tests_required": [
+    "test:architecture-compiler",
+    "test:architecture-projection-gap",
+    "test:evolution-fitness"
+  ]
+}

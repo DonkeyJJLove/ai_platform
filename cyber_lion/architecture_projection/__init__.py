@@ -19,7 +19,20 @@ from .full_plantuml import (
 )
 from .architecture_compiler import (
     ArchitectureCompiler, ArchitectureCompilerError, ArchitectureCompilationResult,
-    CandidateDesign, CandidateLayerBinding,
+    FitnessSelectedArchitectureCompilation, CandidateDesign, CandidateLayerBinding,
+)
+from .evolution_fitness import (
+    EvolutionFitnessError, EvolutionFitnessVector, EvolutionGateState,
+    EvolutionPressure, EvolutionFitnessPolicy, EvolutionFitnessCandidate,
+    EvolutionFitnessAssessment, EvolutionFitnessSelection, EvolutionFitnessOptimizer,
+    BENEFIT_DIMENSIONS, COST_DIMENSIONS, DEFAULT_POLICY,
+)
+from .project_reality import (
+    ProjectRealityError, ProjectSystemSnapshotBinding, ProjectRealitySnapshot,
+    ClaimAtomBinding, ProjectClaimProjection, GateObservation,
+    CandidateRealityBinding, PressureObservation, EvolutionRealityContext,
+    ProjectRealityAdapter, build_project_reality_snapshot,
+    build_project_claim_projection, system_snapshot_from_control_plane_observations,
 )
 from .render_adapter import (
     RendererPin, VisualRenderArtifactPlan, VisualRenderPlan, VisualRenderManifest,
@@ -43,5 +56,15 @@ __all__ = [
     "VisualRenderPlan", "VisualRenderManifest", "build_visual_render_plan",
     "build_visual_render_manifest", "ArchitectureCompiler",
     "ArchitectureCompilerError", "ArchitectureCompilationResult",
-    "CandidateDesign", "CandidateLayerBinding",
+    "FitnessSelectedArchitectureCompilation", "CandidateDesign", "CandidateLayerBinding", "EvolutionFitnessError",
+    "EvolutionFitnessVector", "EvolutionGateState", "EvolutionPressure",
+    "EvolutionFitnessPolicy", "EvolutionFitnessCandidate",
+    "EvolutionFitnessAssessment", "EvolutionFitnessSelection",
+    "EvolutionFitnessOptimizer", "BENEFIT_DIMENSIONS", "COST_DIMENSIONS",
+    "DEFAULT_POLICY", "ProjectRealityError", "ProjectSystemSnapshotBinding",
+    "ProjectRealitySnapshot", "ClaimAtomBinding", "ProjectClaimProjection",
+    "GateObservation", "CandidateRealityBinding", "PressureObservation",
+    "EvolutionRealityContext", "ProjectRealityAdapter",
+    "build_project_reality_snapshot", "build_project_claim_projection",
+    "system_snapshot_from_control_plane_observations",
 ]

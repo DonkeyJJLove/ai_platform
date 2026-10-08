@@ -1,0 +1,81 @@
+{
+  "affected_concepts": [
+    "capabilities",
+    "process_contract_plane",
+    "runtime"
+  ],
+  "authority_effect": "NONE",
+  "baseline": {
+    "branch": "candidate/cooperative-process-bootstrap-r1",
+    "head": "7d04359d6d3ce3c9054057fb86c22f1e0e3c54dc",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "d38e9380652dab1cf0464a94c9cebe2c37bb5e82"
+  },
+  "candidate_digest": "9425e43795e9da21a9e53dc69d107e178921eb3b0a255b470a830ac55cf67868",
+  "candidate_id": "cooperative-process-bootstrap-r6-18",
+  "candidate_scope": [
+    "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_PROCESS_BOOTSTRAP_R6_18.md",
+    "cyber_lion/mission_control/cooperative_process_bootstrap.py",
+    "cyber_lion/tests/test_cooperative_mission_control_wiring.py",
+    "cyber_lion/tests/test_cooperative_process_bootstrap.py",
+    "tools/lion_mission_control_v3.py"
+  ],
+  "change_class": "ARCHITECTURE_CONCEPT",
+  "dependency_ids": [
+    "R6.10",
+    "R6.16",
+    "R6.17"
+  ],
+  "evals_required": [
+    "eval:cooperative-process-bootstrap-fail-closed"
+  ],
+  "evidence_refs": [
+    "source:cooperative-materialization-registry",
+    "source:mission-control-wiring",
+    "source:r6.10-runtime-root",
+    "source:r6.16-control-plane-materializer"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "default UNBOUND remains fail-closed; explicit pinned external process composition can install exact R6.16 WRITE and existing verifier-transfer materializers without authority or execution",
+  "falsification_conditions": [
+    "bootstrap advances a HELD assignment to READY",
+    "bootstrap exposes authority or runtime effect",
+    "more than one process install path is active",
+    "process evidence source depends on the worker provider database it is producing",
+    "write and verifier roots bind different Mission Control databases"
+  ],
+  "falsifiers": [
+    "falsifier:duplicate-registry-install",
+    "falsifier:mission-db-substitution",
+    "falsifier:self-confirming-provider-db"
+  ],
+  "layer_bindings": [
+    {
+      "concept": "capabilities",
+      "layers": [
+        "FLEET_AND_SWARM"
+      ]
+    },
+    {
+      "concept": "process_contract_plane",
+      "layers": [
+        "GOVERNED_SELF_IMPLEMENTATION"
+      ]
+    },
+    {
+      "concept": "runtime",
+      "layers": [
+        "TRUSTED_RUNTIME"
+      ]
+    }
+  ],
+  "motivation": "install exactly one pre-composed non-authorizing cooperative materializer pair into the existing Mission Control registry without using worker provider evidence as its own source",
+  "risk_class": "GREEN",
+  "target_component": "Mission Control cooperative process composition bootstrap",
+  "tests_required": [
+    "test:cooperative-control-plane-materializer",
+    "test:cooperative-mission-control-wiring",
+    "test:cooperative-process-bootstrap",
+    "test:cooperative-worker-qualification"
+  ]
+}

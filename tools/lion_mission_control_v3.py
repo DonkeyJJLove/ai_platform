@@ -27,6 +27,9 @@ from cyber_lion.contracts.mission_contract_profiles import migrated_contract_for
 from cyber_lion.mission_control.mission_reconciliation import evaluate_completion_predicates
 from cyber_lion.mission_control import control_plane_reconnaissance as control_recon
 from cyber_lion.mission_control import cooperative_production as cooperative_prod
+from cyber_lion.mission_control import cooperative_process_bootstrap as cooperative_process_bootstrap
+from cyber_lion.mission_control import cooperative_preactivation as cooperative_preactivation
+from cyber_lion.mission_control import cooperative_preactivation_bootstrap as cooperative_preactivation_bootstrap
 from cyber_lion.mission_control.cooperative_materialization_registry import CooperativeMaterializationRegistry
 from cyber_lion.contracts.action_ir import CanonicalActionIR
 from mission_control_compat import compat_get, STATIC
@@ -341,11 +344,21 @@ PROCESS_CAPABILITY_REGISTRY={
 }
 COOPERATIVE_STATUS_DIR=Path('/srv/lion-e4-candidate-r1/r20-mission/r24-autonomy/status')
 COOPERATIVE_CAPABILITY_REGISTRY=cooperative_prod.capability_registry_entries()
+COOPERATIVE_PREACTIVATION_CAPABILITIES=cooperative_preactivation.capability_registry_entries()
 COOPERATIVE_MATERIALIZERS=CooperativeMaterializationRegistry()
+COOPERATIVE_PREACTIVATION=cooperative_preactivation.CooperativePreactivationRegistry()
+COOPERATIVE_PROCESS_BOOTSTRAP=cooperative_process_bootstrap.bootstrap_process_materializers(
+    registry=COOPERATIVE_MATERIALIZERS
+)
+COOPERATIVE_PREACTIVATION_BOOTSTRAP=cooperative_preactivation_bootstrap.bootstrap_preactivation_provider(
+    registry=COOPERATIVE_PREACTIVATION
+)
 PROCESS_CAPABILITY_REGISTRY[cooperative_prod.CAPABILITY_BOOTSTRAP]=COOPERATIVE_CAPABILITY_REGISTRY[cooperative_prod.CAPABILITY_BOOTSTRAP]
 
 def _process_capability_registry_current():
     current=dict(PROCESS_CAPABILITY_REGISTRY)
+    if COOPERATIVE_PREACTIVATION.current() is not None:
+      current[cooperative_preactivation.CAPABILITY_CLASS]=COOPERATIVE_PREACTIVATION_CAPABILITIES[cooperative_preactivation.CAPABILITY_CLASS]
     try:
       cooperative_prod.bootstrap_readiness(COOPERATIVE_STATUS_DIR,expected_workers=32)
     except Exception:
@@ -559,7 +572,12 @@ def bind_lpcl_execution(mid):
        generic={'handler_id':'GENERIC_LPCL_PHASE','effect_class':'NONE','gate_class':'COGNITIVE_PLAN','retry_policy':'IDEMPOTENT','authority_class':'NONE'}
        cooperative={'handler_id':'COOPERATIVE_PRODUCTION_PHASE','effect_class':'BOUNDED_MATERIAL','gate_class':'RUNTIME_ADMISSION','retry_policy':'NO_AUTOMATIC_EFFECT_RETRY','authority_class':'EXACT_LPCL_PLUS_RUNTIME_ADMISSION'}
        handlers={}
-       cooperative_classes={cooperative_prod.CAPABILITY_BOOTSTRAP,cooperative_prod.CAPABILITY_PRODUCTION,cooperative_prod.CAPABILITY_VERIFY}
+       cooperative_classes={
+        cooperative_prod.CAPABILITY_BOOTSTRAP,
+        cooperative_prod.CAPABILITY_PRODUCTION,
+        cooperative_prod.CAPABILITY_VERIFY,
+        cooperative_preactivation.CAPABILITY_CLASS,
+       }
        for prow in c.execute('SELECT phase_id FROM mission_phases WHERE mission_id=?',(mid,)).fetchall():
         contract=global_sched.phase_execution_contract(c,mid,prow['phase_id'])
         classes=set((contract or {}).get('capability_classes') or ())
@@ -1945,39 +1963,54 @@ def drive_cooperative_once(mid):
       capability=bound['capability_id']
       if operator_control.is_capability_revoked(c,mid,capability):
        _cooperative_wait(c,mid,pid,gate='OPERATOR_CAPABILITY_REVOKED',reason='Cooperative capability is revoked by operator',status='BLOCKED');return
-      try:
-       ready=cooperative_prod.bootstrap_readiness(COOPERATIVE_STATUS_DIR,expected_workers=32)
-      except Exception as exc:
-       _cooperative_wait(c,mid,pid,gate='COOPERATIVE_PROVIDER_NOT_READY',reason=type(exc).__name__+':'+str(exc)[:500]);return
       generation=int((driver_snapshot(c,mid) or {}).get('generation') or 1)
-      materializers=None
-      if capability in {cooperative_prod.CAPABILITY_ID_PRODUCTION,cooperative_prod.CAPABILITY_ID_VERIFY}:
-       materializers=COOPERATIVE_MATERIALIZERS.current()
-       if materializers is None:
-        _cooperative_wait(c,mid,pid,gate='COOPERATIVE_MATERIALIZER_NOT_BOUND',reason='Trusted cooperative materializer is not installed');return
-      if capability==cooperative_prod.CAPABILITY_ID_BOOTSTRAP:
-       _driver_phase_result(c,mid,pid,'PASS','Canonical cooperative worker provider is current on all 32 material workers.',{'event':'COOPERATIVE_PROVIDER_BOUND','capability':capability,**ready},'VALIDATION')
-      elif capability==cooperative_prod.CAPABILITY_ID_PRODUCTION:
-       result=cooperative_prod.advance_build(c,mission_id=mid,phase_id=pid,generation=generation,now_fn=now,write_materializer=materializers.write_materializer)
+
+      if capability==cooperative_preactivation.CAPABILITY_ID:
+       provider=COOPERATIVE_PREACTIVATION.current()
+       if provider is None:
+        _cooperative_wait(c,mid,pid,gate='COOPERATIVE_PREACTIVATION_NOT_BOUND',reason='Trusted cooperative preactivation provider is not installed');return
+       result=cooperative_preactivation.advance_preactivation(
+        c,mission_id=mid,phase_id=pid,generation=generation,provider=provider,now_fn=now
+       )
        if result.get('state')=='PASS':
-        _driver_phase_result(c,mid,pid,'PASS','Model-produced artifact was written through the cooperative assignment pipeline.',{'event':'COOPERATIVE_ARTIFACT_CREATED',**result},'RECEIPT')
-       elif result.get('state')=='FAILED':
-        _cooperative_wait(c,mid,pid,gate=result.get('gate') or 'COOPERATIVE_PRODUCTION_FAILED',reason='Cooperative production assignment failed; no automatic effect retry',status='BLOCKED');return
+        _driver_phase_result(c,mid,pid,'PASS','One worker passed bounded R6.16/R6.17 preactivation without artifact execution.',{'event':'COOPERATIVE_WORKER_PREACTIVATED',**result},'VALIDATION')
        else:
-        _cooperative_wait(c,mid,pid,gate=result.get('gate') or 'COOPERATIVE_PRODUCTION_WAIT',reason='Waiting for bounded cooperative production receipt');return
-      elif capability==cooperative_prod.CAPABILITY_ID_VERIFY:
-       build_phase=_cooperative_build_phase(c,mid)
-       if not build_phase:
-        _cooperative_wait(c,mid,pid,gate='COOPERATIVE_BUILD_PHASE_MISSING',reason='Production phase identity is unavailable',status='BLOCKED');return
-       result=cooperative_prod.advance_verify(c,mission_id=mid,build_phase_id=build_phase,verify_phase_id=pid,generation=generation,now_fn=now,verify_materializer=materializers.verify_materializer)
-       if result.get('state')=='PASS':
-        _driver_phase_result(c,mid,pid,'PASS','Distinct material worker verified exact artifact bytes and digest.',{'event':'COOPERATIVE_ARTIFACT_VERIFIED',**result},'VALIDATION')
-       elif result.get('state')=='FAILED':
-        _cooperative_wait(c,mid,pid,gate=result.get('gate') or 'COOPERATIVE_VERIFY_FAILED',reason='Independent verification failed; no automatic effect retry',status='BLOCKED');return
-       else:
-        _cooperative_wait(c,mid,pid,gate=result.get('gate') or 'COOPERATIVE_VERIFY_WAIT',reason='Waiting for independent verifier receipt');return
+        state='BLOCKED' if result.get('state') in {'BLOCKED','FAILED'} else 'WAITING'
+        _cooperative_wait(c,mid,pid,gate=result.get('gate') or 'COOPERATIVE_PREACTIVATION_WAIT',reason='Waiting for bounded one-worker preactivation evidence; no automatic qualification replay',status=state);return
       else:
-       _cooperative_wait(c,mid,pid,gate='COOPERATIVE_CAPABILITY_SUBSTITUTION',reason='Bound capability does not belong to cooperative provider',status='BLOCKED');return
+       try:
+        ready=cooperative_prod.bootstrap_readiness(COOPERATIVE_STATUS_DIR,expected_workers=32)
+       except Exception as exc:
+        _cooperative_wait(c,mid,pid,gate='COOPERATIVE_PROVIDER_NOT_READY',reason=type(exc).__name__+':'+str(exc)[:500]);return
+       materializers=None
+       if capability in {cooperative_prod.CAPABILITY_ID_PRODUCTION,cooperative_prod.CAPABILITY_ID_VERIFY}:
+        materializers=COOPERATIVE_MATERIALIZERS.current()
+        if materializers is None:
+         _cooperative_wait(c,mid,pid,gate='COOPERATIVE_MATERIALIZER_NOT_BOUND',reason='Trusted cooperative materializer is not installed');return
+       if capability==cooperative_prod.CAPABILITY_ID_BOOTSTRAP:
+        _driver_phase_result(c,mid,pid,'PASS','Canonical cooperative worker provider is current on all 32 material workers.',{'event':'COOPERATIVE_PROVIDER_BOUND','capability':capability,**ready},'VALIDATION')
+       elif capability==cooperative_prod.CAPABILITY_ID_PRODUCTION:
+        result=cooperative_prod.advance_build(c,mission_id=mid,phase_id=pid,generation=generation,now_fn=now,write_materializer=materializers.write_materializer)
+        if result.get('state')=='PASS':
+         _driver_phase_result(c,mid,pid,'PASS','Model-produced artifact was written through the cooperative assignment pipeline.',{'event':'COOPERATIVE_ARTIFACT_CREATED',**result},'RECEIPT')
+        elif result.get('state')=='FAILED':
+         _cooperative_wait(c,mid,pid,gate=result.get('gate') or 'COOPERATIVE_PRODUCTION_FAILED',reason='Cooperative production assignment failed; no automatic effect retry',status='BLOCKED');return
+        else:
+         _cooperative_wait(c,mid,pid,gate=result.get('gate') or 'COOPERATIVE_PRODUCTION_WAIT',reason='Waiting for bounded cooperative production receipt');return
+       elif capability==cooperative_prod.CAPABILITY_ID_VERIFY:
+        build_phase=_cooperative_build_phase(c,mid)
+        if not build_phase:
+         _cooperative_wait(c,mid,pid,gate='COOPERATIVE_BUILD_PHASE_MISSING',reason='Production phase identity is unavailable',status='BLOCKED');return
+        result=cooperative_prod.advance_verify(c,mission_id=mid,build_phase_id=build_phase,verify_phase_id=pid,generation=generation,now_fn=now,verify_materializer=materializers.verify_materializer)
+        if result.get('state')=='PASS':
+         _driver_phase_result(c,mid,pid,'PASS','Distinct material worker verified exact artifact bytes and digest.',{'event':'COOPERATIVE_ARTIFACT_VERIFIED',**result},'VALIDATION')
+        elif result.get('state')=='FAILED':
+         _cooperative_wait(c,mid,pid,gate=result.get('gate') or 'COOPERATIVE_VERIFY_FAILED',reason='Independent verification failed; no automatic effect retry',status='BLOCKED');return
+        else:
+         _cooperative_wait(c,mid,pid,gate=result.get('gate') or 'COOPERATIVE_VERIFY_WAIT',reason='Waiting for independent verifier receipt');return
+       else:
+        _cooperative_wait(c,mid,pid,gate='COOPERATIVE_CAPABILITY_SUBSTITUTION',reason='Bound capability does not belong to cooperative provider',status='BLOCKED');return
+
       current=driver_snapshot(c,mid)
       if current and current['state'] in {'WAITING','BLOCKED'}:
        driver_transition(c,mid,'ACTIVE',now,current_phase=_recompute_process(c,mid)[0],next_action='SELECT_NEXT_PHASE')

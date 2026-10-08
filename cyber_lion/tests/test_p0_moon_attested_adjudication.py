@@ -18,13 +18,13 @@ from tools.p0_moon_readonly_observer_falsification import MoonBoundedFalsificati
 from tools.p0_moon_seven_binding import _attacks
 
 REPO="DonkeyJJLove/ai_platform"
+from cyber_lion.tests.p0_historical_inventory import pinned_p0_inventory
+
 def current_inventory():
-    root=Path(__file__).resolve().parents[2];sources={}
-    for raw in subprocess.run(["git","ls-files"],cwd=root,check=True,stdout=subprocess.PIPE,text=True).stdout.splitlines():
-        if (raw.startswith("cyber_lion/") and raw.endswith(".py") and "/tests/" not in f"/{raw}") or (raw.startswith(".github/workflows/") and raw.endswith((".yml",".yaml"))):sources[raw]=(root/raw).read_text(encoding="utf-8")
-    revision=subprocess.run(["git","rev-parse","HEAD"],cwd=root,check=True,stdout=subprocess.PIPE,text=True).stdout.strip();tree=subprocess.run(["git","write-tree"],cwd=root,check=True,stdout=subprocess.PIPE,text=True).stdout.strip()
-    raw=EffectSurfaceScanner().scan(repository=REPO,revision=revision,tree_digest=tree,sources=sources)
-    inv,report,_=EffectTaxonomyReconciler().reconcile(raw_inventory=raw,sources=sources);return root,inv,report
+    """Legacy test-local alias: exact historical P0 source, not current checkout."""
+    root = Path(__file__).resolve().parents[2]
+    inv, report = pinned_p0_inventory(root)
+    return root, inv, report
 
 class MoonAttestedAdjudicationTests(unittest.TestCase):
     def test_contract_domains_are_explicit_and_versioned(self):

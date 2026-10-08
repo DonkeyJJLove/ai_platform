@@ -90,6 +90,122 @@ def _receipt(conn, assignment_id: str):
     return dict(row) if row else None
 
 
+def _cross_model_intelligence_brief(conn, mission_id: str) -> dict[str, Any] | None:
+    """Return one validated cross-model intelligence parent when present.
+
+    Absence preserves the legacy local-only canary path. Presence is strict:
+    a partial/tampered bundle never degrades silently to legacy behavior.
+    """
+    table = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='mission_artifacts'"
+    ).fetchone()
+    if table is None:
+        return None
+    artifact = global_scheduler.artifact(
+        conn, mission_id, "CONTROL_PLANE_INTELLIGENCE_BUNDLE"
+    )
+    if artifact is None:
+        return None
+    content = artifact.get("content")
+    if not isinstance(content, Mapping):
+        raise CooperativeProductionError("cross-model intelligence content invalid")
+    bundle_digest = content.get("bundle_digest")
+    if (
+        type(bundle_digest) is not str
+        or len(bundle_digest) != 64
+        or any(ch not in "0123456789abcdef" for ch in bundle_digest)
+    ):
+        raise CooperativeProductionError("cross-model intelligence digest invalid")
+    local = content.get("local_model_trajectories")
+    saas = content.get("saas_advisories")
+    if not isinstance(local, list) or not local:
+        raise CooperativeProductionError("cross-model LOCAL trajectories missing")
+    if not all(
+        isinstance(item, Mapping)
+        and item.get("state") == "PASS"
+        and isinstance(item.get("result_digest"), str)
+        and isinstance(item.get("response_digest"), str)
+        for item in local
+    ):
+        raise CooperativeProductionError("cross-model LOCAL trajectories incomplete")
+    responded = [
+        item for item in (saas or [])
+        if isinstance(item, Mapping)
+        and item.get("state") == "RESPONDED"
+        and isinstance(item.get("response_digest"), str)
+        and isinstance(item.get("receipt_digest"), str)
+    ]
+    if not responded:
+        raise CooperativeProductionError("cross-model SaaS response missing")
+    view = {
+        "bundle_digest": bundle_digest,
+        "findings": list(content.get("findings") or [])[:12],
+        "root_cause_candidates": list(content.get("root_cause_candidates") or [])[:8],
+        "cross_model_agreements": list(content.get("cross_model_agreements") or [])[:8],
+        "cross_model_disagreements": list(content.get("cross_model_disagreements") or [])[:8],
+        "unknowns": list(content.get("unknowns") or [])[:12],
+    }
+    encoded = json.dumps(
+        view, sort_keys=True, ensure_ascii=False, separators=(",", ":")
+    )
+    if len(encoded) > 6000:
+        encoded = encoded[:6000]
+    return {
+        "bundle_digest": bundle_digest,
+        "artifact_content_digest": artifact["content_digest"],
+        "view": encoded,
+    }
+
+
+def _model_source_prompt(conn, mission_id: str) -> tuple[str, str | None]:
+    brief = _cross_model_intelligence_brief(conn, mission_id)
+    if brief is None:
+        return (
+            "Create one small UTF-8 text artifact for a LION cooperative-production canary. "
+            "Return plain text only, no markdown fences. Include exactly three lines: "
+            "purpose=cooperative-production, mission=" + mission_id
+            + ", status=generated-by-local-model.",
+            None,
+        )
+    prompt = (
+        "Create one small UTF-8 text artifact from the supplied LION cross-model intelligence. "
+        "The intelligence was produced from independent LOCAL trajectories and a separate SaaS advisory. "
+        "Do not invent observations beyond the supplied bounded view. Return plain text only, no markdown fences. "
+        "Include the source bundle digest verbatim and summarize one supported finding, one disagreement or unknown, "
+        "and one next bounded action. Mission: " + mission_id
+        + "\nSOURCE_INTELLIGENCE_BUNDLE_DIGEST=" + brief["bundle_digest"]
+        + "\nBOUNDED_CROSS_MODEL_VIEW=" + brief["view"]
+    )
+    return prompt, brief["bundle_digest"]
+
+
+def _model_source_digest(model_row: Mapping[str, Any]) -> str | None:
+    try:
+        value = json.loads(model_row.get("input_json") or "{}")
+    except Exception as exc:
+        raise CooperativeProductionError("model source input unavailable") from exc
+    digest = value.get("source_intelligence_bundle_digest")
+    if digest is None:
+        return None
+    if (
+        type(digest) is not str
+        or len(digest) != 64
+        or any(ch not in "0123456789abcdef" for ch in digest)
+    ):
+        raise CooperativeProductionError("model source intelligence digest invalid")
+    return digest
+
+
+def _assert_model_source_current(conn, mission_id: str, model_row: Mapping[str, Any]) -> str | None:
+    bound = _model_source_digest(model_row)
+    if bound is None:
+        return None
+    current = _cross_model_intelligence_brief(conn, mission_id)
+    if current is None or current["bundle_digest"] != bound:
+        raise CooperativeProductionError("cross-model intelligence drift")
+    return bound
+
+
 def _create(
     conn,
     *,
@@ -447,26 +563,25 @@ def advance_build(
     write_phase = phase_id + WRITE_SUFFIX
     model = _assignment(conn, mission_id, model_phase)
     if model is None:
-        prompt = (
-            "Create one small UTF-8 text artifact for a LION cooperative-production canary. "
-            "Return plain text only, no markdown fences. Include exactly three lines: "
-            "purpose=cooperative-production, mission=" + mission_id + ", status=generated-by-local-model."
-        )
+        prompt, source_intelligence_digest = _model_source_prompt(conn, mission_id)
+        model_payload = {
+            "kind": "LOCAL_MODEL_INFERENCE",
+            "capability": CAPABILITY_PRODUCTION,
+            "model_capability": CAPABILITY_PRODUCTION,
+            "purpose": "COOPERATIVE_ARTIFACT_SOURCE_GENERATION",
+            "trajectory_role": "BUILDER",
+            "task_id": mission_id + ":artifact-source",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 768 if source_intelligence_digest else 256,
+            "lease_scope": "MISSION_DRIVER",
+            "authority_effect": "NONE",
+        }
+        if source_intelligence_digest:
+            model_payload["source_intelligence_bundle_digest"] = source_intelligence_digest
         aid = _create(
             conn, mission_id=mission_id, phase_id=model_phase,
             logical_drone_id=logical_drone_id, material_drone_id=builder_worker_id,
-            payload={
-                "kind": "LOCAL_MODEL_INFERENCE",
-                "capability": CAPABILITY_PRODUCTION,
-                "model_capability": CAPABILITY_PRODUCTION,
-                "purpose": "COOPERATIVE_ARTIFACT_SOURCE_GENERATION",
-                "trajectory_role": "BUILDER",
-                "task_id": mission_id + ":artifact-source",
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 256,
-                "lease_scope": "MISSION_DRIVER",
-                "authority_effect": "NONE",
-            },
+            payload=model_payload,
             generation=generation, now_fn=now_fn,
         )
         return {"state": "WAITING", "gate": "MODEL_ASSIGNMENT", "assignment_id": aid, "authority_effect": "NONE"}
@@ -487,24 +602,28 @@ def advance_build(
     content_digest = sha256(content.encode("utf-8")).hexdigest()
     if not isinstance(response_digest, str) or len(response_digest) != 64 or not isinstance(model_call_id, str):
         raise CooperativeProductionError("model provenance missing")
+    source_intelligence_digest = _assert_model_source_current(conn, mission_id, model)
     write = _assignment(conn, mission_id, write_phase)
     if write is None:
+        write_payload = {
+            "kind": WRITE_KIND,
+            "mission_id": mission_id,
+            "generation": int(generation),
+            "artifact_name": artifact_name,
+            "content": content,
+            "expected_sha256": content_digest,
+            "producer_model_call_id": model_call_id,
+            "parent_response_digest": response_digest,
+            "capability": CAPABILITY_PRODUCTION,
+            "lease_scope": "MISSION_DRIVER",
+            "authority_effect": "NONE",
+        }
+        if source_intelligence_digest:
+            write_payload["source_intelligence_bundle_digest"] = source_intelligence_digest
         aid = _create(
             conn, mission_id=mission_id, phase_id=write_phase,
             logical_drone_id=logical_drone_id, material_drone_id=builder_worker_id,
-            payload={
-                "kind": WRITE_KIND,
-                "mission_id": mission_id,
-                "generation": int(generation),
-                "artifact_name": artifact_name,
-                "content": content,
-                "expected_sha256": content_digest,
-                "producer_model_call_id": model_call_id,
-                "parent_response_digest": response_digest,
-                "capability": CAPABILITY_PRODUCTION,
-                "lease_scope": "MISSION_DRIVER",
-                "authority_effect": "NONE",
-            },
+            payload=write_payload,
             generation=generation, now_fn=now_fn, held=True,
         )
         if write_materializer is None:
@@ -545,6 +664,7 @@ def advance_build(
         "artifact_sha256": content_digest,
         "artifact_path": write_result.get("artifact_path"),
         "builder_worker_id": builder_worker_id,
+        "source_intelligence_bundle_digest": source_intelligence_digest,
         "authority_effect": "NONE",
     }
 

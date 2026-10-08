@@ -1,0 +1,47 @@
+{
+  "authority_effect": "NONE",
+  "candidate_scope": [
+    "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+    "LION/architecture/v1_5/PROJECT_REALITY_EVOLUTION_PATH_R1.json",
+    "LION/architecture/v1_5/PROJECT_REALITY_EVOLUTION_PATH_R1.md",
+    "LION/architecture/v1_5/README.md",
+    "LION/architecture/v1_5/semantic_owners.json",
+    "LION/evals/evolution/evolution_cases.yaml",
+    "LION/standards/LION_EVOLUTION_FITNESS_STANDARD.json",
+    "LION/standards/LION_EVOLUTION_FITNESS_STANDARD.md",
+    "cyber_lion/architecture_projection/__init__.py",
+    "cyber_lion/architecture_projection/gap.py",
+    "cyber_lion/architecture_projection/project_reality.py",
+    "cyber_lion/tests/test_project_reality.py"
+  ],
+  "delta_digest": "f2398200d2d719162cf33f731115900ea29cd5e6e33d1fd8ac904880b13831af",
+  "delta_id": "architecture:b671f67875a38d982c8a60a6",
+  "dependency_ids": [
+    "EvidenceBoundLearningEpisode",
+    "SemanticRelevance",
+    "currentness",
+    "federation",
+    "reconciliation"
+  ],
+  "evidence_refs": [
+    "source:control-plane-reconnaissance",
+    "source:dynamic-evolution-fitness-r1",
+    "source:enterprise-graph",
+    "source:evolutionary-rnd",
+    "source:evolutionary-state",
+    "source:semantic-relevance"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "ProjectRealitySnapshot and ProjectClaimProjection reuse existing evidence/graph owners, normalize existing control-plane observations, preserve UNKNOWN fail-closed, and supply evidence-bound gates/pressure to the existing evolution selection and compiler path",
+  "falsification_conditions": [
+    "claim projection accepts an authority-plane edge",
+    "narrative projection promotes candidate simulated or unknown evidence class",
+    "non-current project reality yields source_current PASS",
+    "project reality introduces repository/runtime effect surface",
+    "project reality silently substitutes exact source head/tree"
+  ],
+  "motivation": "compose existing world/system/currentness/conversation/runtime evidence into one non-authoritative project reality substrate and feed candidate-specific evidence into evolution selection without creating a second truth store or scheduler",
+  "risk_class": "GREEN",
+  "schema_version": "1.0.0",
+  "target_component": "project reality and epistemic claim projection bound to dynamic evolution fitness"
+}

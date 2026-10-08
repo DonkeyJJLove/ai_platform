@@ -1,0 +1,15 @@
+{
+  "authority_effect": "NONE",
+  "candidate_digest": "096902f1a3c85573d1636835ce8ac51286af298005ca7cf362957b9f992085ee",
+  "compilation_digest": "bda820b4275ff076c49af99a80af1d5360409335bdebfbb1365e264e1b3e929e",
+  "ends_before_admission": true,
+  "evolution_delta_digest": "777f998cceb4962d62a0aca6d619b00c7ccd743a7bc0188dcf7d39cb50417242",
+  "execution_effect": "NONE",
+  "formalization_manifest_digest": "ef427b60f3aff03a62e55c758d8b94da8797cee4223ba9c194a5be03a22bb3cb",
+  "generated_artifacts_excluded_from_source_tree": true,
+  "required_formalization_set_digest": "6e1d133cfac6196052b0be8d2587f604cf609dfa63097974cdcb2bd5138d3047",
+  "required_formalization_surfaces": 33,
+  "schema": "lion.cooperative-runtime-preparation-provider-r6.21-compilation/v1",
+  "source_tree": "3ff8a579f1ee3c0ae2c34bf4d9e0baf20f294932",
+  "stacked_parent_head": "b20e0c385bb9d0f1bbbffe3fa94e3ef04dc0d415"
+}

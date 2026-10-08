@@ -23,3 +23,21 @@ Thirty distinct tests run successfully in the assistant sandbox, Ubuntu on MOON 
 Existing R24 `material_contract_assignment_once` remains the worker consumer; `material_worker_runtime.py` remains the capability/identity contract. `execution_driver.py` remains the mission cursor owner. No production call site is wired to this new module yet. Read the complete assignment producer, receipt-fencing tests, R24 materializer and currentness consumer before changing the advertised worker profile. Add the bundle consumer through that existing assignment/receipt path, then compile and test the actual LPCL ingress.
 
 This increment supports the artifact-exchange part of B02/C02 and acceptance T04/T05/T11 from the cooperative-production requirements; it does not close those acceptances. A00/PR407 and unfinished A01 remain preserved. No merge, live DB migration, engine restart, fleet mutation, new model session or mission activation is performed by this source increment.
+
+
+## Later source evolution — R6.18/R6.19
+
+Subsequent source candidates advance beyond the initial R1 carrier boundary without rewriting this document's historical R1 claims.
+
+[R6.18 process bootstrap](COOPERATIVE_PROCESS_BOOTSTRAP_R6_18.md) supplies the missing fail-closed Mission Control process-composition install path for the existing cooperative materializer registry. Default mode remains UNBOUND; no authority, assignment or runtime effect is created by source integration.
+
+[R6.19 functional acceptance](COOPERATIVE_FUNCTIONAL_ACCEPTANCE_R6_19.md) updates the historical R6.17 fixture to current scheduler storage and proves the isolated chain R6.16 release → R6.17 qualification → current scheduler claim → material write → distinct MD002 verification. This is functional source acceptance, not live deployment acceptance. The live R24 fleet remains a separately observed state.
+
+
+[R6.20 runtime preparer](COOPERATIVE_RUNTIME_PREPARER_R6_20.md) adds the missing prepare-only composition edge from exact HELD cooperative WRITE + existing Action/PDP/provisioning/sandbox evidence into `CooperativeRuntimeContext`. It delegates admission to the existing `RuntimeAdmissionEngine.admit_bound_action(...)`, exposes no execution surface, and feeds the existing R6.16 materializer through an immutable prepared-context source.
+
+[R6.21 durable preparation provider](COOPERATIVE_RUNTIME_PREPARATION_PROVIDER_R6_21.md) binds R6.20 to the existing R6.9 `SQLiteRuntimeAdmissionSource` and the existing R6.16 materializer. It journals `PREPARING → PREPARED → PUBLISHED`, reconstructs from an already-issued durable admission after restart, and classifies the narrow post-replay/pre-journal crash window as `ADMISSION_ISSUANCE_UNKNOWN` with no automatic retry.
+
+[R6.22 preactivation](COOPERATIVE_PREACTIVATION_R6_22.md) adds one fail-closed `COOPERATIVE_WORKER_PREACTIVATION` capability before the 32-worker readiness gate. It drives a qualification-only HELD WRITE through R6.21/R6.16/R6.17, stores the result in the existing mission artifact ledger and never claims or executes that assignment. Production and verification readiness rules are unchanged.
+
+[R6.23 cross-model artifact source](COOPERATIVE_CROSS_MODEL_ARTIFACT_R6_23.md) binds completed LOCAL reconnaissance plus an independently responded SaaS advisory into `CONTROL_PLANE_INTELLIGENCE_BUNDLE`; cooperative production then binds its LOCAL artifact-generation assignment and WRITE provenance to that exact bundle digest. Legacy missions without the bundle retain the original canary path.

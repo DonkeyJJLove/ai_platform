@@ -1,0 +1,46 @@
+{
+  "authority_effect": "NONE",
+  "candidate_scope": [
+    "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+    "LION/architecture/v1_5/README.md",
+    "LION/architecture/v1_5/semantic_owners.json",
+    "LION/evals/evolution/evolution_cases.yaml",
+    "LION/standards/LION_EVOLUTION_FITNESS_STANDARD.json",
+    "LION/standards/LION_EVOLUTION_FITNESS_STANDARD.md",
+    "LION/standards/README.md",
+    "cyber_lion/architecture_projection/__init__.py",
+    "cyber_lion/architecture_projection/architecture_compiler.py",
+    "cyber_lion/architecture_projection/evolution_fitness.py",
+    "cyber_lion/architecture_projection/gap.py",
+    "cyber_lion/tests/test_architecture_compiler.py",
+    "cyber_lion/tests/test_evolution_fitness.py"
+  ],
+  "delta_digest": "7fef135eb41db788afdf7510a5b9c3a989a4e5ad15d94c4f63959f1e3cac8541",
+  "delta_id": "architecture:68feb5c7a56ff86c7555459f",
+  "dependency_ids": [
+    "architecture",
+    "architecture_knowledge",
+    "formalization",
+    "roadmap"
+  ],
+  "evidence_refs": [
+    "source:architecture_compiler",
+    "source:flow-09-flow-10",
+    "source:formalization_kernel",
+    "source:gap_projection",
+    "source:typed_status_model"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "deterministic hard-gated Pareto/pressure selection followed by the existing non-effectful ArchitectureCompiler and formalization spine",
+  "falsification_conditions": [
+    "dynamic pressure changes a hard-gate failure into PASS",
+    "fitness/design identities diverge without rejection",
+    "identical bound inputs produce different selection/compilation digests",
+    "optimizer or selected compiler exposes authority/scheduling/effect methods",
+    "strictly Pareto-dominated candidate wins selection"
+  ],
+  "motivation": "select one bounded high-value evolution candidate and feed exactly that CandidateDesign into the existing ArchitectureCompiler, prioritizing reusable generativity without widening authority",
+  "risk_class": "GREEN",
+  "schema_version": "1.0.0",
+  "target_component": "dynamic evolution fitness selection"
+}

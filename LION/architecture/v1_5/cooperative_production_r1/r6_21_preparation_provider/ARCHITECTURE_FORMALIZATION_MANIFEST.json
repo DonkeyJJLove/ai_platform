@@ -1,0 +1,106 @@
+{
+  "affected_concepts": [
+    "capabilities",
+    "process_contract_plane",
+    "runtime"
+  ],
+  "authority_effect": "NONE",
+  "baseline": {
+    "branch": "candidate/cooperative-preparation-provider-r1",
+    "head": "b20e0c385bb9d0f1bbbffe3fa94e3ef04dc0d415",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "3ff8a579f1ee3c0ae2c34bf4d9e0baf20f294932"
+  },
+  "change_class": "CAPABILITY",
+  "currentness_invalidations": [],
+  "discoverability": {
+    "bootstrap_routes": [],
+    "max_reads_to_owner": 1,
+    "probe_questions": []
+  },
+  "evals_required": [
+    "eval:cooperative-durable-preparation-current-ledger"
+  ],
+  "execution_effect": "NONE",
+  "falsifiers": [
+    "falsifier:durable-admission-substitution",
+    "falsifier:preparing-retry",
+    "falsifier:reconstruction-replay"
+  ],
+  "formalization_updates": [],
+  "layer_bindings": [
+    {
+      "concept": "capabilities",
+      "layers": [
+        "FLEET_AND_SWARM"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "process_contract_plane",
+      "layers": [
+        "GOVERNED_SELF_IMPLEMENTATION"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "runtime",
+      "layers": [
+        "TRUSTED_RUNTIME"
+      ],
+      "new_top_level_layer_required": false
+    }
+  ],
+  "manifest_digest": "ef427b60f3aff03a62e55c758d8b94da8797cee4223ba9c194a5be03a22bb3cb",
+  "manifest_id": "afm-preview:096902f1a3c85573d1636835",
+  "migration": {
+    "compatibility_adapter": null,
+    "exit_condition": "formalization preview classified without source mutation",
+    "steps": [
+      "validate candidate through existing formalization owner"
+    ]
+  },
+  "rag_delta": {
+    "record_ids": [],
+    "required": false,
+    "retrieval_probes": []
+  },
+  "rollback": {
+    "compatibility_adapter": null,
+    "exit_condition": "no repository or runtime effect remains",
+    "steps": [
+      "discard unadmitted compiler preview"
+    ]
+  },
+  "schema_id": "lion.architecture-formalization-manifest/v1",
+  "semantic_owner_delta": [
+    {
+      "concept": "capabilities",
+      "operation": "VALIDATE_ONLY",
+      "primary": "cyber_lion/CAPABILITY_MAP.md",
+      "secondary": []
+    },
+    {
+      "concept": "process_contract_plane",
+      "operation": "VALIDATE_ONLY",
+      "primary": "LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md",
+      "secondary": []
+    },
+    {
+      "concept": "runtime",
+      "operation": "VALIDATE_ONLY",
+      "primary": "cyber_lion/enterprise/runtime_enforcement.py",
+      "secondary": []
+    }
+  ],
+  "source_evolution_delta": {
+    "digest": "777f998cceb4962d62a0aca6d619b00c7ccd743a7bc0188dcf7d39cb50417242",
+    "ref": "compiler:architecture:096902f1a3c85573d1636835"
+  },
+  "tests_required": [
+    "test:cooperative-control-plane-materializer",
+    "test:cooperative-runtime-preparation-provider",
+    "test:cooperative-runtime-preparer",
+    "test:persistent-runtime-state"
+  ]
+}

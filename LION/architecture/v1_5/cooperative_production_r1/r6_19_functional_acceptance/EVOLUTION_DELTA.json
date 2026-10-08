@@ -1,0 +1,36 @@
+{
+  "authority_effect": "NONE",
+  "candidate_scope": [
+    "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_FUNCTIONAL_ACCEPTANCE_R6_19.md",
+    "LION/architecture/v1_5/cooperative_production_r1/README.md",
+    "cyber_lion/tests/test_cooperative_context_resolver.py",
+    "cyber_lion/tests/test_cooperative_functional_acceptance.py"
+  ],
+  "delta_digest": "515d7bf0806c92e5eb7953a3fbdc37124f8d61742953265c8b473f547c35ba74",
+  "delta_id": "architecture:f66c389764ff62aa70f1a366",
+  "dependency_ids": [
+    "R6.16",
+    "R6.17",
+    "R6.18"
+  ],
+  "evidence_refs": [
+    "source:r6.16",
+    "source:r6.17",
+    "source:r6.18",
+    "test:cooperative-runtime-regression-167",
+    "test:functional-r616-r617-current-scheduler"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "current scheduler storage accepts the qualification fixture and the exact MD001 write plus MD002 verification chain completes with byte and digest readback while authority remains NONE",
+  "falsification_conditions": [
+    "MD002 verifier digest differs from the builder artifact digest",
+    "current scheduler migration rejects the qualification fixture",
+    "functional acceptance changes authority state",
+    "material write readback differs from expected bytes",
+    "qualified builder cannot traverse current scheduler claim and receipt ledger"
+  ],
+  "motivation": "bind the historical R6.17 qualification fixture to current scheduler storage and prove the existing cooperative write and independent verification path as one deterministic regression",
+  "risk_class": "GREEN",
+  "schema_version": "1.0.0",
+  "target_component": "cooperative production functional acceptance over current scheduler storage"
+}
