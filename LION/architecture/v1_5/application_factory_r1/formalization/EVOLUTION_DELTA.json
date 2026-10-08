@@ -1,0 +1,44 @@
+{
+  "authority_effect": "NONE",
+  "candidate_scope": [
+    "LION/architecture/v1_5/README.md",
+    "LION/architecture/v1_5/application_factory_r1/CANONICAL_RUN_1_2.txt",
+    "LION/architecture/v1_5/application_factory_r1/CAPABILITY_PREFLIGHTS.json",
+    "LION/architecture/v1_5/application_factory_r1/MISSION_PROGRAM.json",
+    "LION/architecture/v1_5/application_factory_r1/PANEL_LPCL_1_2.txt",
+    "LION/architecture/v1_5/application_factory_r1/PROGRAM_VALIDATION.json",
+    "LION/architecture/v1_5/application_factory_r1/README.md",
+    "LION/architecture/v1_5/application_factory_r1/REGISTRATION_PREVIEW.json",
+    "cyber_lion/mission_control/application_factory_program.py",
+    "cyber_lion/tests/test_application_factory_program.py"
+  ],
+  "delta_digest": "0632b7c21ad63e01495b492f66e5378714f8d391a30c94e433d553e541de59b3",
+  "delta_id": "architecture:020cb284c2403e821a60af17",
+  "dependency_ids": [
+    "ArchitectureCompiler",
+    "CONTROL_PLANE_RECONNAISSANCE",
+    "PhaseExecutionContract",
+    "R6.22",
+    "R6.23"
+  ],
+  "evidence_refs": [
+    "source:lpcl-1.2-process-contract-plane",
+    "source:r6.23",
+    "test:application-factory-program",
+    "test:isolated-mission-control-registration",
+    "test:regression-356"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "one deterministic mission program has equivalent panel and canonical process contracts, preserves a dynamic capability boundary before material production, and carries exact cross-model evidence lineage into one independently verified artifact",
+  "falsification_conditions": [
+    "cross-model phase can pass without both LOCAL and SaaS evidence",
+    "material BUILD is retryable without reconciliation",
+    "panel and canonical phase contract digests diverge",
+    "production capability appears bound in the preactivation-only capability profile",
+    "registration preview activates a mission"
+  ],
+  "motivation": "materialize one source-bound mission program that composes existing LOCAL plus SaaS reconnaissance, one-worker preactivation, unchanged fleet readiness, bounded artifact production and independent verification without creating a new scheduler or authority owner",
+  "risk_class": "GREEN",
+  "schema_version": "1.0.0",
+  "target_component": "finite cross-model application factory mission program"
+}

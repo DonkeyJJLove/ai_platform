@@ -1,0 +1,349 @@
+{
+  "authority_effect": "NONE",
+  "canonical_run_digest": "fede7e8593cc2c71efc7daa9476ab5500f958a3afe1a5fd02e586c7795dac870",
+  "capability_preflights": {
+    "full_cooperative_runtime_ready": {
+      "authority_closure": "PASS",
+      "bound_count": 5,
+      "capability_closure": "PASS",
+      "contract_count": 5,
+      "currentness_closure": "PASS",
+      "dynamic_count": 5,
+      "evidence_closure": "PASS",
+      "invalid_count": 0,
+      "mission_readiness": "READY_BOUND",
+      "phase_count": 5,
+      "phases": [
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "CONTROL_PLANE_RECONNAISSANCE"
+          ],
+          "contract_digest": "5ceb06fd781854413848b5e3282639088e494610a1819f2ab04395afa3e4448f",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [
+            "CONTROL_PLANE_RECONNAISSANCE_V1"
+          ],
+          "phase_id": "CROSS_MODEL_RECON",
+          "state": "VALID_BOUND"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_WORKER_PREACTIVATION"
+          ],
+          "contract_digest": "f0537bd8d7dc6dd15837ac91f36e6445257147eb43e5f3bc28e7534f5d3e7214",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [
+            "COOPERATIVE_WORKER_PREACTIVATION_R1"
+          ],
+          "phase_id": "PREACTIVATE_BUILDER",
+          "state": "VALID_BOUND"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_ARTIFACT_BOOTSTRAP"
+          ],
+          "contract_digest": "e8ae8ad863113df8aac2b98761de767736ed6252b0e3c4d4f16e24aafef0b189",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [
+            "COOPERATIVE_ARTIFACT_BOOTSTRAP_R1"
+          ],
+          "phase_id": "FULL_FLEET_PROVIDER_READINESS",
+          "state": "VALID_BOUND"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_ARTIFACT_PRODUCTION"
+          ],
+          "contract_digest": "dd832417eb66b1ee311c488702dae2fe4acf6f2c27d048c351ff39459a04edff",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "BOUNDED_MATERIAL",
+          "matching_capabilities": [
+            "COOPERATIVE_ARTIFACT_PRODUCTION_R1"
+          ],
+          "phase_id": "BUILD_CROSS_MODEL_ARTIFACT",
+          "state": "VALID_BOUND"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_ARTIFACT_VERIFY"
+          ],
+          "contract_digest": "3459d4f40ca7cc971042e40d0ab70fa6f168821263d9003eb690f10a079079e7",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [
+            "COOPERATIVE_ARTIFACT_VERIFY_R1"
+          ],
+          "phase_id": "VERIFY_CROSS_MODEL_ARTIFACT",
+          "state": "VALID_BOUND"
+        }
+      ],
+      "preflight_digest": "8f0e89ce9217c31ee64b2a981d22fb3cd7a31f7b1764db62cb2ed9af19bab63d",
+      "schema": "lion.mission-execution-preflight/v1",
+      "unbound_count": 0
+    },
+    "no_runtime_registry": {
+      "authority_closure": "PASS",
+      "bound_count": 0,
+      "capability_closure": "PARTIAL",
+      "contract_count": 5,
+      "currentness_closure": "PASS",
+      "dynamic_count": 5,
+      "evidence_closure": "PASS",
+      "invalid_count": 0,
+      "mission_readiness": "WAITING_FOR_CAPABILITIES",
+      "phase_count": 5,
+      "phases": [
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "CONTROL_PLANE_RECONNAISSANCE"
+          ],
+          "contract_digest": "5ceb06fd781854413848b5e3282639088e494610a1819f2ab04395afa3e4448f",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [],
+          "phase_id": "CROSS_MODEL_RECON",
+          "state": "VALID_UNBOUND_WAITING"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_WORKER_PREACTIVATION"
+          ],
+          "contract_digest": "f0537bd8d7dc6dd15837ac91f36e6445257147eb43e5f3bc28e7534f5d3e7214",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [],
+          "phase_id": "PREACTIVATE_BUILDER",
+          "state": "VALID_UNBOUND_WAITING"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_ARTIFACT_BOOTSTRAP"
+          ],
+          "contract_digest": "e8ae8ad863113df8aac2b98761de767736ed6252b0e3c4d4f16e24aafef0b189",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [],
+          "phase_id": "FULL_FLEET_PROVIDER_READINESS",
+          "state": "VALID_UNBOUND_WAITING"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_ARTIFACT_PRODUCTION"
+          ],
+          "contract_digest": "dd832417eb66b1ee311c488702dae2fe4acf6f2c27d048c351ff39459a04edff",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "BOUNDED_MATERIAL",
+          "matching_capabilities": [],
+          "phase_id": "BUILD_CROSS_MODEL_ARTIFACT",
+          "state": "VALID_UNBOUND_WAITING"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_ARTIFACT_VERIFY"
+          ],
+          "contract_digest": "3459d4f40ca7cc971042e40d0ab70fa6f168821263d9003eb690f10a079079e7",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [],
+          "phase_id": "VERIFY_CROSS_MODEL_ARTIFACT",
+          "state": "VALID_UNBOUND_WAITING"
+        }
+      ],
+      "preflight_digest": "ffc745f929dfd605c4a1b8c3938588002777d69c380ad0aa01193564910fa6cb",
+      "schema": "lion.mission-execution-preflight/v1",
+      "unbound_count": 5
+    },
+    "preactivation_ready_production_unbound": {
+      "authority_closure": "PASS",
+      "bound_count": 3,
+      "capability_closure": "PARTIAL",
+      "contract_count": 5,
+      "currentness_closure": "PASS",
+      "dynamic_count": 5,
+      "evidence_closure": "PASS",
+      "invalid_count": 0,
+      "mission_readiness": "VALID_WITH_DYNAMIC_BINDING",
+      "phase_count": 5,
+      "phases": [
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "CONTROL_PLANE_RECONNAISSANCE"
+          ],
+          "contract_digest": "5ceb06fd781854413848b5e3282639088e494610a1819f2ab04395afa3e4448f",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [
+            "CONTROL_PLANE_RECONNAISSANCE_V1"
+          ],
+          "phase_id": "CROSS_MODEL_RECON",
+          "state": "VALID_BOUND"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_WORKER_PREACTIVATION"
+          ],
+          "contract_digest": "f0537bd8d7dc6dd15837ac91f36e6445257147eb43e5f3bc28e7534f5d3e7214",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [
+            "COOPERATIVE_WORKER_PREACTIVATION_R1"
+          ],
+          "phase_id": "PREACTIVATE_BUILDER",
+          "state": "VALID_BOUND"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_ARTIFACT_BOOTSTRAP"
+          ],
+          "contract_digest": "e8ae8ad863113df8aac2b98761de767736ed6252b0e3c4d4f16e24aafef0b189",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [
+            "COOPERATIVE_ARTIFACT_BOOTSTRAP_R1"
+          ],
+          "phase_id": "FULL_FLEET_PROVIDER_READINESS",
+          "state": "VALID_BOUND"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_ARTIFACT_PRODUCTION"
+          ],
+          "contract_digest": "dd832417eb66b1ee311c488702dae2fe4acf6f2c27d048c351ff39459a04edff",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "BOUNDED_MATERIAL",
+          "matching_capabilities": [],
+          "phase_id": "BUILD_CROSS_MODEL_ARTIFACT",
+          "state": "VALID_UNBOUND_WAITING"
+        },
+        {
+          "binding_mode": "DYNAMIC",
+          "capability_classes": [
+            "COOPERATIVE_ARTIFACT_VERIFY"
+          ],
+          "contract_digest": "3459d4f40ca7cc971042e40d0ab70fa6f168821263d9003eb690f10a079079e7",
+          "contract_source": "DECLARED",
+          "effect_ceiling": "NONE",
+          "matching_capabilities": [],
+          "phase_id": "VERIFY_CROSS_MODEL_ARTIFACT",
+          "state": "VALID_UNBOUND_WAITING"
+        }
+      ],
+      "preflight_digest": "72a0abc0920d8976d64e37db3feb361a8b12713d307c6602ae200c50bb7232b9",
+      "schema": "lion.mission-execution-preflight/v1",
+      "unbound_count": 2
+    }
+  },
+  "classification": "CURRENT_SOURCE_SUCCESSOR_CANDIDATE_NOT_REGISTERED_NOT_ACTIVATED",
+  "cross_model_source": {
+    "artifact_generation_binds_exact_bundle_digest": true,
+    "intelligence_artifact": "CONTROL_PLANE_INTELLIGENCE_BUNDLE",
+    "recon_phase": "CROSS_MODEL_RECON",
+    "required_local_trajectories": true,
+    "required_saas_response": true
+  },
+  "deployment_boundaries": {
+    "post_preactivation_fleet_activation": {
+      "after_phase": "PREACTIVATE_BUILDER",
+      "authority_requirement": "SEPARATE_CURRENT_DEPLOYMENT_AUTHORITY_REQUIRED",
+      "before_phase": "FULL_FLEET_PROVIDER_READINESS",
+      "inside_mission": false,
+      "required": true
+    },
+    "prerequisite_source_deployment": {
+      "authority_requirement": "SEPARATE_CURRENT_DEPLOYMENT_AUTHORITY_REQUIRED",
+      "inside_mission": false,
+      "reason": "R6.18-R6.23 source and pinned process/preactivation providers must exist in the deployed runtime before this mission can execute.",
+      "required": true
+    }
+  },
+  "execution_effect": "NONE",
+  "mission_id": "LION-APPLICATION-FACTORY-CROSS-MODEL-R1",
+  "panel_lpcl_digest": "19603183f95f3cd50923682a64a63fb03941eb7b5de315e3f90968ba528d7e46",
+  "phase_contract_digests": [
+    "5ceb06fd781854413848b5e3282639088e494610a1819f2ab04395afa3e4448f",
+    "f0537bd8d7dc6dd15837ac91f36e6445257147eb43e5f3bc28e7534f5d3e7214",
+    "e8ae8ad863113df8aac2b98761de767736ed6252b0e3c4d4f16e24aafef0b189",
+    "dd832417eb66b1ee311c488702dae2fe4acf6f2c27d048c351ff39459a04edff",
+    "3459d4f40ca7cc971042e40d0ab70fa6f168821263d9003eb690f10a079079e7"
+  ],
+  "phases": [
+    {
+      "capability_classes": [
+        "CONTROL_PLANE_RECONNAISSANCE"
+      ],
+      "completion": "CROSS_MODEL_INTELLIGENCE_BOUND=PASS",
+      "effect_ceiling": "NONE",
+      "execution_class": "COGNITIVE",
+      "id": "CROSS_MODEL_RECON",
+      "title": "Acquire Independent LOCAL And SaaS Intelligence"
+    },
+    {
+      "capability_classes": [
+        "COOPERATIVE_WORKER_PREACTIVATION"
+      ],
+      "completion": "COOPERATIVE_WORKER_QUALIFIED=PASS",
+      "effect_ceiling": "NONE",
+      "execution_class": "VALIDATE",
+      "id": "PREACTIVATE_BUILDER",
+      "title": "Qualify One Builder Without Artifact Effect"
+    },
+    {
+      "capability_classes": [
+        "COOPERATIVE_ARTIFACT_BOOTSTRAP"
+      ],
+      "completion": "COOPERATIVE_PROVIDER_READY=PASS",
+      "effect_ceiling": "NONE",
+      "execution_class": "VERIFY",
+      "id": "FULL_FLEET_PROVIDER_READINESS",
+      "title": "Wait For Canonical Cooperative Provider On Full Fleet"
+    },
+    {
+      "capability_classes": [
+        "COOPERATIVE_ARTIFACT_PRODUCTION"
+      ],
+      "completion": "COOPERATIVE_ARTIFACT_WRITTEN=PASS",
+      "effect_ceiling": "BOUNDED_MATERIAL",
+      "execution_class": "MUTATE",
+      "id": "BUILD_CROSS_MODEL_ARTIFACT",
+      "title": "Build Material Artifact From Cross-Model Evidence"
+    },
+    {
+      "capability_classes": [
+        "COOPERATIVE_ARTIFACT_VERIFY"
+      ],
+      "completion": "COOPERATIVE_ARTIFACT_VERIFIED=PASS",
+      "effect_ceiling": "NONE",
+      "execution_class": "VERIFY",
+      "id": "VERIFY_CROSS_MODEL_ARTIFACT",
+      "title": "Independently Verify Artifact Bytes"
+    }
+  ],
+  "registration": {
+    "activation_performed": false,
+    "exact_payload_rule": "REGENERATE_REGISTRATION_PAYLOAD_FROM_DEPLOYED_CURRENT_HEAD_TREE_IMMEDIATELY_BEFORE_REGISTRATION",
+    "performed": false,
+    "preview_source_identity_only": true
+  },
+  "schema": "lion.application-factory-mission-program/v1",
+  "source_parent": {
+    "head": "c530417415c158dfc769b85f9648ec0c65d57b98",
+    "tree": "c7e9c917fdb70e22354fdf35ec35481e54f2a8f8"
+  }
+}

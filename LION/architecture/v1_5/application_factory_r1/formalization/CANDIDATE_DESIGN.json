@@ -1,0 +1,97 @@
+{
+  "affected_concepts": [
+    "architecture",
+    "capabilities",
+    "process_contract_plane",
+    "roadmap"
+  ],
+  "authority_effect": "NONE",
+  "baseline": {
+    "branch": "candidate/application-factory-mission-r1",
+    "head": "c530417415c158dfc769b85f9648ec0c65d57b98",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "b03c87ef835b0f64a60e5acf9d2bd7baf55b35f0"
+  },
+  "candidate_digest": "020cb284c2403e821a60af178bfa6178a27f3c20a6c029a5b47e266f8921bf9d",
+  "candidate_id": "application-factory-cross-model-mission-r1",
+  "candidate_scope": [
+    "LION/architecture/v1_5/README.md",
+    "LION/architecture/v1_5/application_factory_r1/CANONICAL_RUN_1_2.txt",
+    "LION/architecture/v1_5/application_factory_r1/CAPABILITY_PREFLIGHTS.json",
+    "LION/architecture/v1_5/application_factory_r1/MISSION_PROGRAM.json",
+    "LION/architecture/v1_5/application_factory_r1/PANEL_LPCL_1_2.txt",
+    "LION/architecture/v1_5/application_factory_r1/PROGRAM_VALIDATION.json",
+    "LION/architecture/v1_5/application_factory_r1/README.md",
+    "LION/architecture/v1_5/application_factory_r1/REGISTRATION_PREVIEW.json",
+    "cyber_lion/mission_control/application_factory_program.py",
+    "cyber_lion/tests/test_application_factory_program.py"
+  ],
+  "change_class": "ARCHITECTURE_CONCEPT",
+  "dependency_ids": [
+    "ArchitectureCompiler",
+    "CONTROL_PLANE_RECONNAISSANCE",
+    "PhaseExecutionContract",
+    "R6.22",
+    "R6.23"
+  ],
+  "evals_required": [
+    "eval:application-factory-cross-model-mission"
+  ],
+  "evidence_refs": [
+    "source:lpcl-1.2-process-contract-plane",
+    "source:r6.23",
+    "test:application-factory-program",
+    "test:isolated-mission-control-registration",
+    "test:regression-356"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "one deterministic mission program has equivalent panel and canonical process contracts, preserves a dynamic capability boundary before material production, and carries exact cross-model evidence lineage into one independently verified artifact",
+  "falsification_conditions": [
+    "cross-model phase can pass without both LOCAL and SaaS evidence",
+    "material BUILD is retryable without reconciliation",
+    "panel and canonical phase contract digests diverge",
+    "production capability appears bound in the preactivation-only capability profile",
+    "registration preview activates a mission"
+  ],
+  "falsifiers": [
+    "falsifier:cross-model-evidence-collapse",
+    "falsifier:material-retry-widening",
+    "falsifier:panel-canonical-contract-drift"
+  ],
+  "layer_bindings": [
+    {
+      "concept": "architecture",
+      "layers": [
+        "ARCHITECTURE_PROJECTION"
+      ]
+    },
+    {
+      "concept": "capabilities",
+      "layers": [
+        "FLEET_AND_SWARM"
+      ]
+    },
+    {
+      "concept": "process_contract_plane",
+      "layers": [
+        "GOVERNED_SELF_IMPLEMENTATION"
+      ]
+    },
+    {
+      "concept": "roadmap",
+      "layers": [
+        "EVOLUTIONARY_EPOCH"
+      ]
+    }
+  ],
+  "motivation": "materialize one source-bound mission program that composes existing LOCAL plus SaaS reconnaissance, one-worker preactivation, unchanged fleet readiness, bounded artifact production and independent verification without creating a new scheduler or authority owner",
+  "risk_class": "GREEN",
+  "target_component": "finite cross-model application factory mission program",
+  "tests_required": [
+    "test:application-factory-program",
+    "test:control-plane-reconnaissance",
+    "test:cooperative-production",
+    "test:lpcl-canonical-run",
+    "test:process-contract-plane"
+  ]
+}

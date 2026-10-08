@@ -131,3 +131,9 @@ The candidate implementation is `cyber_lion/architecture_projection/project_real
 The roadmap/evolution owner now has a candidate deterministic fitness projection for selecting **one** bounded critical-path evolution candidate. `ProjectRealityAdapter` supplies source-bound gates/pressure, then `ArchitectureCompiler.compile_selected(...)` delegates only the chosen `CandidateDesign` to the existing compiler. Hard source/authority/effect/collision/evidence gates run before Pareto and evidence-bound pressure.
 
 See [LION Evolution Fitness Standard](../../standards/LION_EVOLUTION_FITNESS_STANDARD.md). It adds no scheduler, FLOW-11, authority source or execution surface. The intended next high-value acceptance is a real SaaS + LOCAL + material-worker artifact loop followed by a second task-family proof using the same factory mechanism.
+
+## Application Factory R1 — cross-model material successor candidate
+
+The [Application Factory R1 package](application_factory_r1/README.md) is the finite successor candidate for the roadmap acceptance named above. It uses one mission artifact ledger to retain independent LOCAL trajectories and a responded SaaS advisory, binds the resulting `CONTROL_PLANE_INTELLIGENCE_BUNDLE` digest into cooperative material production, performs one-worker preactivation before the unchanged full-fleet readiness gate, and requires a distinct verifier.
+
+The package is source-only. Its `REGISTRATION_PREVIEW.json` is intentionally not a live registration payload; exact deployed HEAD/TREE must be reacquired and the payload regenerated immediately before any separate registration/activation action.
