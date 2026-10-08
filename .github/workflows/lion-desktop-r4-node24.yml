@@ -1,0 +1,54 @@
+name: LION Desktop R4 Node 24
+
+on:
+  pull_request:
+    paths:
+      - 'browser_broker/**'
+      - '.github/workflows/lion-desktop-r4-node24.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  desktop-source-tests:
+    name: R4 source / ${{ matrix.os }} / Node 24
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Confirm exact source
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          printf 'CHECKED_HEAD=%s\n' "$EXPECTED_HEAD"
+          git rev-parse 'HEAD^{tree}'
+      - name: Install locked dependencies without Electron downloads
+        working-directory: browser_broker
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Check native main and IPC modules
+        working-directory: browser_broker
+        run: |
+          node --check src/main.cjs
+          node --check src/local-advisory.cjs
+          node --check src/desktop-read-model.cjs
+          node --check src/local-preload.cjs
+          node --check src/observer-preload.cjs
+      - name: Run the complete Node24 test suite
+        working-directory: browser_broker
+        run: node --test

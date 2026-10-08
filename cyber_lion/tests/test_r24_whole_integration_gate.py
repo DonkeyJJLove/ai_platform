@@ -56,7 +56,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertEqual(result["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(result["authority_effect"], "NONE")
         self.assertEqual(result["source_bytes"], "GIT_INDEX_BLOB")
-        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R2.json"))
+        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R4.json"))
 
     def test_source_successor_retains_historical_ccf_manifest_immutably(self):
         import subprocess
@@ -72,7 +72,53 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         ).stdout
         self.assertEqual(original.read_bytes(), tracked)
         source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R1.json")
+        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R3.json")
+        self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
+        self.assertEqual(source["authority_effect"], "NONE")
+
+    def test_pr431_source_manifest_remains_byte_identical(self):
+        import subprocess
+        historical = SOURCE_PACKAGE_MANIFEST_PATH.parent / "SOURCE_PACKAGE_MANIFEST_CCF_R2.json"
+        committed = subprocess.run(
+            ["git", "-C", str(SOURCE_PACKAGE_MANIFEST_PATH.parents[4]),
+             "show", "HEAD:LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_MANIFEST_CCF_R2.json"],
+            capture_output=True, check=True,
+        ).stdout
+        self.assertEqual(historical.read_bytes(), committed)
+
+    def test_r4_desktop_source_closure_is_explicitly_pinned(self):
+        source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
+        paths = {row["path"] for row in source["files"]}
+        required = {
+            "browser_broker/src/main.cjs",
+            "browser_broker/src/desktop-read-model.cjs",
+            "browser_broker/src/fleet-carrier-read-model.cjs",
+            "browser_broker/test/r4-fleet-carrier-read-model.test.cjs",
+            "browser_broker/src/local-advisory.cjs",
+            "browser_broker/src/observer-preload.cjs",
+            "browser_broker/src/local-preload.cjs",
+            "browser_broker/src/canonical-conversation-consumer.cjs",
+            "browser_broker/local-gpt.html",
+            "browser_broker/observability-preview/LION_Cluster_System_Tabs_Preview.html",
+            ".github/workflows/lion-desktop-r4-node24.yml",
+        }
+        self.assertTrue(required.issubset(paths), sorted(required - paths))
+        self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
+        self.assertEqual(source["authority_effect"], "NONE")
+
+    def test_r4_archive_sources_and_operator_machine_navigation_are_pinned(self):
+        source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding='utf-8'))
+        paths = {x["path"] for x in source["files"]}
+        owners = {
+            "tools/lion_mission_evidence_archive_r1.py",
+            "tools/lion_reasoning_lineage_journal_r1.py",
+            "cyber_lion/tests/test_lion_mission_evidence_archive_r1.py",
+            "cyber_lion/tests/test_lion_reasoning_lineage_journal_r1.py",
+            "LION/architecture/v1_5/MISSION_EVIDENCE_ARCHIVE_R1.md",
+            "LION/panel/PANEL_OBSERVABILITY.md",
+            "browser_broker/observability-preview/LION_Cluster_System_Tabs_Preview.html",
+        }
+        self.assertTrue(owners.issubset(paths), sorted(owners-paths))
         self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(source["authority_effect"], "NONE")
 
@@ -129,6 +175,22 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
             result = _package_identity_at(path, expected_classification="SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertFalse(result["match"])
         self.assertTrue(any(x["path"] == "<classification>" for x in result["mismatches"]))
+
+    def test_r24_integration_runs_node24_desktop_suite_on_candidate(self):
+        workflow = (
+            Path(__file__).resolve().parents[2]
+            / '.github' / 'workflows' / 'lion-r24-whole-integration-closure.yml'
+        ).read_text(encoding='utf-8')
+        self.assertIn('actions/setup-node@v4', workflow)
+        self.assertIn("node-version: '24'", workflow)
+        self.assertIn('npm ci --ignore-scripts --no-audit --no-fund', workflow)
+        self.assertIn('node --test', workflow)
+        node24_workflow = (
+            Path(__file__).resolve().parents[2]
+            / '.github' / 'workflows' / 'lion-desktop-r4-node24.yml'
+        ).read_text(encoding='utf-8')
+        self.assertIn('printf \'CHECKED_HEAD=%s\\n\' "$EXPECTED_HEAD"', node24_workflow)
+        self.assertIn('working-directory: browser_broker', workflow)
 
     def test_matrix_is_exactly_t01_through_t40(self):
         value = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))

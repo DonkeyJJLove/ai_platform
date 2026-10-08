@@ -46,6 +46,19 @@ jobs:
           assert value["authority_effect"]=="NONE"
           PY
 
+      - name: Set up Node 24 for native Desktop source verification
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Run exact Desktop R4 + bounded SaaS Node24 source tests
+        shell: bash
+        working-directory: browser_broker
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+          node --test
+
       - name: Upload exact gate evidence
         if: always()
         uses: actions/upload-artifact@v4

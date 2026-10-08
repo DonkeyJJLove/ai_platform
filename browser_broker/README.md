@@ -2,7 +2,7 @@
 
 Status: current source-level operator shell. Deployment/current runtime remains a separate observation claim.
 
-The component originated as the R19 browser feasibility candidate, but the current source is the Electron shell that composes the operator experience: Mission Control on the left and the LPCL Panel / ChatGPT SaaS surfaces on the right. Historical R19 evidence remains valid for its own epoch; this README describes the current source role rather than preserving the old "not a production replacement" label.
+The component originated as the R19 browser feasibility candidate. The R4 successor source now composes two independent columns: Mission Control / Cluster / System on the left and LPCL Panel / ChatGPT SaaS / Local GPT on the right. This layout is SOURCE_CANDIDATE_ONLY until its own exact-head package, CI and native deployment are accepted. Historical R19 evidence remains valid for its own epoch; this README describes the current source role rather than preserving the old "not a production replacement" label.
 
 The 8780 panel is displayed without granting renderer authority. A separate
 WebContentsView hosts the ChatGPT SaaS surface. The Chromium profile is persistent;
@@ -219,3 +219,7 @@ correct project/conversation, an actual MCP roundtrip, source/runtime identity,
 and same-thread receipt delivery. Then integrate the existing R18 semantic/model
 modules and Docker workers under the R19 task budgets. Do not replace the live
 panel with the simplified R18 candidate without checking feature/data parity.
+
+## R4 operator desktop source candidate
+
+The source-bound successor is described in [DESKTOP_R4_RELEASE_NOTES.md](DESKTOP_R4_RELEASE_NOTES.md). Only canonical Model Chat/LPCL may bind local/SaaS model output to a mission; interactive Local GPT is unbound advisory. The WebContentsView sender-validated IPC permits limited read-only observation and one bounded operator-initiated local inference, never authority to execute workers or access raw mission SQLite. Startup leaves the canonical SaaS consumer STOPPED until exact prior sends/receipts are reconciled. Cluster now consumes a bounded read-only, digest-verified MOON fleet carrier with worker-level freshness; even a FRESH carrier does not grant mission authority or material readiness.

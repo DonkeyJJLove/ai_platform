@@ -137,3 +137,7 @@ See [LION Evolution Fitness Standard](../../standards/LION_EVOLUTION_FITNESS_STA
 The [Application Factory R1 package](application_factory_r1/README.md) is the finite successor candidate for the roadmap acceptance named above. It uses one mission artifact ledger to retain independent LOCAL trajectories and a responded SaaS advisory, binds the resulting `CONTROL_PLANE_INTELLIGENCE_BUNDLE` digest into cooperative material production, performs one-worker preactivation before the unchanged full-fleet readiness gate, and requires a distinct verifier.
 
 The package is source-only. Its `REGISTRATION_PREVIEW.json` is intentionally not a live registration payload; exact deployed HEAD/TREE must be reacquired and the payload regenerated immediately before any separate registration/activation action.
+
+## Mission evidence and reasoning lineage (R1 source candidate)
+
+[MISSION_EVIDENCE_ARCHIVE_R1.md](MISSION_EVIDENCE_ARCHIVE_R1.md) describes the tested immutable terminal-mission archive and the append-only evidence-classified reasoning journal. It does not change the canonical Mission Control owner, RAG preferred release, LPCL activation, or provide authority to delete older missions/functions.

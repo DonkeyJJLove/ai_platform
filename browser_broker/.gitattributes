@@ -1,0 +1,3 @@
+# Exact cross-platform source bytes for hash-pinned Electron renderers.
+*.cjs text eol=lf
+*.html text eol=lf

@@ -39,3 +39,7 @@ EFFECT / RECEIPT / OBSERVATION / RECONCILIATION
 ## Browser security boundary
 
 Remote SaaS content receives no Node.js authority. The Electron main process constrains navigation, denies new windows, downloads and permission requests, and keeps local service credentials outside renderers. Those controls are source properties; live deployment must be independently observed.
+
+## R4 candidate — dual independent tab bars
+
+An **unmerged source successor**, not an as-is deployment claim, implements LEFT Mission Control/Cluster/System and RIGHT LPCL Panel/ChatGPT SaaS/Local GPT. The Electron main process retains sandboxed WebContentsView isolation; Local GPT is a dedicated file:// renderer with exact SHA pin and sender-checked IPC to 127.0.0.1:8772. A narrowly bounded read-model is displayed by Cluster and System. Stored Docker and federation HEADs remain explicitly snapshot-scoped. Separate CI/deployment readback is required before describing R4 as live.
