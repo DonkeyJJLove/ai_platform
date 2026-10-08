@@ -18,14 +18,13 @@ CREATE_BLOCKED="478e559a2f8762b471ec9d69eca2bf03ed2744ab0e4f34593ab5060ae95cad9d
 PRAGMA_BLOCKED="e631906532cb4c60aa69736270432263cb1d5346afde33cbb01fecec6c793de0"
 SCHEMA="CREATE TABLE moon_file_write_effect(effect_key TEXT PRIMARY KEY,admission_digest TEXT UNIQUE NOT NULL,request_digest TEXT UNIQUE NOT NULL,repository TEXT NOT NULL,target_path TEXT NOT NULL,state TEXT NOT NULL,prepared_at TEXT NOT NULL,attempted_at TEXT,observed_at TEXT,reconciled_at TEXT,pre_observation_digest TEXT,post_observation_digest TEXT,reconciliation_digest TEXT)"
 
+from cyber_lion.tests.p0_historical_inventory import pinned_p0_inventory
+
 def current_inventory():
-    root=Path(__file__).resolve().parents[2];sources={}
-    for base in (root/"cyber_lion",root/".github/workflows"):
-        for p in sorted(base.rglob("*")):
-            if p.is_file() and p.suffix in {".py",".yml",".yaml"}:sources[p.relative_to(root).as_posix()]=p.read_text(encoding="utf-8")
-    revision=subprocess.check_output(["git","rev-parse","HEAD"],cwd=root,text=True).strip();tree=subprocess.check_output(["git","rev-parse","HEAD^{tree}"],cwd=root,text=True).strip()
-    raw=EffectSurfaceScanner().scan(repository=REPO,revision=revision,tree_digest=tree,sources=sources)
-    inventory,report,_=EffectTaxonomyReconciler().reconcile(raw_inventory=raw,sources=sources);return inventory,report
+    """Legacy test-local alias: exact historical P0 source, not current checkout."""
+    root = Path(__file__).resolve().parents[2]
+    inv, report = pinned_p0_inventory(root)
+    return inv, report
 
 def make_db(path:Path,*,wal=True,schema=SCHEMA):
     c=sqlite3.connect(path)

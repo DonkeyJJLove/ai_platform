@@ -12,23 +12,25 @@ from tools.p0_moon_security_boundary_evidence import _admission, materialize_sec
 REPO = "DonkeyJJLove/ai_platform"
 
 
+from cyber_lion.tests.p0_historical_inventory import pinned_p0_inventory, pinned_p0_checkout
+
 def current():
+    """Legacy test-local alias: exact historical P0 source, not current checkout."""
     root = Path(__file__).resolve().parents[2]
-    src = {}
-    for p in subprocess.check_output(["git", "ls-files"], cwd=root, text=True).splitlines():
-        if (p.startswith("cyber_lion/") and p.endswith(".py") and "/tests/" not in f"/{p}") or (p.startswith(".github/workflows/") and p.endswith((".yml", ".yaml"))):
-            src[p] = (root / p).read_text()
-    rev = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
-    tree = subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], cwd=root, text=True).strip()
-    raw = EffectSurfaceScanner().scan(repository=REPO, revision=rev, tree_digest=tree, sources=src)
-    inv, report, _ = EffectTaxonomyReconciler().reconcile(raw_inventory=raw, sources=src)
+    inv, report = pinned_p0_inventory(root)
     return root, inv, report
 
 
 class MoonAuthoritySecurityBoundaryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.root, cls.inv, cls.tax = current()
+        # This source-bound security campaign requires the historical Git HEAD
+        # as well as the historical effect inventory. Never substitute a
+        # current PR checkout while retaining old runner/receipt evidence.
+        cls._p0_checkout = pinned_p0_checkout(Path(__file__).resolve().parents[2])
+        cls.root = cls._p0_checkout.__enter__()
+        cls.addClassCleanup(cls._p0_checkout.__exit__, None, None, None)
+        cls.inv, cls.tax = pinned_p0_inventory(cls.root)
         cls.records, cls.satisfactions, cls.report, cls.policy, cls.closure, cls.carrier, cls.topology = materialize_security_boundary_evidence(inventory=cls.inv, taxonomy_report=cls.tax, repo_root=cls.root)
 
     def test_pure_permission_trusted_values_pass(self):

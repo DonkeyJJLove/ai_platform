@@ -33,26 +33,13 @@ LIVE_SOURCE_REVISION = "830f8c2e5561655dc35118c97f4574acc3bf0816"
 WORKFLOW_SOURCE = "tools/p0_moon_runner_attested_execution_bridge.workflow.source.yml"
 
 
+from cyber_lion.tests.p0_historical_inventory import pinned_p0_inventory
+
 def inventory():
+    """Legacy test-local alias: exact historical P0 source, not current checkout."""
     root = Path(__file__).resolve().parents[2]
-    sources: dict[str, str] = {}
-    for base in (root / "cyber_lion", root / ".github/workflows"):
-        for path in sorted(base.rglob("*")):
-            if path.is_file() and path.suffix in {".py", ".yml", ".yaml"}:
-                sources[path.relative_to(root).as_posix()] = path.read_text(encoding="utf-8")
-    revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
-    tree = subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], cwd=root, text=True).strip()
-    raw = EffectSurfaceScanner().scan(
-        repository=REPOSITORY,
-        revision=revision,
-        tree_digest=tree,
-        sources=sources,
-    )
-    reconciled, _, _ = EffectTaxonomyReconciler().reconcile(
-        raw_inventory=raw,
-        sources=sources,
-    )
-    return reconciled
+    inv, report = pinned_p0_inventory(root)
+    return inv
 
 
 class RunnerAttestedExecutionBridgeTests(unittest.TestCase):

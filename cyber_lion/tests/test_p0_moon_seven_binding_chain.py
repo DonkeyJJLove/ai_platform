@@ -20,18 +20,13 @@ EXPECTED_ATTACKS={
     "STALE_AUTHORITY_SOURCE","CONTROL_ISSUE_SUBSTITUTION",
 }
 
+from cyber_lion.tests.p0_historical_inventory import pinned_p0_inventory
+
 def current_inventory():
-    root=Path(__file__).resolve().parents[2]
-    sources={}
-    for base in (root/"cyber_lion",root/".github/workflows"):
-        for p in sorted(base.rglob("*")):
-            if p.is_file() and p.suffix in {".py",".yml",".yaml"}:
-                sources[p.relative_to(root).as_posix()]=p.read_text(encoding="utf-8")
-    revision=subprocess.check_output(["git","rev-parse","HEAD"],cwd=root,text=True).strip()
-    tree=subprocess.check_output(["git","rev-parse","HEAD^{tree}"],cwd=root,text=True).strip()
-    raw=EffectSurfaceScanner().scan(repository=REPO,revision=revision,tree_digest=tree,sources=sources)
-    inventory,report,_=EffectTaxonomyReconciler().reconcile(raw_inventory=raw,sources=sources)
-    return inventory,report
+    """Legacy test-local alias: exact historical P0 source, not current checkout."""
+    root = Path(__file__).resolve().parents[2]
+    inv, report = pinned_p0_inventory(root)
+    return inv, report
 
 class MoonSevenBindingChainTests(unittest.TestCase):
     @classmethod
