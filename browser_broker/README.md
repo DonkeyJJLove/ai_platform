@@ -12,6 +12,12 @@ execution-policy override.
 
 Canonical architecture and information-model documentation lives in `LION/panel/`.
 
+**Autonomous message delivery boundary (source candidate):** see
+[`DELIVERY_BOUNDARY_STRATEGY_R1.md`](DELIVERY_BOUNDARY_STRATEGY_R1.md)
+for one-dispatch-per-tick budgeting, durable round-robin, single unresolved
+external send, SEND_UNKNOWN reconciliation and the limits of conclusions drawn
+from a UI message-delivery timeout. Source changes do not prove deployment.
+
 The implementation follows Electron's [WebContentsView](https://www.electronjs.org/docs/latest/api/web-contents-view)
 and [security guidance](https://www.electronjs.org/docs/latest/tutorial/security).
 Electron 44.4.3 and Express 5.2.1 are pinned in the lockfile. The UI adapter uses

@@ -4,6 +4,16 @@ const {conversationInfo}=require('./conversation.cjs');
 
 const TRANSPORT='CHATGPT_SENTINELX_MCP';
 const EXTERNAL_SYSTEM='CHATGPT_SAAS';
+// The UI delivery acknowledgement may outlive one broker tick. Never send
+// an entire pending batch in one async turn; advance a durable fair cursor.
+const MAX_DISPATCHES_PER_TICK=1;
+const UNRESOLVED_SEND_STATES=new Set([
+ 'PROVISIONING','DISPATCHING','SEND_COMMITTED','BOUND_SENT','SEND_UNKNOWN','RESULT_OBSERVED',
+]);
+const receiptConfirmed=(broker,rid)=>
+ broker?.request_id===rid&&broker.status==='RESPONDED'&&broker.authority_effect==='NONE'
+ &&/^[a-f0-9]{64}$/.test(broker.response_digest||'')
+ &&/^[a-f0-9]{64}$/.test(broker.receipt_digest||'');
 // Contract markers: AUTO_CREATE · CANONICAL_BRIDGE_WINS · EXPLICIT_BRIDGE_ONLY.
 // Durable bridge owner is conversation_external_bridges. Historical bridges are
 // SUPERSEDED by provenance, never rewritten. BIND/DETACH enforce
@@ -71,6 +81,9 @@ class CanonicalConversationSaaSConsumer{
   this.turnMap=loadJson(store,'canonical_turn_map',{});
   this.dispatchMap=loadJson(store,'canonical_dispatch_map',{});
   this.cursor=Math.max(0,Number(store.setting('canonical_ingress_cursor')||0)||0);
+  const savedScan=Number(store.setting('canonical_dispatch_scan_cursor')||0);
+  this.scanCursor=Number.isSafeInteger(savedScan)&&savedScan>=0?savedScan:0;
+  this.lastPendingCount=0;
  }
  status(){
   return {
@@ -85,6 +98,9 @@ class CanonicalConversationSaaSConsumer{
    conversation_filter:this.conversationFilter,
    writes_legacy_threads:false,
    enabled:this.enabled,
+   max_dispatches_per_tick:MAX_DISPATCHES_PER_TICK,
+   dispatch_scan_cursor:this.scanCursor,
+   pending_candidates_last_tick:this.lastPendingCount,
    authority_effect:'NONE',
   };
  }
@@ -94,6 +110,7 @@ class CanonicalConversationSaaSConsumer{
   this.store.setSetting('canonical_ingress_cursor',String(this.cursor));
   saveJson(this.store,'canonical_turn_map',this.turnMap);
   saveJson(this.store,'canonical_dispatch_map',this.dispatchMap);
+  this.store.setSetting('canonical_dispatch_scan_cursor',String(this.scanCursor));
  }
  async _discoverTurns(){
   const batch=await this.ingress('/v1/events?after='+this.cursor);
@@ -251,12 +268,33 @@ class CanonicalConversationSaaSConsumer{
   this.inFlight.add(rid);
   try{
    const broker=await this.mc('/api/v3/saas-broker/requests/'+encodeURIComponent(rid));
-   if(broker.status==='RESPONDED'){this.dispatchMap[rid]={...(this.dispatchMap[rid]||{}),state:'RECONCILED',observed_at:this.now()};this._persist();return}
+   if(broker.status==='RESPONDED'){
+    if(!receiptConfirmed(broker,rid)){
+     this.state='OPERATOR_REQUIRED';
+     this.lastDecision={stage:'RESPONSE_RECEIPT_UNVERIFIED',request_id:rid,authority_effect:'NONE'};
+     return;
+    }
+    this.dispatchMap[rid]={...(this.dispatchMap[rid]||{}),state:'RECONCILED',observed_at:this.now()};this._persist();return;
+   }
    if(!['WAITING_SUPERVISOR','PENDING','CREATED','QUEUED','CLAIMED'].includes(broker.status))return;
    const turn=await this._turnFor(rid);if(!turn){this.state='WAITING_TURN';return}
    const exact=this._validate(candidate,turn,broker);
    const prior=this.dispatchMap[rid];
+   if(prior&&['PROVISIONING','DISPATCHING'].includes(prior.state)){
+    // After an interrupted send, the actual SaaS UI outcome is unknown.
+    // Never auto-replay a request that may already have been submitted.
+    this.dispatchMap[rid]={...prior,state:'SEND_UNKNOWN',
+      uncertainty_reason:'UNACKNOWLEDGED_EXTERNAL_SEND',observed_at:this.now()};this._persist();
+    this.state='OPERATOR_REQUIRED';
+    this.lastDecision={stage:'SEND_UNKNOWN_RECONCILE_FIRST',request_id:rid,authority_effect:'NONE'};
+    return;
+   }
    if(prior&&['SEND_COMMITTED','BOUND_SENT','SEND_UNKNOWN','RESULT_OBSERVED'].includes(prior.state)){
+    if(prior.state==='SEND_UNKNOWN'){
+     this.state='OPERATOR_REQUIRED';
+     this.lastDecision={stage:'SEND_UNKNOWN_RECONCILE_FIRST',request_id:rid,authority_effect:'NONE'};
+     return;
+    }
     if(
      !prior.dispatch_evidence_recorded_at &&
      ['SEND_COMMITTED','BOUND_SENT'].includes(prior.state) &&
@@ -282,7 +320,19 @@ class CanonicalConversationSaaSConsumer{
    if(!bridge||rotate){
     this.state='PROVISIONING';this.lastDecision={stage:'AUTO_CREATE',request_id:rid,conversation_id:candidate.conversation_id};
     this.dispatchMap[rid]={state:'PROVISIONING',exact,...dispatchEvidence,started_at:this.now()};this._persist();
-    const created=await this.browser.createProjectConversationWithPrompt(prompt,()=>this.dispatchMap[rid]?.state==='PROVISIONING');
+    let created;
+    try{
+     created=await this.browser.createProjectConversationWithPrompt(
+      prompt,()=>this.dispatchMap[rid]?.state==='PROVISIONING');
+    }catch(error){
+     // A browser timeout can happen after the external send was committed.
+     this.dispatchMap[rid]={...this.dispatchMap[rid],state:'SEND_UNKNOWN',
+      uncertainty_reason:'PROVISIONING_SEND_OUTCOME_UNKNOWN',
+      error:String(error?.message||error).slice(0,200),observed_at:this.now()};this._persist();
+     this.state='OPERATOR_REQUIRED';
+     this.lastDecision={stage:'SEND_UNKNOWN_RECONCILE_FIRST',request_id:rid,authority_effect:'NONE'};
+     throw error;
+    }
     this.dispatchMap[rid]={...this.dispatchMap[rid],state:'SEND_COMMITTED',conversation_url:created.conversation_url,external_thread_ref:created.external_thread_ref,sent_at:this.now()};this._persist();
     const persisted=await this._persistBridge(candidate,created,rotate?bridge:null);
     bridge={...persisted,provenance:{conversation_url:created.conversation_url,creation_receipt_digest:persisted.creation_receipt_digest}};
@@ -324,16 +374,52 @@ class CanonicalConversationSaaSConsumer{
    const pending=await this.panel('/api/conversations/saas/pending?limit=128');
    const allRows=Array.isArray(pending.candidates)?pending.candidates:[];
    const rows=this.conversationFilter?allRows.filter(x=>x.conversation_id===this.conversationFilter):allRows;
-   for(const candidate of rows){
-    await this._dispatch(candidate);
+   this.lastPendingCount=rows.length;
+   const unresolved=Object.entries(this.dispatchMap)
+     .filter(([,value])=>value&&UNRESOLVED_SEND_STATES.has(value.state));
+   if(unresolved.length>1){
+    this.state='OPERATOR_REQUIRED';
+    this.lastDecision={stage:'MULTIPLE_UNRESOLVED_EXTERNAL_SENDS',
+     count:unresolved.length,authority_effect:'NONE'};
+   }else if(unresolved.length===1){
+    const [requestId]=unresolved[0];
+    const owned=rows.find(candidate=>candidate.request_id===requestId);
+    if(owned){
+     // Reconcile exactly the same request; do not begin another send.
+     await this._dispatch(owned);
+    }else{
+     // A responded request may disappear from the pending projection.
+     // Only verified canonical response/receipt readback frees the gate.
+     const broker=await this.mc('/api/v3/saas-broker/requests/'+encodeURIComponent(requestId));
+     if(receiptConfirmed(broker,requestId)){
+      this.dispatchMap[requestId]={...this.dispatchMap[requestId],
+       state:'RECONCILED',observed_at:this.now()};this._persist();
+      this.lastDecision={stage:'RECONCILED_BY_EXACT_BROKER_READBACK',
+       request_id:requestId,authority_effect:'NONE'};
+     }else{
+      this.state=broker?.status==='RESPONDED'?'OPERATOR_REQUIRED':'WAITING_PRIOR_READBACK';
+      this.lastDecision={stage:'PRIOR_EXTERNAL_SEND_NOT_RECONCILED',
+       request_id:requestId,authority_effect:'NONE'};
+     }
+    }
+   }else if(rows.length){
+    // Advance and persist the fair scan cursor before an external send.
+    const index=this.scanCursor%rows.length;
+    this.scanCursor=(index+MAX_DISPATCHES_PER_TICK)%rows.length;
+    this._persist();
+    await this._dispatch(rows[index]);
    }
    this.lastError=null;
-   if(!rows.length)this.state='WAITING_CANONICAL_REQUEST';
+   if(!rows.length&&!['WAITING_PRIOR_READBACK','OPERATOR_REQUIRED'].includes(this.state))this.state='WAITING_CANONICAL_REQUEST';
    else if(this.state==='STARTING')this.state='WAITING_CANONICAL_REQUEST';
   }catch(error){
    this.lastError=String(error?.message||error).slice(0,500);
-   this.state=/SEND_UNKNOWN/.test(this.lastError)?'OPERATOR_REQUIRED':'DEGRADED';
-   this.lastDecision={stage:'ERROR',error:this.lastError};
+   const uncertain=Object.values(this.dispatchMap).some(x=>x?.state==='SEND_UNKNOWN');
+   this.state=uncertain||this.state==='OPERATOR_REQUIRED'||/SEND_UNKNOWN/.test(this.lastError)
+     ?'OPERATOR_REQUIRED':'DEGRADED';
+   this.lastDecision=uncertain
+    ?{stage:'SEND_UNKNOWN_RECONCILE_FIRST',error:this.lastError,authority_effect:'NONE'}
+    :{stage:'ERROR',error:this.lastError};
   }finally{this.running=false}
  }
 }

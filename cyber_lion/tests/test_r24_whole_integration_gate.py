@@ -56,7 +56,25 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertEqual(result["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(result["authority_effect"], "NONE")
         self.assertEqual(result["source_bytes"], "GIT_INDEX_BLOB")
-        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R1.json"))
+        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R2.json"))
+
+    def test_source_successor_retains_historical_ccf_manifest_immutably(self):
+        import subprocess
+
+        original = (
+            SOURCE_PACKAGE_MANIFEST_PATH.parent / "SOURCE_PACKAGE_MANIFEST_CCF_R1.json"
+        )
+        self.assertTrue(original.is_file())
+        tracked = subprocess.run(
+            ["git", "-C", str(SOURCE_PACKAGE_MANIFEST_PATH.parents[4]),
+             "show", "HEAD:LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_MANIFEST_CCF_R1.json"],
+            capture_output=True, check=True,
+        ).stdout
+        self.assertEqual(original.read_bytes(), tracked)
+        source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R1.json")
+        self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
+        self.assertEqual(source["authority_effect"], "NONE")
 
     def test_current_source_package_covers_runtime_state_owners(self):
         source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
