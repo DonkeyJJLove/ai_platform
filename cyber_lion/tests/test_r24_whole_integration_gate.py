@@ -92,6 +92,8 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         required = {
             "browser_broker/src/main.cjs",
             "browser_broker/src/desktop-read-model.cjs",
+            "browser_broker/src/fleet-carrier-read-model.cjs",
+            "browser_broker/test/r4-fleet-carrier-read-model.test.cjs",
             "browser_broker/src/local-advisory.cjs",
             "browser_broker/src/observer-preload.cjs",
             "browser_broker/src/local-preload.cjs",

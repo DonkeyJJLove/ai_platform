@@ -1,7 +1,7 @@
 {
   "schema": "lion.source-package-manifest/v1",
   "classification": "SOURCE_ONLY_NOT_DEPLOYMENT",
-  "purpose": "Exact source-only package successor for R4 dual-column Desktop/Local GPT/Cluster and inherited PR431 bounded SaaS delivery; no runtime deployment claim",
+  "purpose": "Source-only Desktop R4, bounded SaaS delivery and digest-verified MOON fleet-carrier observation; not runtime deployment/mission authority.",
   "files": [
     {
       "path": ".github/workflows/lion-desktop-r4-node24.yml",
@@ -41,11 +41,11 @@
     },
     {
       "path": "browser_broker/DESKTOP_R4_RELEASE_NOTES.md",
-      "sha256": "e8ae725f775f78ebc526fe61926109907e66b484eb9b21d20ccb40e690fba42c"
+      "sha256": "aad06ade51334b8905bbdefaf4f778eb95e438279ace8cc29e544dd59f0c279c"
     },
     {
       "path": "browser_broker/README.md",
-      "sha256": "ce597baf33dcf869835437e9fb34ce8cc5af544aa1e4356d2253708c6fa17b52"
+      "sha256": "be2000d216c9848e76b28e90ec3560c00869bc85443b9678ee4f6f07a77f5204"
     },
     {
       "path": "browser_broker/local-gpt.html",
@@ -53,7 +53,7 @@
     },
     {
       "path": "browser_broker/observability-preview/LION_Cluster_System_Tabs_Preview.html",
-      "sha256": "0b863ccaa0ba0118e761d21253b560b1f6665239ca6d84fb7718d666c67ae12a"
+      "sha256": "850d756bf1bd37bd6d879dc0f9994b1e7bad1857dd90fabed3f267f075b92b96"
     },
     {
       "path": "browser_broker/package-lock.json",
@@ -69,7 +69,11 @@
     },
     {
       "path": "browser_broker/src/desktop-read-model.cjs",
-      "sha256": "a058a3ce9be2ad5d073488a2bf4c534947b6c7e6725d83113392d2e3dd4e28e0"
+      "sha256": "002986161495e6ebb2ae95f1bb2d569d86582635965a2bd9c1c9a5b2f105d62c"
+    },
+    {
+      "path": "browser_broker/src/fleet-carrier-read-model.cjs",
+      "sha256": "6aa301a6d435ac2a7c20e12e9dad8ba5168b77cacdab9e0aefc4acf84856ae7c"
     },
     {
       "path": "browser_broker/src/local-advisory.cjs",
@@ -81,7 +85,7 @@
     },
     {
       "path": "browser_broker/src/main.cjs",
-      "sha256": "0e030f23d5b02bfac6b22eb059f195730200221c985e2842258afe88b6135e58"
+      "sha256": "5e18bf00419fd110d4e5df8ffe6dbdf871ed5e76a8b133175303af1bbebbbd91"
     },
     {
       "path": "browser_broker/src/observer-preload.cjs",
@@ -89,7 +93,11 @@
     },
     {
       "path": "browser_broker/test/observability-tabs.test.cjs",
-      "sha256": "a9ca303c076f21bb3fc0a7e19b2135793cf1c18a68679a80189f603d0d9e8c06"
+      "sha256": "e8909e3d0e51ede80f7577b11f93793fdfb50d53e29c1def737ec6937c5b638c"
+    },
+    {
+      "path": "browser_broker/test/r4-fleet-carrier-read-model.test.cjs",
+      "sha256": "e5971f6d0549a9c168606c1ea5586b590b3f37bb65d356d9b26efd89def6b6bc"
     },
     {
       "path": "browser_broker/test/r4-local-advisory.test.cjs",
@@ -97,7 +105,7 @@
     },
     {
       "path": "browser_broker/test/r4-read-model.test.cjs",
-      "sha256": "9b5b069ef11a6ed66184401c0ad23bd0f4ac174602107460a2364a939e96a3d2"
+      "sha256": "a709f6c1e1f7007cff051f5206fd31307dfd722863fb50feac9c5e9c3e812bf0"
     },
     {
       "path": "browser_broker/test/sentinelx-transport.test.cjs",
@@ -388,7 +396,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "24dcbb704681cc6287f74a84c11592ef8491e61d01671085d751c75f6b2c0adf",
+  "package_digest": "0cee58a6b88905076b6b99ebc4ae9e8cdef152e27606c62455d7d339f6d107b0",
   "authority_effect": "NONE",
   "supersedes": "SOURCE_PACKAGE_MANIFEST_CCF_R2.json"
 }

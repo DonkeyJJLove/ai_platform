@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
 const {createReadModel,redact,tail}=require('../src/desktop-read-model.cjs');
+const {digest,CARRIER_SCHEMA}=require('../src/fleet-carrier-read-model.cjs');
 const response=v=>({ok:true,headers:{get:()=>null},text:async()=>JSON.stringify(v)});
 function fixture(overrides={}){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'lion-readmodel-r4-'));
@@ -95,5 +96,49 @@ test('oversized or missing file never escapes the read model',async()=>{
   const d=await f.model.observe('system');
   assert.equal(d.repos.repositories.length,0);
   assert.equal(d.repos.source,'STORED_GITHUB_HEADS_NOT_LIVE');
+ }finally{f.cleanup()}
+});
+
+test('Cluster uses exact canonical 32-worker fleet carrier when fresh',async()=>{
+ const f=fixture();
+ try{
+  const value={
+   schema:CARRIER_SCHEMA,physical_host:'MOON',materialized:32,ready:0,
+   state:'DEGRADED',observed_at:'2026-10-08T17:49:30Z',
+   source_head:'a'.repeat(40),source_tree:'b'.repeat(40),
+   workers:Array.from({length:32},(_,i)=>({
+    material_worker_id:'MD'+String(i+1).padStart(3,'0'),
+    container_id:(i+1).toString(16).padStart(64,'0'),
+    container_state:'exited',ready:false,
+    heartbeat_observed_at:'2026-10-08T17:49:10Z'
+   }))
+  };
+  const carrier=path.join(f.root,'r23-autonomy','fleet-currentness.json');
+  fs.mkdirSync(path.dirname(carrier),{recursive:true});
+  fs.writeFileSync(carrier,JSON.stringify({...value,currentness_digest:digest(value)}));
+  const observed=await f.model.observe('cluster');
+  assert.equal(observed.material_workers.source,'MOON_CANONICAL_FLEET_CARRIER_READ_ONLY');
+  assert.equal(observed.material_workers.currentness,'FRESH');
+  assert.equal(observed.material_workers.carrier_digest_verified,true);
+  assert.equal(observed.material_workers.observed_runtime_state,'PARKED_OBSERVED');
+  assert.equal(observed.material_workers.provider_ready,false);
+  assert.equal(observed.material_workers.workers.length,32);
+  assert.equal(observed.material_workers.authority_effect,'NONE');
+ }finally{f.cleanup()}
+});
+test('tampered carrier cannot silently fall back to unlabelled ready worker metadata',async()=>{
+ const f=fixture();
+ try{
+  const carrier=path.join(f.root,'r23-autonomy','fleet-currentness.json');
+  fs.mkdirSync(path.dirname(carrier),{recursive:true});
+  fs.writeFileSync(carrier,JSON.stringify({
+   schema:CARRIER_SCHEMA,currentness_digest:'0'.repeat(64),
+   workers:[{material_worker_id:'MD001',ready:true}],ready:32
+  }));
+  const observed=await f.model.observe('cluster');
+  assert.equal(observed.material_workers.currentness,'INVALID');
+  assert.equal(observed.material_workers.provider_ready,false);
+  assert.deepEqual(observed.material_workers.workers,[]);
+  assert.equal(observed.material_workers.authority_effect,'NONE');
  }finally{f.cleanup()}
 });

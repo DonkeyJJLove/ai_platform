@@ -42,10 +42,10 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   const mediatorKey=process.env.LION_MEDIATOR_KEY_FILE?fs.readFileSync(process.env.LION_MEDIATOR_KEY_FILE,'utf8').trim():null;
   store=new Store(path.join(dir,'broker.db'),PROJECT);store.recover();
   const overviewFile=path.join(__dirname,'..','observability-preview','LION_Cluster_System_Tabs_Preview.html');
-  const overviewSha256='0b863ccaa0ba0118e761d21253b560b1f6665239ca6d84fb7718d666c67ae12a';
+  const overviewSha256='850d756bf1bd37bd6d879dc0f9994b1e7bad1857dd90fabed3f267f075b92b96';
   const localFile=path.join(__dirname,'..','local-gpt.html');
   const localSha256='642bd04bfc9f8e7bc59c2bdac94cf18cd8207f9fadfd6e92afe99743d2e51468';
-  const pinned={'desktop-read-model.cjs':'a058a3ce9be2ad5d073488a2bf4c534947b6c7e6725d83113392d2e3dd4e28e0','local-advisory.cjs':'9ca8278b2f70435e71689723bfb8e749d73166a775abf20749ae8870aa36e987','observer-preload.cjs':'d8be9fbf23c3208d455fd584792ac8e7753a87cdbbd4ec1ab38458975f1b978c','local-preload.cjs':'79bc4b5d86fa853b725b05e89ce37b65527e0da1c8f1a5895e42a5485bf61322'};
+  const pinned={'desktop-read-model.cjs':'002986161495e6ebb2ae95f1bb2d569d86582635965a2bd9c1c9a5b2f105d62c','local-advisory.cjs':'9ca8278b2f70435e71689723bfb8e749d73166a775abf20749ae8870aa36e987','fleet-carrier-read-model.cjs':'6aa301a6d435ac2a7c20e12e9dad8ba5168b77cacdab9e0aefc4acf84856ae7c','observer-preload.cjs':'d8be9fbf23c3208d455fd584792ac8e7753a87cdbbd4ec1ab38458975f1b978c','local-preload.cjs':'79bc4b5d86fa853b725b05e89ce37b65527e0da1c8f1a5895e42a5485bf61322'};
   for(const [name,expected] of Object.entries(pinned)){
    const f=path.join(__dirname,name);
    if(!fs.existsSync(f)||require('./contract.cjs').hash(fs.readFileSync(f))!==expected)

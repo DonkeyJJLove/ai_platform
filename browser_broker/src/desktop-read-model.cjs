@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
+const {observeFleetCarrier}=require('./fleet-carrier-read-model.cjs');
 
 const MC = 'http://127.0.0.1:8766';
 const PANEL = 'http://127.0.0.1:8780';
@@ -69,6 +70,16 @@ function createReadModel({root,fetcher=fetch,readFs=fs,now=()=>new Date()}){
    ready:Number.isSafeInteger(m.ready)?m.ready:null,
   })):[];
   const workerSnapshot=Array.isArray(stored.cluster?.workers)?stored.cluster.workers.slice(0,32):[];
+  const carrier=observeFleetCarrier({root,readFs,now});
+  const fleetObservation=carrier.currentness==='UNAVAILABLE'?{
+   source:'STORED_SNAPSHOT_NOT_LIVE_DOCKER',
+   currentness:'STORED_ONLY',
+   snapshot_at:stored.generated_at||null,
+   carrier_reason:carrier.reason,
+   observed_runtime_state:'UNVERIFIED',
+   provider_ready:false,authority_effect:'NONE',
+   workers:workerSnapshot
+  }:carrier;
   const repoSnapshot=Array.isArray(stored.federation?.repositories)?stored.federation.repositories.slice(0,20):[];
   const modelData=Array.isArray(live.models?.data)?live.models.data.slice(0,2).map(x=>({
    label:path.win32.basename(String(x.id||'unknown')).slice(0,120),
@@ -85,7 +96,7 @@ function createReadModel({root,fetcher=fetch,readFs=fs,now=()=>new Date()}){
     broker_pending:Number.isInteger(live.broker?.pending_count)?live.broker.pending_count:null,
    },
    missions:recent,
-   material_workers:{source:'STORED_SNAPSHOT_NOT_LIVE_DOCKER',snapshot_at:stored.generated_at||null,workers:workerSnapshot},
+   material_workers:fleetObservation,
    repos:{source:'STORED_GITHUB_HEADS_NOT_LIVE',snapshot_at:stored.generated_at||null,repositories:repoSnapshot},
    artifacts:{source:'STORED_LEDGER_METADATA_NOT_BYTES',snapshot_at:stored.generated_at||null,
     types:stored.cluster?.historical_artifact_metadata?.type_counts||{},

@@ -64,6 +64,13 @@ test('cluster refreshes read-only owner data, repo HEADs remain labelled snapsho
  assert(!overview.includes('fetch('));
  assert(overview.includes('lion-refresh'));
 });
+test('cluster renders carrier digest, freshness and individual material workers without authority',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'..','observability-preview','LION_Cluster_System_Tabs_Preview.html'),'utf8');
+ for(const phrase of ['observedFleet.carrier_digest_verified','observedFleet.currentness','observedFleet.observed_runtime_state',
+  'w=>w.worker_id||w.name','w=>w.container_state||w.state','NIEPOTWIERDZONE'])
+  assert(html.includes(phrase),phrase);
+ assert(!html.includes('docker stop')&&!html.includes('innerHTML'));
+});
 test('Local GPT has operator-initiated send and provenance, never tools or autostart',()=>{
  assert(local.includes("window.lionLocal.send(prompt,past)"));
  assert(local.includes('mission_binding'));

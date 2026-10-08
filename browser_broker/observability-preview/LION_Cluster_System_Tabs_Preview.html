@@ -155,9 +155,34 @@ async function refreshLive(){
   ])card(key,String(val??'UNKNOWN'),'odczyt bieżący; nie oznacza dopuszczenia efektów',cards);
   liveStatus.appendChild(cards);
   const info=document.createElement('p');info.className='muted';
-  info.textContent='Workery i repozytoria: snapshot '+(value.scope==='system'?value.repos.snapshot_at:value.material_workers.snapshot_at)+'. Zmiana misji nie modyfikuje ich automatycznie.';
+  const observedFleet=value.material_workers||{};
+  const workerStamp=observedFleet.observation_time||observedFleet.snapshot_at||'UNKNOWN';
+  info.textContent='Workery: '+String(observedFleet.source||'UNKNOWN')+
+   ', aktualność '+String(observedFleet.currentness||'UNKNOWN')+
+   ', obserwacja '+workerStamp+
+   '. Repozytoria: snapshot '+String(value.repos.snapshot_at||'UNKNOWN')+
+   '. Odczyt nie daje authority ani admission.';
   liveStatus.appendChild(info);
   if(value.scope==='cluster'){
+   const fleetHead=document.createElement('h3');fleetHead.textContent='Flota MD — kanoniczny nośnik aktualności';
+   liveStatus.appendChild(fleetHead);
+   const fleetExplanation=document.createElement('p');fleetExplanation.className='muted';
+   fleetExplanation.textContent='Źródło: '+String(observedFleet.source||'UNKNOWN')+
+    ' • '+String(observedFleet.currentness||'UNKNOWN')+
+    ' • digest: '+(observedFleet.carrier_digest_verified===true?'ZWERYFIKOWANY':'BRAK POTWIERDZENIA')+
+    ' • stan: '+String(observedFleet.observed_runtime_state||'UNKNOWN')+
+    ' • ready: '+String(observedFleet.ready??'—')+'/'+String(observedFleet.materialized??'—')+
+    ' • provider/admission: NIEPOTWIERDZONE'+
+    (observedFleet.reason?' • '+String(observedFleet.reason):'');
+   liveStatus.appendChild(fleetExplanation);
+   if(Array.isArray(observedFleet.workers)&&observedFleet.workers.length){
+    liveStatus.appendChild(createTable([
+     ['Worker',w=>w.worker_id||w.name],['Kontener',w=>w.container_state||w.state],
+     ['Gotowość z nośnika',w=>w.ready===true?'TAK':'NIE'],
+     ['Heartbeat',w=>w.heartbeat_observed_at||'—'],
+     ['Id kontenera',w=>w.container_id_prefix||w.id_prefix||'—'],
+    ],observedFleet.workers));
+   }
    const title=document.createElement('h3');title.textContent='Aktualne misje (GET /api/v3/missions/recent)';
    liveStatus.appendChild(title);
    liveStatus.appendChild(createTable([['Misja',x=>x.mission_id],['Stan',x=>x.state],['Runtime',x=>x.runtime_state],['M / R',x=>x.materialized+' / '+x.ready]],value.missions));
