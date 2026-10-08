@@ -1,0 +1,83 @@
+{
+  "affected_concepts": [
+    "capabilities",
+    "process_contract_plane",
+    "runtime"
+  ],
+  "authority_effect": "NONE",
+  "baseline": {
+    "branch": "candidate/cooperative-preparation-provider-r1",
+    "head": "b20e0c385bb9d0f1bbbffe3fa94e3ef04dc0d415",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "3ff8a579f1ee3c0ae2c34bf4d9e0baf20f294932"
+  },
+  "candidate_digest": "096902f1a3c85573d1636835ce8ac51286af298005ca7cf362957b9f992085ee",
+  "candidate_id": "cooperative-runtime-preparation-provider-r6-21",
+  "candidate_scope": [
+    "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_RUNTIME_PREPARATION_PROVIDER_R6_21.md",
+    "LION/architecture/v1_5/cooperative_production_r1/README.md",
+    "cyber_lion/enterprise/cooperative_runtime_preparation_provider.py",
+    "cyber_lion/enterprise/cooperative_runtime_preparer.py",
+    "cyber_lion/tests/test_cooperative_runtime_preparation_provider.py",
+    "cyber_lion/tests/test_cooperative_runtime_preparer.py"
+  ],
+  "change_class": "CAPABILITY",
+  "dependency_ids": [
+    "R22I",
+    "R6.16",
+    "R6.20",
+    "R6.9"
+  ],
+  "evals_required": [
+    "eval:cooperative-durable-preparation-current-ledger"
+  ],
+  "evidence_refs": [
+    "source:r6.16",
+    "source:r6.20",
+    "source:r6.9-persistent-runtime-state",
+    "test:r6.21-current-ledger-r6.16"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "one exact HELD WRITE is purely validated, admitted through the existing engine, journaled and durably persisted, reconstructed after restart without replay, then consumed by existing R6.16 for provider evidence and the canonical HELD-to-READY transition",
+  "falsification_conditions": [
+    "PREPARING without a durable admission is automatically retried",
+    "R6.21 writes artifact bytes",
+    "durable admission differs from reconstructed context",
+    "invalid preparation creates a PREPARING journal before pure validation",
+    "restart replays RuntimeAdmission issuance"
+  ],
+  "falsifiers": [
+    "falsifier:durable-admission-substitution",
+    "falsifier:preparing-retry",
+    "falsifier:reconstruction-replay"
+  ],
+  "layer_bindings": [
+    {
+      "concept": "capabilities",
+      "layers": [
+        "FLEET_AND_SWARM"
+      ]
+    },
+    {
+      "concept": "process_contract_plane",
+      "layers": [
+        "GOVERNED_SELF_IMPLEMENTATION"
+      ]
+    },
+    {
+      "concept": "runtime",
+      "layers": [
+        "TRUSTED_RUNTIME"
+      ]
+    }
+  ],
+  "motivation": "bind the R6.20 prepare-only adapter to the existing R6.9 immutable RuntimeAdmission store and existing R6.16 materializer while preserving fail-closed recovery and existing authority ownership",
+  "risk_class": "GREEN",
+  "target_component": "durable per-assignment cooperative runtime preparation provider",
+  "tests_required": [
+    "test:cooperative-control-plane-materializer",
+    "test:cooperative-runtime-preparation-provider",
+    "test:cooperative-runtime-preparer",
+    "test:persistent-runtime-state"
+  ]
+}

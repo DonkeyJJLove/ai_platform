@@ -51,6 +51,7 @@ from cyber_lion.enterprise.cooperative_runtime_preparer import (
     PreparedCooperativeContextSource,
     assert_no_effect_surface,
     prepare_cooperative_runtime_context,
+    reconstruct_cooperative_runtime_context,
 )
 from cyber_lion.mission_control.cooperative_artifacts import WRITE_KIND
 from cyber_lion.mission_control import (
@@ -490,6 +491,32 @@ class CooperativeRuntimePreparerTests(unittest.TestCase):
             CooperativeRuntimePreparationError, "canonical runtime admission denied"
         ):
             self.prepare()
+
+    def test_durable_admission_reconstructs_context_without_replaying_admission(self):
+        prepared = self.prepare()
+        reconstructed = reconstruct_cooperative_runtime_context(
+            assignment=self.assignment,
+            artifact_root=self.root,
+            evidence=self.evidence,
+            durable_admission=prepared.execution.admission,
+        )
+        self.assertEqual(reconstructed, prepared)
+        self.assertEqual(list(self.root.rglob("*")), [])
+
+        bad = replace(
+            prepared.execution.admission,
+            live_authority_digest=D("other-live-authority"),
+            admission_digest="",
+        ).sealed()
+        with self.assertRaisesRegex(
+            CooperativeRuntimePreparationError, "live authority mismatch"
+        ):
+            reconstruct_cooperative_runtime_context(
+                assignment=self.assignment,
+                artifact_root=self.root,
+                evidence=self.evidence,
+                durable_admission=bad,
+            )
 
     def test_prepared_context_source_is_repeatable_without_second_admission(self):
         context = self.prepare()

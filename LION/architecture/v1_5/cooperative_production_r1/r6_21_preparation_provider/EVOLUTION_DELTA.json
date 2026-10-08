@@ -1,0 +1,38 @@
+{
+  "authority_effect": "NONE",
+  "candidate_scope": [
+    "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_RUNTIME_PREPARATION_PROVIDER_R6_21.md",
+    "LION/architecture/v1_5/cooperative_production_r1/README.md",
+    "cyber_lion/enterprise/cooperative_runtime_preparation_provider.py",
+    "cyber_lion/enterprise/cooperative_runtime_preparer.py",
+    "cyber_lion/tests/test_cooperative_runtime_preparation_provider.py",
+    "cyber_lion/tests/test_cooperative_runtime_preparer.py"
+  ],
+  "delta_digest": "777f998cceb4962d62a0aca6d619b00c7ccd743a7bc0188dcf7d39cb50417242",
+  "delta_id": "architecture:096902f1a3c85573d1636835",
+  "dependency_ids": [
+    "R22I",
+    "R6.16",
+    "R6.20",
+    "R6.9"
+  ],
+  "evidence_refs": [
+    "source:r6.16",
+    "source:r6.20",
+    "source:r6.9-persistent-runtime-state",
+    "test:r6.21-current-ledger-r6.16"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "one exact HELD WRITE is purely validated, admitted through the existing engine, journaled and durably persisted, reconstructed after restart without replay, then consumed by existing R6.16 for provider evidence and the canonical HELD-to-READY transition",
+  "falsification_conditions": [
+    "PREPARING without a durable admission is automatically retried",
+    "R6.21 writes artifact bytes",
+    "durable admission differs from reconstructed context",
+    "invalid preparation creates a PREPARING journal before pure validation",
+    "restart replays RuntimeAdmission issuance"
+  ],
+  "motivation": "bind the R6.20 prepare-only adapter to the existing R6.9 immutable RuntimeAdmission store and existing R6.16 materializer while preserving fail-closed recovery and existing authority ownership",
+  "risk_class": "GREEN",
+  "schema_version": "1.0.0",
+  "target_component": "durable per-assignment cooperative runtime preparation provider"
+}

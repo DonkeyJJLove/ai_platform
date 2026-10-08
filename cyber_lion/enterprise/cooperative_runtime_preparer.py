@@ -34,6 +34,7 @@ from cyber_lion.contracts.executor_sandbox import (
     ProvisioningBinding,
     SandboxRuntimeBinding,
 )
+from cyber_lion.contracts.runtime_enforcement import RuntimeAdmission
 from cyber_lion.contracts.runtime_execution import RuntimeExecutionRequest
 from cyber_lion.enterprise.control_plane import ActionProposal
 from cyber_lion.enterprise.live_authority_admission import LiveAdmittedAuthority
@@ -192,27 +193,105 @@ class CooperativeRuntimePreparationEvidence:
         return self
 
 
-def prepare_cooperative_runtime_context(
+def _preflight_preparation(
     *,
     assignment: Mapping[str, Any],
     artifact_root: str | Path,
     evidence: CooperativeRuntimePreparationEvidence,
-    admission_engine: RuntimeAdmissionEngine,
-    trusted_now: datetime,
-) -> CooperativeRuntimeContext:
-    """Prepare one exact pre-effect cooperative runtime context.
+) -> None:
+    """Reject all caller-visible substitution before consuming admission replay."""
+    _require(type(evidence) is CooperativeRuntimePreparationEvidence, "exact preparation evidence required")
+    evidence.validate()
+    row = _assignment_mapping(assignment)
+    root = _direct_root(artifact_root)
+    inp = assignment_input(row)
+    _require(inp.get("kind") == WRITE_KIND, "cooperative WRITE assignment required")
+    _require(inp.get("capability") == CAPABILITY_PRODUCTION, "cooperative production capability required")
+    _require(inp.get("mission_id") == row["mission_id"], "assignment/input mission mismatch")
+    _require(inp.get("generation") == row["lease_generation"], "assignment/input generation mismatch")
+    derived_payload = {**inp, "assignment_id": row["assignment_id"]}
+    metadata, _ = validate_write_payload(derived_payload, row["material_drone_id"])
+    resource = artifact_path(
+        root,
+        mission_id=metadata["mission_id"],
+        generation=metadata["generation"],
+        artifact_name=metadata["artifact_name"],
+    ).relative_to(root).as_posix()
+    proposal = evidence.proposal
+    _require(
+        (
+            proposal.mission_id,
+            proposal.capability,
+            proposal.requested_authority,
+            proposal.action_class,
+            proposal.target,
+            proposal.payload_digest,
+        )
+        == (
+            row["mission_id"],
+            inp["capability"],
+            "local_write",
+            "WRITE_FILE",
+            resource,
+            metadata["artifact_sha256"],
+        ),
+        "proposal/cooperative assignment substitution",
+    )
+    _require(evidence.admitted_authority.mission_id == row["mission_id"], "authority mission substitution")
+    provisioned = evidence.provisioned_executor
+    dispatch = evidence.dispatch
+    provisioning = evidence.provisioning
+    policy = evidence.sandbox_policy
+    runtime = evidence.sandbox_runtime
+    _require(provisioned.mission_id == row["mission_id"], "provisioned mission substitution")
+    _require(dispatch.mission_id == row["mission_id"], "dispatch mission substitution")
+    _require(dispatch.generation == row["lease_generation"], "dispatch generation substitution")
+    _require(policy.mission_id == row["mission_id"], "sandbox policy mission substitution")
+    _require(policy.generation == row["lease_generation"], "sandbox policy generation substitution")
+    _require(policy.write_scope == (resource,), "sandbox policy must bind one artifact resource")
+    _require(provisioned.write_scope == (resource,), "provisioned executor write scope substitution")
+    _require(provisioning.write_scope == (resource,), "provisioning write scope substitution")
+    _require(dispatch.write_scope == (resource,), "dispatch write scope substitution")
+    _require(
+        (runtime.sandbox_id, runtime.workspace_id)
+        == (provisioned.sandbox_id, provisioned.workspace_id),
+        "sandbox runtime/provisioned executor substitution",
+    )
 
-    No assignment state is changed.  The returned context is suitable as the
-    trusted context_source input for R6.16/R6.10 composition.
+
+def validate_cooperative_runtime_preparation_inputs(
+    *,
+    assignment: Mapping[str, Any],
+    artifact_root: str | Path,
+    evidence: CooperativeRuntimePreparationEvidence,
+) -> None:
+    """Validate all pure preparation bindings without consuming admission replay."""
+    _preflight_preparation(
+        assignment=assignment,
+        artifact_root=artifact_root,
+        evidence=evidence,
+    )
+
+
+def _compose_context_from_admission(
+    *,
+    assignment: Mapping[str, Any],
+    artifact_root: str | Path,
+    evidence: CooperativeRuntimePreparationEvidence,
+    admission: RuntimeAdmission,
+) -> CooperativeRuntimeContext:
+    """Compose a cooperative context around one already-sealed admission.
+
+    The caller is responsible for obtaining the admission from the canonical
+    admission engine or from a trusted durable RuntimeAdmission source.
     """
     _require(type(evidence) is CooperativeRuntimePreparationEvidence, "exact preparation evidence required")
     evidence.validate()
-    _require(type(admission_engine) is RuntimeAdmissionEngine, "exact RuntimeAdmissionEngine required")
-    _require(isinstance(trusted_now, datetime) and trusted_now.tzinfo is not None, "trusted zoned time required")
-    now = trusted_now.astimezone(timezone.utc)
+    _require(type(admission) is RuntimeAdmission, "exact RuntimeAdmission required")
+    admission.validate()
+
     row = _assignment_mapping(assignment)
     root = _direct_root(artifact_root)
-
     inp = assignment_input(row)
     _require(inp.get("kind") == WRITE_KIND, "cooperative WRITE assignment required")
     _require(inp.get("capability") == CAPABILITY_PRODUCTION, "cooperative production capability required")
@@ -269,8 +348,6 @@ def prepare_cooperative_runtime_context(
         "sandbox runtime/provisioned executor substitution",
     )
 
-    # Compute deterministic binder outputs independently, then require the
-    # existing governed admission path to admit those exact semantics.
     try:
         effect, identity, canonical_pdp = bind_allowed_action_to_runtime_inputs(
             proposal,
@@ -279,31 +356,38 @@ def prepare_cooperative_runtime_context(
             evidence.currentness,
             provisioned,
         )
-        admission = admission_engine.admit_bound_action(
-            proposal=proposal,
-            context=evidence.proposal_context,
-            pdp_result=evidence.pdp_result,
-            currentness=evidence.currentness,
-            admitted_authority=evidence.admitted_authority,
-            provisioned_executor=provisioned,
-            provisioning_request=evidence.provisioning_request,
-            provider_trust=evidence.provider_trust,
-            trusted_now=now,
-        )
     except Exception as exc:
-        raise CooperativeRuntimePreparationError("canonical runtime admission denied") from exc
+        raise CooperativeRuntimePreparationError("action runtime binding denied") from exc
 
-    admission.validate()
+    gate = evidence.pdp_result.applied
+    receipt = evidence.pdp_result.receipt
+    authority = evidence.admitted_authority
+    _require(
+        (
+            admission.request_id,
+            admission.gate_event_id,
+            admission.proposal_id,
+            admission.gate_decision_digest,
+        )
+        == (
+            gate.request_id,
+            gate.gate_event_id,
+            gate.proposal_id,
+            gate.decision_digest,
+        ),
+        "admission/PDP coordinate mismatch",
+    )
     _require(admission.requested_effect_digest == effect.digest(), "admission/effect digest mismatch")
     _require(admission.runtime_identity_digest == identity.digest(), "admission/runtime identity mismatch")
-    _require(
-        admission.provisioned_executor_digest == provisioned.digest(),
-        "admission/provisioning digest mismatch",
-    )
-    _require(
-        admission.pdp_evidence_digest == canonical_pdp.evidence_digest,
-        "admission/PDP evidence mismatch",
-    )
+    _require(admission.provisioned_executor_digest == provisioned.digest(), "admission/provisioning digest mismatch")
+    _require(admission.pdp_evidence_digest == canonical_pdp.evidence_digest, "admission/PDP evidence mismatch")
+    _require(admission.live_authority_digest == authority.digest(), "admission/live authority mismatch")
+    _require(admission.authority_lineage_digest == authority.lineage_digest, "admission authority lineage mismatch")
+    _require(admission.policy_binding == gate.policy_binding, "admission policy binding mismatch")
+    _require(admission.effective_authority == proposal.requested_authority, "admission authority class mismatch")
+    _require(admission.pdp_receipt_digest, "admission PDP receipt digest missing")
+    _require(receipt.request_id == gate.request_id and receipt.gate_event_id == gate.gate_event_id,
+             "PDP receipt coordinate mismatch")
     _require(effect.resource == resource and effect.payload_digest == metadata["artifact_sha256"],
              "runtime effect/artifact substitution")
 
@@ -358,6 +442,61 @@ def prepare_cooperative_runtime_context(
         dispatch=dispatch,
         provisioning=provisioning,
     ).validate()
+
+
+def prepare_cooperative_runtime_context(
+    *,
+    assignment: Mapping[str, Any],
+    artifact_root: str | Path,
+    evidence: CooperativeRuntimePreparationEvidence,
+    admission_engine: RuntimeAdmissionEngine,
+    trusted_now: datetime,
+) -> CooperativeRuntimeContext:
+    """Issue one canonical admission, then compose a pre-effect context."""
+    _preflight_preparation(
+        assignment=assignment,
+        artifact_root=artifact_root,
+        evidence=evidence,
+    )
+    _require(type(admission_engine) is RuntimeAdmissionEngine, "exact RuntimeAdmissionEngine required")
+    _require(isinstance(trusted_now, datetime) and trusted_now.tzinfo is not None, "trusted zoned time required")
+    now = trusted_now.astimezone(timezone.utc)
+    try:
+        admission = admission_engine.admit_bound_action(
+            proposal=evidence.proposal,
+            context=evidence.proposal_context,
+            pdp_result=evidence.pdp_result,
+            currentness=evidence.currentness,
+            admitted_authority=evidence.admitted_authority,
+            provisioned_executor=evidence.provisioned_executor,
+            provisioning_request=evidence.provisioning_request,
+            provider_trust=evidence.provider_trust,
+            trusted_now=now,
+        )
+    except Exception as exc:
+        raise CooperativeRuntimePreparationError("canonical runtime admission denied") from exc
+    return _compose_context_from_admission(
+        assignment=assignment,
+        artifact_root=artifact_root,
+        evidence=evidence,
+        admission=admission,
+    )
+
+
+def reconstruct_cooperative_runtime_context(
+    *,
+    assignment: Mapping[str, Any],
+    artifact_root: str | Path,
+    evidence: CooperativeRuntimePreparationEvidence,
+    durable_admission: RuntimeAdmission,
+) -> CooperativeRuntimeContext:
+    """Reconstruct from an already-issued durable admission without replaying admission."""
+    return _compose_context_from_admission(
+        assignment=assignment,
+        artifact_root=artifact_root,
+        evidence=evidence,
+        admission=durable_admission,
+    )
 
 
 class PreparedCooperativeContextSource:

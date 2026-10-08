@@ -1,0 +1,321 @@
+{
+  "items": [
+    {
+      "artifact_id": "architecture-contradiction-register",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/ARCHITECTURE_CONTRADICTION_REGISTER.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "architecture-docs",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/README.md",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "architecture-document-census",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "architecture-document-graph",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "architecture-projection",
+      "classification": "VALIDATE_ONLY",
+      "path": "cyber_lion/architecture_projection/full_architecture.py",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CAPABILITY_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "architecture-reconciliation",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "autonomous-evolution-control-flow",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/AUTONOMOUS_EVOLUTION_CONTROL_FLOW.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_4/capability_catalog.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CAPABILITY_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "code-derived-architecture",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CAPABILITY_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_4/contract_catalog.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "cross-repository-dependency-graph",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/canonical-state-v1-3-candidate.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "classification": "VALIDATE_ONLY",
+      "path": "AGENTS.md",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "document-derived-architecture",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "documentation-currentness-model",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "documentation-evolution-control-flow",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/DOCUMENTATION_EVOLUTION_CONTROL_FLOW.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/evals/evolution/evolution_cases.yaml",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CAPABILITY_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "federated-formalization-binding",
+      "classification": "VALIDATE_ONLY",
+      "path": "cyber_lion/contracts/federated_formalization_binding.py",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "federation-live-snapshot",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "fleet-baseline",
+      "classification": "VALIDATE_ONLY",
+      "path": "cyber_lion/contracts/repository_expansion.py",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "fleet-baseline-instance",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/FLEET_BASELINE_FEDERATION_R1.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "formalization-closure",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD.schema.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "formalization-registry",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "gap-projection",
+      "classification": "VALIDATE_ONLY",
+      "path": "cyber_lion/architecture_projection/gap.py",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CAPABILITY_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "rag-federated-architecture-probes",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_PROBES.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "rag-federated-architecture-source-set",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_SOURCE_SET.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "rag-release",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/rag/",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "rag-routing",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/rag/RAG_BOOTSTRAP.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "repository-documentation-plans",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/REPOSITORY_DOCUMENTATION_PLANS.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "repository-role-matrix",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "roadmap-next",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CAPABILITY_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "semantic-owner-reconciliation",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/SEMANTIC_OWNER_RECONCILIATION.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "semantic-owners",
+      "classification": "VALIDATE_ONLY",
+      "path": "LION/architecture/v1_5/semantic_owners.json",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    }
+  ],
+  "manifest_digest": "ef427b60f3aff03a62e55c758d8b94da8797cee4223ba9c194a5be03a22bb3cb",
+  "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f",
+  "schema_id": "lion.required-formalization-set/v1",
+  "set_digest": "6e1d133cfac6196052b0be8d2587f604cf609dfa63097974cdcb2bd5138d3047"
+}
