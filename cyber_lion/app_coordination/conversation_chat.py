@@ -15,6 +15,7 @@ import time
 import uuid
 from typing import Any, Mapping
 
+from .mission_cooperative_scaffold import validate_for_chat
 from .conversation_domain import (
     ConversationConflict,
     ConversationDomainError,
@@ -1270,6 +1271,7 @@ def _saas_prompt(
     plan: Mapping[str, Any],
     leg: Mapping[str, Any],
     attachment_segments: tuple[str, ...] = (),
+    mission_scaffold_prompt: str | None = None,
 ) -> str:
     lines = [
         "LION MODEL CHAT — immutable context snapshot.",
@@ -1285,6 +1287,8 @@ def _saas_prompt(
     ]
     if plan.get("synchronization_checkpoint_digest"):
         lines.append("synchronization_checkpoint_digest=" + str(plan["synchronization_checkpoint_digest"]))
+    if mission_scaffold_prompt is not None:
+        lines.append(mission_scaffold_prompt)
     for item in plan["history"]:
         lines.append(str(item["role"]).upper() + ": " + str(item["content"]))
     lines.append("USER: " + str(plan["message"]))
@@ -1304,6 +1308,9 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
         "synchronization_checkpoint": payload.get("synchronization_checkpoint"),
         "attachments": payload.get("attachments"),
     })
+    scaffold = payload.get("mission_scaffold")
+    if scaffold is not None:
+        validate_for_chat(scaffold, plan)
     responses: dict[str, Any] = {}
     saas_handoff = None
     legs = {x["provider"]: x for x in plan["legs"]}
@@ -1334,7 +1341,10 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 )
             if not callable(getattr(gateway, "control_provider", None)):
                 raise RuntimeError("SaaS handoff control provider unavailable")
-            saas_projection = _saas_prompt(plan, leg, saas_attachment_segments)
+            saas_projection = _saas_prompt(
+                plan, leg, saas_attachment_segments,
+                scaffold["projections"]["SAAS"]["prompt"] if scaffold is not None else None,
+            )
             saas_projection_digest = sha256(saas_projection.encode("utf-8")).hexdigest()
             handoff = gateway.control_provider("saas_request", {
                 "scope_type": "CONTROL_PLANE",
@@ -1416,7 +1426,10 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 }
                 if local_attachment_segments:
                     local_kwargs["attachment_segments"] = local_attachment_segments
-                local = gateway.chat(plan["message"], **local_kwargs)
+                local_message = plan["message"]
+                if scaffold is not None:
+                    local_message = scaffold["projections"]["LOCAL"]["prompt"] + "\nUSER: " + local_message
+                local = gateway.chat(local_message, **local_kwargs)
             finally:
                 ROUTE_CONTEXT.reset(token)
             answer = str(local.get("answer") or "")

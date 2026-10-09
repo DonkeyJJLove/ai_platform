@@ -1,11 +1,14 @@
 {
-  "schema": "lion.source-package-manifest/v1",
+  "authority_effect": "NONE",
   "classification": "SOURCE_ONLY_NOT_DEPLOYMENT",
-  "purpose": "Exact cognitive communication fabric R2 source package with bounded attachment ingestion, provider-payload projection, and ThreadStore delivery-safety repair; historical deployed/runtime evidence remains immutable and separate.",
   "files": [
     {
       "path": ".github/workflows/lion-r24-whole-integration-closure.yml",
       "sha256": "6d0bfe7c266dcd37e175f26eea2ade774b4309a31d8aa1d2a8c00fd1d296ca6e"
+    },
+    {
+      "path": "LION/architecture/v1_5/cooperative_production_r1/R4_LPCL_SCAFFOLD_DOCKER_BOOTSTRAP.md",
+      "sha256": "f331a24a8823ad1c5eee83970f30365b2ddd9d67d293ecc0b42ed7a1a77a154f"
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
@@ -37,15 +40,19 @@
     },
     {
       "path": "cyber_lion/app_coordination/cognitive_continuity.py",
-      "sha256": "4befa5df120fea2866235f5b4ab2cb17d71fad0791d700c3597995d5911f74de"
+      "sha256": "e9037f516b1f99e5f064369a3d90327b3996f4f396ae783214789809a1d55902"
     },
     {
       "path": "cyber_lion/app_coordination/conversation_chat.py",
-      "sha256": "9c189f911ed5eb81e25862d0215fb351c030bf7286a3c47a19e3473b58f4a588"
+      "sha256": "219c9c464203afd70aa87451ee374a809355051e98c07600f6f11726f6194854"
     },
     {
       "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
-      "sha256": "864c2c36cbb7d424f65ee3128d92f789203a2ec436d96e6d722de6fbd6739ce7"
+      "sha256": "3f33f8d313aa0fb48cdb1fca5c60e9dc380664e7137b19fc7503e4b8736510b2"
+    },
+    {
+      "path": "cyber_lion/app_coordination/mission_cooperative_scaffold.py",
+      "sha256": "45635fe08491ba9eecad3d0c606312ea877690594625f8b189df4df6a733f2ce"
     },
     {
       "path": "cyber_lion/contracts/action_ir.py",
@@ -176,6 +183,14 @@
       "sha256": "0df864ba28771c073d3c887ad82862806d83c454f26f14100eafca89f8ba12d7"
     },
     {
+      "path": "cyber_lion/mission_control/docker_fleet_bootstrap_executor.py",
+      "sha256": "814bdd334482f4f3b4456fc70154179ce477679d8b6bd5e1bbfafcdcb4fb426d"
+    },
+    {
+      "path": "cyber_lion/mission_control/docker_local_fleet_plan.py",
+      "sha256": "c1ba292f3131c01b04153fe688b9c0ba6bfd45e38d0c9d5db01eafd5193a9d1c"
+    },
+    {
       "path": "cyber_lion/mission_control/dual_result_join.py",
       "sha256": "7ce631308f4150525330a56421c55353906d49ad2217206fa4d7ff314bb8139f"
     },
@@ -230,6 +245,14 @@
     {
       "path": "cyber_lion/process_language/lpcl.py",
       "sha256": "355af5b4073378adc4cc35254de4fc59ed6371fa125b3ffd27070a09ecad4b91"
+    },
+    {
+      "path": "cyber_lion/tests/test_r4_docker_fleet_bootstrap_executor.py",
+      "sha256": "ef99fad0edc0e025413d87a487b498e4b02a4fbd93bb14b7ee724384c2f84feb"
+    },
+    {
+      "path": "cyber_lion/tests/test_r4_mission_scaffold_docker_plan.py",
+      "sha256": "99ce7a80a2f223090ba07524ab71cf5592934031d03e264d823ad184eb0910f4"
     },
     {
       "path": "deploy/mission-control/v3/app.css",
@@ -316,6 +339,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "c77e83bd7e8f8cbfd6fec4ad48a18e0823af08cde3fc499af144e034c5647540",
-  "authority_effect": "NONE"
+  "package_digest": "cd913026ed89670af55a1e15474427353ea5d0d15681be914a596beb2b291ba9",
+  "purpose": "Current exact source-only candidate: mission-bound LOCAL/SAAS scaffolding, strict currentness, typed one-shot R24 Docker executor using pre-existing durable admission source and guard. No operator mission launch, Docker execution, PDP grant, runtime deployment or fleet ready claim.",
+  "schema": "lion.source-package-manifest/v1"
 }

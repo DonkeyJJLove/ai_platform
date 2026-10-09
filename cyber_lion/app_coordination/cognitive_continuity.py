@@ -197,7 +197,12 @@ class SynchronizationCheckpoint:
 
     def to_dict(self) -> dict[str, Any]:
         self.validate()
-        return {"schema": SYNC_SCHEMA_ID, **asdict(self)}
+        value = asdict(self)
+        # On the wire these immutable internal tuples become JSON arrays.
+        # The strict receiving contract requires lists even for in-process calls.
+        for key in ("history_message_ids", "artifact_refs", "open_dependencies"):
+            value[key] = list(value[key])
+        return {"schema": SYNC_SCHEMA_ID, **value}
 
 
 def build_synchronization_checkpoint(
