@@ -16,7 +16,7 @@
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R4_OPERATOR_RETRY_UX_AND_RUNTIME_GATES_R1.md",
-      "sha256": "bc39c379624a017976fef2825787ea6d542ff5edfa29dab00458d7a2364fd2f9"
+      "sha256": "02417669c6a57ef6f36c440449db5ae8794e1d076454bd29c8b01a443c84781b"
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
@@ -56,7 +56,7 @@
     },
     {
       "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
-      "sha256": "002362f258c6ad1fb67e11a6fd6e6020507610a51171d86f5db011b46ebdc625"
+      "sha256": "fe0ee4b0b21a2fc3d96693501db287d9299146b4395771503473018b9a1b1232"
     },
     {
       "path": "cyber_lion/app_coordination/mission_cooperative_scaffold.py",
@@ -272,7 +272,7 @@
     },
     {
       "path": "cyber_lion/tests/test_r4_operator_retry_ui.py",
-      "sha256": "4b1d5f3ce6899ab60cce5e99ca48be7a4831f8d450e593ef6f57c90274f2833f"
+      "sha256": "2119e9a6aa4e7eddc32c0cd19ac754c292a19422aad307934e791961c699a921"
     },
     {
       "path": "deploy/mission-control/v3/app.css",
@@ -363,7 +363,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "b46572e3e727df5fba8178b901dd8803f08958e661669ef6a499f0c2d3767bb1",
-  "purpose": "Source-only independent PR435 child: explicit operator mission delete and bound LOCAL/SAAS synchronization UX; no historical fleet false-currentness. This does not install Docker admission or claim live SaaS reply.",
+  "package_digest": "b037851308f7ac6a190e11fdc0c164135fbeed211a7e753a02843cebfc1a5ae8",
+  "purpose": "Source-only PR436 UI: explicit one-shot cognitive DUAL preparation with current SentinelX mediator and empty backlog; initial EXPIRED/NOT_ATTESTED attestation must not deadlock its own first reply. Activation still requires both real LOCAL/SAAS receipts; no docker issuer installed, no deployment or authority effect.",
   "schema": "lion.source-package-manifest/v1"
 }
