@@ -340,7 +340,34 @@ class LpclControlBridge:
             raise ValueError('LPCL_PHASE_EXECUTION_CONTRACT:'+str(exc)) from exc
         from cyber_lion.mission_control.lpcl_runtime_selection import runtime_selection
         selected_runtime=runtime_selection(kv,logical,material)
-        cur=self.broker.call('MAT04','github_branch',{'repository':'DonkeyJJLove/ai_platform','branch':'master'})['result']
+        # Pure LPCL syntax/phase validation must remain testable when the
+        # isolated operator-panel canary intentionally has no material drones.
+        # Never dispatch a MAT04 task into an unserved canary inbox. A missing
+        # GitHub currentness receipt is NOT sufficient for mission registration.
+        cur={'head':None,'tree':None,'verification':'UNVERIFIED',
+             'reason':'MAT04_CURRENTNESS_UNAVAILABLE'}
+        try:
+            probe=getattr(self.broker,'fleet_state',None)
+            if callable(probe):
+                health=probe()
+                if isinstance(health,dict):
+                    mat04=next((row for row in health.get('rows',[])
+                                if isinstance(row,dict) and row.get('drone_id')=='MAT04'),None)
+                    if not isinstance(mat04,dict) or mat04.get('live') is not True:
+                        raise LookupError('MAT04_NOT_LIVE')
+            observed=self.broker.call('MAT04','github_branch',{'repository':'DonkeyJJLove/ai_platform','branch':'master'})['result']
+            if (not isinstance(observed,dict)
+                or not isinstance(observed.get('head'),str)
+                or not re.fullmatch('[0-9a-f]{40}',observed['head'])
+                or not isinstance(observed.get('tree'),str)
+                or not re.fullmatch('[0-9a-f]{40}',observed['tree'])):
+                raise ValueError('MAT04_CURRENTNESS_MALFORMED')
+            cur={'head':observed['head'],'tree':observed['tree'],
+                 'verification':'VERIFIED','provider':'MAT04'}
+        except (LookupError,TimeoutError,OSError,ValueError):
+            # Deliberately no local Git or old UI-tab fallback: it would
+            # silently substitute historical source for GitHub master.
+            pass
         dg=hashlib.sha256(text.encode('utf-8')).hexdigest()
         spec={'mission_id':mid,'title':kv['MISSION_TITLE'][:180],'objective':kv['MISSION_OBJECTIVE'][:4000],'description':kv['MISSION_DESCRIPTION'][:8000],'lpcl_digest':dg,'lpcl_text':text,'source_head':cur['head'],'source_tree':cur['tree'],'logical_count':logical,'material_target':material,'phases':phases,'protocols':prot}
         return {'valid':True,'runtime_preflight':selected_runtime,'lpcl_digest':dg,'source_currentness':cur,'spec':spec,'execution_preflight':preflight.as_dict(),'capability_registry_state':registry_state,'capability_registry_digest':registry_snapshot.get('registry_digest') if isinstance(registry_snapshot,dict) else None,'phase_execution_contracts':[x.as_dict() for x in contracts],'parsed':{'run':kv.get('RUN'),'project':kv['PROJECT'],'mode':kv['MODE'],'control_language':kv['CONTROL_LANGUAGE'],'phase_count':len(phases)}}
@@ -431,7 +458,10 @@ class LpclControlBridge:
             return self._post('/api/v3/missions/'+mid+'/messages',{'protocol':protocol,'from_id':from_id,'to_id':to_id,'phase':phase,'payload':payload})
         if op=='validate_lpcl':return self.validate(args.get('lpcl_text'))
         if op=='register_lpcl':
-            source=args.get('lpcl_text');v=self.validate(source);out=self._post('/api/v3/missions/register-lpcl',v['spec'])
+            source=args.get('lpcl_text');v=self.validate(source)
+            if (v.get('source_currentness') or {}).get('verification')!='VERIFIED':
+                raise ValueError('LPCL_SOURCE_CURRENTNESS_REQUIRED:MAT04')
+            out=self._post('/api/v3/missions/register-lpcl',v['spec'])
             mission=out.get('mission') if isinstance(out,dict) else None
             if not isinstance(mission,dict):raise ValueError('REGISTERED_SOURCE_DRIFT:missing mission readback')
             backend_mid=mission.get('mission_id') or (mission.get('process') or {}).get('mission_id')

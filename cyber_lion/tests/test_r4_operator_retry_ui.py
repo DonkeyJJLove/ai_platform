@@ -28,6 +28,16 @@ class R4OperatorRetryUiTests(unittest.TestCase):
         self.assertIn("if($('missionDeleteQuick'))$('missionDeleteQuick').disabled=readOnly", s)
         self.assertIn("if($('missionDeleteQuick'))$('missionDeleteQuick').disabled=true", s)
 
+    def test_saas_status_projection_forwards_actual_broker_hop(self):
+        # Live broker advertises automatic_hop=AVAILABLE. The old local
+        # gateway discarded it while the panel demanded that exact field.
+        self.assertIn(
+            "('session_attestation_state','pending_count','channel_state',"
+            "'transport','automatic_hop')",
+            self.source,
+        )
+        self.assertIn("broker.automatic_hop!=='AVAILABLE'", self.source)
+
     def test_cognitive_prepare_requires_available_saas_transport_and_never_auto_activates(self):
         s = self.source
         snippet = s[s.index('let lpclBoundSyncBusy=false;'):
@@ -49,6 +59,47 @@ class R4OperatorRetryUiTests(unittest.TestCase):
         self.assertIn("const run=selected?candidates.find(r=>r.run_id===selected):observedRun", s)
         self.assertIn("NO CURRENT FLEET OBSERVATION", s)
         self.assertIn("Historical 12/64", s)
+
+    def test_lpcl_validation_without_mat04_does_not_enable_registration(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node not installed")
+        body = self.source
+        fragment = body[
+            body.index("function renderLpclIntake("):
+            body.index("function invalidateLpclSource(")
+        ]
+        test = r"""
+const vm=require('vm'),assert=require('node:assert/strict');
+const buttons={};
+const c={
+ lpclValidated:{validated_digest:'a'.repeat(64),
+  response:{source_currentness:{verification:'UNVERIFIED'}}},
+ lpclRegistered:null,
+ lpclBoundSyncBusy:false,
+ lpclCognitiveState:null,
+ lpclSourceState:null,
+ $:id=>buttons[id]||(buttons[id]={disabled:false,textContent:''}),
+ lpclRequiredCognitiveProviders:()=>[],
+ lpclSourceDiagnostics:()=>({input_length:100,detected_key_count:10}),
+ patchCards:()=>{},
+ renderLpclCognitive:()=>{},
+};
+vm.runInNewContext(source,c);
+c.renderLpclIntake('VALIDATED',{input_length:100,detected_key_count:10});
+assert.equal(buttons.lpclRegisterButton.disabled,true,'Unverified source cannot register');
+assert.equal(buttons.lpclActivateButton.disabled,true,'Unregistered source cannot activate');
+c.lpclValidated.response.source_currentness.verification='VERIFIED';
+c.renderLpclIntake('VALIDATED',{input_length:100,detected_key_count:10});
+assert.equal(buttons.lpclRegisterButton.disabled,false,'Verified current source can register');
+console.log('PASS_NO_MAT04_SOURCE_CURRENTNESS_IS_NOT_AUTHORITY');
+"""
+        result = subprocess.run(
+            [node, "-e", "const source="+json.dumps(fragment)+";\n"+test],
+            text=True,capture_output=True,timeout=20,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr[:1800])
+        self.assertIn("PASS_NO_MAT04", result.stdout)
 
     def test_source_embedded_js_parses(self):
         node = shutil.which("node")

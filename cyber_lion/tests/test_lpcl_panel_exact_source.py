@@ -14,16 +14,28 @@ class LpclPanelExactSourceTests(unittest.TestCase):
 
     def test_register_returns_exact_backend_confirmation(self):
         bridge=self.bridge();source='PROJECT=LION_EVOLUSION\n';digest='a'*64;mid='EXACT-SOURCE-R1'
-        bridge.validate=lambda value: {'lpcl_digest':digest,'spec':{'mission_id':mid,'lpcl_digest':digest,'lpcl_text':value}}
+        bridge.validate=lambda value: {'lpcl_digest':digest,'source_currentness':{'verification':'VERIFIED','head':'a'*40,'tree':'b'*40},'spec':{'mission_id':mid,'lpcl_digest':digest,'lpcl_text':value}}
         calls=[]
         bridge._post=lambda path,body,timeout=10: (calls.append((path,body)) or {'idempotent':False,'mission':{'mission_id':mid,'spec_digest':digest,'process':{'lpcl_digest':digest}}})
         out=bridge('register_lpcl',{'lpcl_text':source})
         self.assertEqual(calls,[('/api/v3/missions/register-lpcl',{'mission_id':mid,'lpcl_digest':digest,'lpcl_text':source})])
         self.assertEqual(out['registration_confirmation'],{'mission_id':mid,'lpcl_digest':digest,'source_length':len(source),'authority_effect':'NONE'})
 
+    def test_register_denied_when_mat04_currentness_not_proven(self):
+        bridge=self.bridge()
+        digest='c'*64;mid='EXACT-SOURCE-R1'
+        bridge.validate=lambda _: {
+            'lpcl_digest':digest,
+            'source_currentness':{'verification':'UNVERIFIED','head':None,'tree':None},
+            'spec':{'mission_id':mid,'lpcl_digest':digest,'source_head':None,'source_tree':None},
+        }
+        bridge._post=lambda *a,**kw: (_ for _ in ()).throw(AssertionError('MISSION_REGISTRATION_MUST_NOT_RUN'))
+        with self.assertRaisesRegex(ValueError,'LPCL_SOURCE_CURRENTNESS_REQUIRED'):
+            bridge('register_lpcl',{'lpcl_text':'PROJECT=LION_EVOLUSION'})
+
     def test_register_fails_closed_on_backend_digest_drift(self):
         bridge=self.bridge();source='PROJECT=LION_EVOLUSION\n';digest='a'*64;mid='EXACT-SOURCE-R1'
-        bridge.validate=lambda value: {'lpcl_digest':digest,'spec':{'mission_id':mid,'lpcl_digest':digest,'lpcl_text':value}}
+        bridge.validate=lambda value: {'lpcl_digest':digest,'source_currentness':{'verification':'VERIFIED','head':'a'*40,'tree':'b'*40},'spec':{'mission_id':mid,'lpcl_digest':digest,'lpcl_text':value}}
         bridge._post=lambda path,body,timeout=10: {'mission':{'mission_id':mid,'spec_digest':'b'*64,'process':{'lpcl_digest':'b'*64}}}
         with self.assertRaisesRegex(ValueError,'REGISTERED_SOURCE_DRIFT'):
             bridge('register_lpcl',{'lpcl_text':source})

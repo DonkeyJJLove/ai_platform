@@ -625,7 +625,7 @@ function renderLpclIntake(state,diag=lpclSourceDiagnostics($('lpclText')?.value|
  const labels={EMPTY:'BRAK LPCL',DIRTY:'DIRTY · REVALIDATION REQUIRED',VALIDATED:'VALID · '+String(validated||'').slice(0,12),REGISTERED:'REGISTERED · '+String(registered||'').slice(0,12),AUTHORIZED:'AUTHORIZED · '+String(registered||'').slice(0,12)};
  $('lpclStatus').textContent=statusOverride||labels[state]||state;
  $('lpclValidateButton').disabled=['REGISTERED','AUTHORIZED'].includes(state);
- $('lpclRegisterButton').disabled=state!=='VALIDATED';
+ $('lpclRegisterButton').disabled=state!=='VALIDATED'||lpclValidated?.response?.source_currentness?.verification!=='VERIFIED';
  const providers=lpclRequiredCognitiveProviders();
  const cognitiveReady=!providers.length||lpclCognitiveState?.readiness?.readiness==='READY';
  $('lpclPrepareCognitiveButton').disabled=state!=='REGISTERED'||!providers.length;
@@ -647,13 +647,18 @@ async function validateLpcl(){
   if(x.lpcl_digest!==localDigest||x.spec?.lpcl_digest!==localDigest||x.spec?.lpcl_text!==source)throw new Error('VALIDATION_DIGEST_DRIFT');
   lpclValidated=Object.freeze({response:x,validated_source:source,validated_digest:localDigest,validated_mission_id:x.spec.mission_id,validated_at:new Date().toISOString(),validated_length:source.length});
   const pf=x.execution_preflight||{},waiting=Number(pf.invalid_count||0)===0&&Number(pf.unbound_count||0)>0,ready=Number(pf.invalid_count||0)===0&&Number(pf.unbound_count||0)===0;
-  renderLpclIntake('VALIDATED',diag,waiting?'VALID · WAITING FOR CAPABILITIES':ready?'VALID · EXECUTION READY':null);
+  renderLpclIntake('VALIDATED',diag,x.source_currentness?.verification!=='VERIFIED'?'VALID SYNTAX · SOURCE CURRENTNESS UNVERIFIED':waiting?'VALID · WAITING FOR CAPABILITIES':ready?'VALID · EXECUTION READY':null);
   $('lpclPreview').textContent=JSON.stringify({mission_id:x.spec.mission_id,title:x.spec.title,objective:x.spec.objective,digest:localDigest,validated_at:lpclValidated.validated_at,validated_length:source.length,source:x.source_currentness,logical:x.spec.logical_count,material:x.spec.material_target,phases:x.spec.phases,protocols:x.spec.protocols,execution_preflight:{mission_readiness:pf.mission_readiness,phase_count:pf.phase_count,contract_count:pf.contract_count,bound_count:pf.bound_count,unbound_count:pf.unbound_count,invalid_count:pf.invalid_count,capability_closure:pf.capability_closure},activation_notice:waiting?'Activation will start this mission parked until matching capabilities become available.':'Execution contracts are currently bindable.'},null,2)
  }catch(e){lpclValidated=null;lpclRegistered=null;renderLpclIntake('DIRTY',diag,'INVALID');$('lpclPreview').textContent=String(e)}
 }
 async function registerLpcl(){
  if(!lpclValidated){renderLpclIntake($('lpclText').value.trim()?'DIRTY':'EMPTY',lpclSourceDiagnostics($('lpclText').value),'DIRTY · REVALIDATION REQUIRED');return}
- const snapshot=lpclValidated;if($('lpclText').value!==snapshot.validated_source){invalidateLpclSource();return}
+ const snapshot=lpclValidated;
+ if(snapshot.response?.source_currentness?.verification!=='VERIFIED'){
+  renderLpclIntake('VALIDATED',lpclSourceDiagnostics(snapshot.validated_source),'SOURCE CURRENTNESS REQUIRED · MAT04');
+  return;
+ }
+ if($('lpclText').value!==snapshot.validated_source){invalidateLpclSource();return}
  try{
   let r=await fetch('/api/lpcl/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lpcl_text:snapshot.validated_source})}),x=await r.json();if(!r.ok)throw new Error(x.error);
   const confirmation=x.registration_confirmation||{},mission=x.mission||x,backendMission=confirmation.mission_id||mission.mission_id||mission.process?.mission_id,backendDigest=confirmation.lpcl_digest||mission.spec_digest||mission.process?.lpcl_digest;
@@ -1442,7 +1447,7 @@ def make_handler(g):
             if path=='/health':return self.out({'status':'ok','authority_effect':'NONE'})
             if path=='/api/saas/broker/status':
                 state=self._control('saas_status',{})
-                return self.out({k:state.get(k) for k in ('session_attestation_state','pending_count','channel_state','transport')})
+                return self.out({k:state.get(k) for k in ('session_attestation_state','pending_count','channel_state','transport','automatic_hop')})
             if path=='/api/state':return self.out(g.state())
             if path.startswith('/api/operator/'):
                 try:
