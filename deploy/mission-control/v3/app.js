@@ -155,10 +155,16 @@ function renderCluster(online=clusterOnline){
   const picker=$('clusterRun'),selected=picker.value;
   patchHtml(picker,'<option value="">Follow latest fleet</option>'+candidates.map(r=>`<option value="${esc(r.run_id)}">${esc(r.run_id)}</option>`).join(''));
   picker.value=selected;
-  const run=selected?candidates.find(r=>r.run_id===selected):candidates[0];
+  // 'Follow latest fleet' means a current, independently observed runtime.
+  // Never silently substitute an old 12/64 recorded fleet when the operator
+  // is supervising a new 8/32 mission with no live worker evidence.
+  const observedRun=clusterOnline&&latestFleet.currentness==='OBSERVED'
+    &&Array.isArray(latestFleet.run_ids)&&latestFleet.run_ids.length===1
+    ?candidates.find(r=>r.run_id===latestFleet.run_ids[0]):null;
+  const run=selected?candidates.find(r=>r.run_id===selected):observedRun;
   $('clusterPodDetail').hidden=true;
   $('clusterDetails').hidden=!run;
-  if(!run){$('clusterState').textContent=online?'No fleet evidence recorded. Cluster state: UNKNOWN.':'OFFLINE · Cluster state: UNKNOWN.';patchHtml($('clusterMap'),'<div class="empty-state">Waiting for a fleet observation. No drones have been inferred.</div>');return}
+  if(!run){$('clusterState').textContent=online?'NO CURRENT FLEET OBSERVATION · choose a historical run explicitly':'OFFLINE · Cluster state: UNKNOWN';patchHtml($('clusterMap'),'<div class="empty-state"><b>NO CURRENT MATERIAL FLEET</b> · Active worker count is UNKNOWN. Historical 12/64 and other recorded runs are available only after explicit selection. Do not infer workers or logical drones from recorded memberships.</div>');return}
   const historical=run.evidence?.class==='HISTORICAL_IMPORTED_EVIDENCE'||['CLEANED','CLEANING'].includes(run.status)||['STOPPED','CLEANED'].includes(run.cleanup?.status);
   // Use the fresh summary itself; never color persisted participant records as live.
   const current=online&&!historical&&latestFleet.currentness==='OBSERVED'&&latestFleet.run_ids?.length===1&&latestFleet.run_ids[0]===run.run_id;

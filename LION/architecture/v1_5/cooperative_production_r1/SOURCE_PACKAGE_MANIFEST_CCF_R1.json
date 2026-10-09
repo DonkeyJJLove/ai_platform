@@ -7,8 +7,16 @@
       "sha256": "6d0bfe7c266dcd37e175f26eea2ade774b4309a31d8aa1d2a8c00fd1d296ca6e"
     },
     {
+      "path": "LION/architecture/v1_5/application_factory_r1/DEPLOYMENT_PACKAGE_MANIFEST.json",
+      "sha256": "1e726695dc66a3d319d18e6195921d3d987738c4d02e22e32a32722808e61579"
+    },
+    {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R4_LPCL_SCAFFOLD_DOCKER_BOOTSTRAP.md",
       "sha256": "f96cbf2208ac11031e52f66dc12cc69d634cd0ea8bde92ea144e6c1759fe05c9"
+    },
+    {
+      "path": "LION/architecture/v1_5/cooperative_production_r1/R4_OPERATOR_RETRY_UX_AND_RUNTIME_GATES_R1.md",
+      "sha256": "02417669c6a57ef6f36c440449db5ae8794e1d076454bd29c8b01a443c84781b"
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
@@ -48,7 +56,7 @@
     },
     {
       "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
-      "sha256": "3f33f8d313aa0fb48cdb1fca5c60e9dc380664e7137b19fc7503e4b8736510b2"
+      "sha256": "fe0ee4b0b21a2fc3d96693501db287d9299146b4395771503473018b9a1b1232"
     },
     {
       "path": "cyber_lion/app_coordination/mission_cooperative_scaffold.py",
@@ -263,12 +271,16 @@
       "sha256": "99ce7a80a2f223090ba07524ab71cf5592934031d03e264d823ad184eb0910f4"
     },
     {
+      "path": "cyber_lion/tests/test_r4_operator_retry_ui.py",
+      "sha256": "2119e9a6aa4e7eddc32c0cd19ac754c292a19422aad307934e791961c699a921"
+    },
+    {
       "path": "deploy/mission-control/v3/app.css",
       "sha256": "0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c"
     },
     {
       "path": "deploy/mission-control/v3/app.js",
-      "sha256": "3baea82b0e2c8ae4d9b0eca36be2f7c755462b245e59c092adec47d85934ff9d"
+      "sha256": "e30244042c257b82babc355233e4b94c8ad8ca49b9348aca1f6544e6b367e285"
     },
     {
       "path": "deploy/mission-control/v3/control-v3.js",
@@ -293,6 +305,10 @@
     {
       "path": "tools/lion_cooperative_worker_qualification.py",
       "sha256": "9d8b56476b064efe56e22e9a05712330e4a123acd4eee4316d05c30bfb0644fc"
+    },
+    {
+      "path": "tools/lion_effect_admission_broker.py",
+      "sha256": "5d0291b4bd62e563ed6137db1155d24a20552368d309b6e6cd436f15f963e569"
     },
     {
       "path": "tools/lion_firefox_broker_relay.py",
@@ -347,7 +363,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "f0fd2b42afdb42c55a56142284cc1ce42965b166b3d823d3ed347e589701b20c",
-  "purpose": "Exact source-only R4 candidate including LOC-invariant effect-census and historical P0 owner tests, bounded cognitive scaffold and admission-gated Docker plan/consumer. Historical effect receipts unchanged; no live runtime effect or permission.",
+  "package_digest": "b037851308f7ac6a190e11fdc0c164135fbeed211a7e753a02843cebfc1a5ae8",
+  "purpose": "Source-only PR436 UI: explicit one-shot cognitive DUAL preparation with current SentinelX mediator and empty backlog; initial EXPIRED/NOT_ATTESTED attestation must not deadlock its own first reply. Activation still requires both real LOCAL/SAAS receipts; no docker issuer installed, no deployment or authority effect.",
   "schema": "lion.source-package-manifest/v1"
 }
