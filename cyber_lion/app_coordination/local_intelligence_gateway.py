@@ -14,6 +14,7 @@ from .local_tool_protocol import ToolCall,parse_tool_call
 from .local_tool_gate import evaluate_tool_call
 from .conversation_domain import ConversationDomainError, ConversationConflict, ConversationNotFound
 from .conversation_chat import submit_chat
+from .mission_cooperative_scaffold import build_mission_scaffold
 from .cognitive_continuity import (
     active_saas_bridge,
     build_mission_cognitive_continuity,
@@ -932,11 +933,20 @@ class Gateway:
             "Use only the supplied canonical conversation context for this request. "
             "Acknowledge this exact synchronization checkpoint; authority_effect=NONE."
         )
+        # Operator-defined identity and current LPCL bytes constrain two distinct
+        # cognitive projections. Both remain proposal-only and require the same
+        # conversation binding and synchronization checkpoint.
+        scaffold=build_mission_scaffold(
+            mission,conversation,checkpoint,
+            provider_roles={"LOCAL":"ANALYST","SAAS":"ANALYST"},
+            system_context_digest=self.ctx.digest,
+        )
         dispatch=submit_chat(
             self.thread_provider,
             self,
             conversation_id,
             {
+                "mission_scaffold":scaffold,
                 "message":message,
                 "route":route,
                 "client_request_id":"sync-"+checkpoint["checkpoint_digest"][:40],

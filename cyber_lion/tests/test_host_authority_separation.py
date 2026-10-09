@@ -350,7 +350,18 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         self.assertIn('cyber_lion/app_coordination/saas_thread_delivery.py', sources)
         self.assertIn('cyber_lion/contracts/mission_contract_profiles.py', sources)
         self.assertIn('cyber_lion/mission_control/mission_reconciliation.py', sources)
-        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(424,573,6))
+        # The preceding application-factory epoch had exactly 424 tracked
+        # production paths. R4 introduces three *source-only* peers. They
+        # are explicitly accounted for rather than hiding new effect owners
+        # behind a relaxed global count or scanner exclusion.
+        r4_added = {
+            "cyber_lion/app_coordination/mission_cooperative_scaffold.py",
+            "cyber_lion/mission_control/docker_local_fleet_plan.py",
+            "cyber_lion/mission_control/docker_fleet_bootstrap_executor.py",
+        }
+        self.assertTrue(r4_added.issubset(sources))
+        self.assertEqual(len(sources), 424 + len(r4_added))
+        self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (573, 6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",
