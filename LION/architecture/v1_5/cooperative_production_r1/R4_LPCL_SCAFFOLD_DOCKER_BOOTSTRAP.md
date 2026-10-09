@@ -107,3 +107,32 @@ operator-launched LPCL. That integration is the next concrete source change.
 Tests for the scaffolding, 32-worker plan and admitted one-shot effect consumer include mission LPCL digest substitution, wrong binding/epoch, modified scaffold bytes, independent provider prompt routing through existing submitter, strict sync JSON serialization, exact 32-service Compose structure, wrong runtime, duplicate IDs/incorrect Compose project, stopped cohort/restart-vs-block decisions and unsealed currentness are in `cyber_lion/tests/test_r4_mission_scaffold_docker_plan.py`. The current source suite and original LPCL suites run independently. Docker Compose parsing and Docker inspect were executed **read-only**. No new worker was started and no operator activation was consumed.
 
 **First next step:** wire the exact `DOCKER_FLEET_BOOTSTRAP` capability into the original operator-authorized phase/action/PDP/provisioning and execution driver path; provision new immutable runtime source evidence, install the one-shot MOON consumer using the existing durable admission store, and independently read back the 32 worker heartbeats and assignment/receipt ledger after an operator-launched new LPCL. Do not label current source-only tests a passed live material roundtrip.
+
+
+## PR #435 current-candidate effect inventory reconciliation
+
+GitHub Core workflow on the first published candidate correctly stopped in the
+**full 4,191-test suite**: three tests still expected the predecessor's exact
+production source path count and effect-surface lineage. Historical P0 remains
+unchanged: 567 frozen surfaces. Current R4 introduces precisely three
+production modules (mission scaffold, Docker fleet plan, Docker effect
+consumer), so the source scan changes from 424 to **427** production files.
+
+Current source effect-surface count stays **573**, unresolved refs **0**.
+The compared P0-current delta contains 547 shared historical surfaces, 26
+new location-derived records and 20 superseded locations. Six are the
+previously explicitly owned cooperative-runtime preparation writes; five
+control-plane-reconnaissance SQL callsites moved by +22 source lines, and
+15 conversation-chat SQL callsites moved by +1 due to the new scaffold
+import. Neither new module contributes a new scanner-recorded
+`persistent_state.write` surface. The 15 conversation SQL calls were
+independently paired with their historical entrypoints and their **71 total
+`conn.execute` AST expression trees** hash-identically to the exact
+master predecessor `e0e979d5affca433743dc3eb2db8ed7cc7b40374`.
+This excludes a hidden SQL mutation being disguised as a harmless LOC move.
+
+The tests `test_host_authority_separation.py` and
+`test_p0_current_candidate_inventory_delta.py` now pin this *exact* new
+candidate epoch and verify the provider, class, target, line displacement,
+and AST fingerprint. This is a source currentness reconciliation, not
+new approval, mediation, or an assertion of new runtime execution.
