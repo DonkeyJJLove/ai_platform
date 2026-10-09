@@ -11,6 +11,10 @@
       "sha256": "1e726695dc66a3d319d18e6195921d3d987738c4d02e22e32a32722808e61579"
     },
     {
+      "path": "LION/architecture/v1_5/cooperative_production_r1/R4_CANARY_SAAS_STATUS_AND_LPCL_CURRENTNESS_R1.md",
+      "sha256": "45c593af8ca351a444998aed716394960b2fd55ab22f943b5bfc7075a640e0f3"
+    },
+    {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R4_LPCL_SCAFFOLD_DOCKER_BOOTSTRAP.md",
       "sha256": "f96cbf2208ac11031e52f66dc12cc69d634cd0ea8bde92ea144e6c1759fe05c9"
     },
@@ -56,7 +60,7 @@
     },
     {
       "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
-      "sha256": "fe0ee4b0b21a2fc3d96693501db287d9299146b4395771503473018b9a1b1232"
+      "sha256": "ed547fdc56de552032c6539ebc8beb225b18741e6e79cdde5932aad67a176a66"
     },
     {
       "path": "cyber_lion/app_coordination/mission_cooperative_scaffold.py",
@@ -259,6 +263,14 @@
       "sha256": "50353cc4db2beee4959a41051d1bf5acea1f3a16901c50445a1e19fac556f775"
     },
     {
+      "path": "cyber_lion/tests/test_lpcl_panel_exact_source.py",
+      "sha256": "449b6ab57a67602bdea383fe7271c2daffd446797e1602f6040802278a309146"
+    },
+    {
+      "path": "cyber_lion/tests/test_lpcl_source_currentness_in_isolated_canary.py",
+      "sha256": "25dc2d3c255a47f1bb40249363974f0b2392fa6d7bd768b9d128aa82b8e4764b"
+    },
+    {
       "path": "cyber_lion/tests/test_p0_current_candidate_inventory_delta.py",
       "sha256": "bd67fbb603ba47d106507ad72afb6cceba92bdf1256a11053c50282645a59422"
     },
@@ -272,7 +284,7 @@
     },
     {
       "path": "cyber_lion/tests/test_r4_operator_retry_ui.py",
-      "sha256": "2119e9a6aa4e7eddc32c0cd19ac754c292a19422aad307934e791961c699a921"
+      "sha256": "e65df2b1b63034ca2cd9651e074ea0283fc24e35b90aea341abd25959968819c"
     },
     {
       "path": "deploy/mission-control/v3/app.css",
@@ -316,7 +328,7 @@
     },
     {
       "path": "tools/lion_local_intelligence_runtime.py",
-      "sha256": "6c6b40d5355bffe1e654c05b94938f05a16fe65e492f9ce40a2c0a7cc77f9e05"
+      "sha256": "5b3a497b76c989a6a067e89462bedbfd8803af165292d28f0170cbaf44267568"
     },
     {
       "path": "tools/lion_mission_control_compat.py",
@@ -363,7 +375,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "b037851308f7ac6a190e11fdc0c164135fbeed211a7e753a02843cebfc1a5ae8",
-  "purpose": "Source-only PR436 UI: explicit one-shot cognitive DUAL preparation with current SentinelX mediator and empty backlog; initial EXPIRED/NOT_ATTESTED attestation must not deadlock its own first reply. Activation still requires both real LOCAL/SAAS receipts; no docker issuer installed, no deployment or authority effect.",
+  "package_digest": "dfffecc2efc55e770cf57e717663b3e36f67de4de593b99969a5767c7a062830",
+  "purpose": "Exact source-only R4 SaaS broker status automatic_hop projection and LPCL canary source-currentness fail-closed syntax validation; no LPCL registration, effect, docker bootstrap, or deployed approval.",
   "schema": "lion.source-package-manifest/v1"
 }
