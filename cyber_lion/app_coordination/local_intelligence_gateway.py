@@ -558,10 +558,15 @@ async function prepareBoundCognition(){
     throw new Error('COGNITIVE_PROVIDER_REQUIREMENTS_DRIFT');
   if(providers.includes('SAAS')){
    const broker=await cmcApi('/api/saas/broker/status');
-   if(broker.session_attestation_state!=='BOUND')
-    throw new Error('SAAS_SESSION_'+(broker.session_attestation_state||'UNKNOWN')+'; odnów zewnętrzny binding SaaS, potem ponów');
-   if(Number(broker.pending_count||0)>0)
-    throw new Error('SAAS_BACKLOG_PRESENT: nierozliczone żądania wymagają osobnego odbioru');
+   // Actual provider response creates a new BOUND session attestation.
+   // A BOUND requirement before the first user-initiated send is a deadlock.
+   // EXPIRED/NOT_ATTESTED permit ONE explicit sync, never LPCL activation.
+   if(!['BOUND','EXPIRED','NOT_ATTESTED'].includes(broker.session_attestation_state))
+    throw new Error('SAAS_SESSION_STATE_UNKNOWN');
+   if(broker.automatic_hop!=='AVAILABLE'||broker.channel_state!=='SENTINELX_MCP_READY')
+    throw new Error('SAAS_TRANSPORT_NOT_READY');
+   if(!Number.isSafeInteger(Number(broker.pending_count))||Number(broker.pending_count)>0)
+    throw new Error('SAAS_BACKLOG_PRESENT_OR_UNKNOWN: wymagany odbiór poprzednich żądań');
   }
   let bound=cmcActive?.state==='BOUND'&&cmcActive.current_binding?.mission_id===mid?cmcActive:null;
   if(!bound){
@@ -593,7 +598,7 @@ async function prepareBoundCognition(){
   note('SYNCHRONIZACJA DUAL · '+bound.conversation_id+' · epoch '+bound.current_binding.binding_epoch);
   await prepareCognitiveContext();
   await cmcPoll(true);
-  note('DUAL nadano. Poczekaj na dwa rzeczywiste receipty i READY przed autoryzacją LPCL.');
+  note('DUAL zgłoszono. Poczekaj na rzeczywiste receipty i READY obu providerów przed autoryzacją LPCL.');
  }catch(e){
   note('BIND/SYNC BLOCKED · '+e.message);
   throw e;

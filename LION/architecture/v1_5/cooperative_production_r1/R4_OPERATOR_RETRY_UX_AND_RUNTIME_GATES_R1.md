@@ -36,11 +36,16 @@ or no selected mission. This is not a generic cleanup request and never
 stops a container.
 
 A single explicit **Połącz LOCAL + SaaS i synchronizuj** step reads the
-registered mission with exact digest, validates the required cognitive
-providers, refuses an EXPIRED SaaS session or old broker pending requests,
-and creates/reuses a mission-bound canonical conversation with a stable
-idempotency key. The original cognitive-sync producer then performs the
-separate LOCAL/SaaS projection over this bound conversation. On a canonical
+registered mission with exact digest, validates required cognitive providers and creates/reuses a mission-bound
+canonical conversation with a stable idempotency key. The original broker
+creates a fresh BOUND session attestation only after a real SaaS reply and
+durable receipt. Requiring BOUND before the FIRST user-initiated request was
+a circular dependency, so EXPIRED or NOT_ATTESTED permits precisely one
+explicitly clicked sync only when SENTINELX_MCP_READY, automatic_hop=AVAILABLE
+and pending_count=0. Unknown session state, unavailable mediator, or
+nonempty/unknown backlog still block dispatch; there is no automatic retry.
+The original cognitive-sync producer then performs the distinct LOCAL/SaaS
+projections over the bound conversation. On a canonical
 delivery terminal event, the panel refreshes cognitive readiness.
 A repeated sync never blindly re-sends to a provider after uncertain
 delivery. This button is not LPCL activation and cannot create Docker authority.
@@ -93,6 +98,6 @@ but no durable reply or receipt arrived at last readback, and the broker
 still reported EXPIRED. The consumer reported AWAITING_MCP_RESULT.
 Do not replay this request, infer attestation or report end-to-end SaaS PASS.
 
-The source-only panel shows an exact SaaS binding blocker. It must not
+The source-only panel distinguishes transport readiness from completed SaaS session attestation. It must not
 fabricate provider lanes, force a claim completion, or turn SAAS_QUEUED into
 a material receipt. This UX change does not add a native SaaS session broker.
