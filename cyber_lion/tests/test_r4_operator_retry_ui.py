@@ -1,0 +1,145 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import unittest
+
+ROOT = Path(__file__).resolve().parents[2]
+GATEWAY = ROOT / "cyber_lion/app_coordination/local_intelligence_gateway.py"
+CLUSTER = ROOT / "deploy/mission-control/v3/app.js"
+
+
+class R4OperatorRetryUiTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.source = GATEWAY.read_text(encoding="utf-8")
+        cls.cluster = CLUSTER.read_text(encoding="utf-8")
+
+    def test_delete_button_visible_near_mission_title_and_bound_to_safe_preview(self):
+        s = self.source
+        self.assertIn('id="missionDeleteQuick" type="button"', s)
+        title = s.index('id="missionTitle"')
+        button = s.index('id="missionDeleteQuick"')
+        self.assertLess(button - title, 500, "Delete must not be hidden below huge phase output")
+        self.assertIn("fetch('/api/missions/'+encodeURIComponent(mid)+'/delete-preview'", s)
+        self.assertIn("JSON.stringify({spec_digest:p.spec_digest})", s)
+        self.assertIn("if($('missionDeleteQuick'))$('missionDeleteQuick').disabled=readOnly", s)
+        self.assertIn("if($('missionDeleteQuick'))$('missionDeleteQuick').disabled=true", s)
+
+    def test_cognitive_prepare_requires_live_saas_and_never_auto_activates(self):
+        s = self.source
+        snippet = s[s.index('let lpclBoundSyncBusy=false;'):
+                    s.index('async function prepareCognitiveContext(){')]
+        self.assertIn("/api/saas/broker/status", snippet)
+        self.assertIn("session_attestation_state!=='BOUND'", snippet)
+        self.assertIn("idempotency_key:'lpcl-sync-'", snippet)
+        self.assertIn("mission_id:mid", snippet)
+        self.assertIn("await prepareCognitiveContext()", snippet)
+        self.assertNotIn("activateLpcl(", snippet)
+        self.assertNotIn("docker compose", snippet)
+        self.assertIn("mission.cognitive_requirements?.providers", snippet)
+        self.assertIn("COGNITIVE_PROVIDER_REQUIREMENTS_DRIFT", snippet)
+        self.assertIn("await refreshCognitiveReadiness()", self.source)
+        self.assertIn("if(cmcActive?.current_binding?.mission_id===lpclRegistered?.mission_id)", self.source)
+
+    def test_cluster_follow_mode_refuses_historical_fallback(self):
+        s = self.cluster
+        self.assertIn("const run=selected?candidates.find(r=>r.run_id===selected):observedRun", s)
+        self.assertIn("NO CURRENT FLEET OBSERVATION", s)
+        self.assertIn("Historical 12/64", s)
+
+    def test_source_embedded_js_parses(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node not installed; dedicated Node workflow still required")
+        start = self.source.index("<script>") + len("<script>")
+        end = self.source.index("</script>", start)
+        program = self.source[start:end]
+        result = subprocess.run([node, "--check", "-"], input=program, text=True,
+                                capture_output=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stderr[:1800])
+
+    def test_operator_preparation_acceptance_and_expired_session_fails_closed(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node not installed")
+        source = self.source
+        code = source[source.index('let lpclBoundSyncBusy=false;'):
+                      source.index('async function prepareCognitiveContext(){')]
+        probe = r'''
+const vm = require("vm");
+const assert = require("node:assert/strict");
+
+function fixture({expired=false, alreadyRequested=false, ready=false}={}) {
+ let events=[], active=null, buttons={}, lastNote='';
+ const mission='LION-R4-E2E-8L32M-TEST';
+ const digest='a'.repeat(64);
+ const ctx={
+  lpclRegistered:{mission_id:mission,lpcl_digest:digest,validated_source:'LOCAL_MODEL_INFERENCE,SAAS_DELEGATION'},
+  cmcActive:null,
+  cmcGeneration:1,cmcActiveId:null,
+  lpclSourceState:'REGISTERED',
+  $:id=>buttons[id]||(buttons[id]={disabled:false,set textContent(v){lastNote=v},get textContent(){return lastNote}}),
+  lpclRequiredCognitiveProviders:()=>['LOCAL','SAAS'],
+  renderLpclIntake:state=>events.push('RENDER:'+state),
+  cmcApi:async path=>{
+   events.push('GET:'+path);
+   if(path.endsWith('/process'))return {mission_id:mission,spec_digest:digest,state:'REGISTERED',cognitive_requirements:{providers:['LOCAL','SAAS']}};
+   if(path.endsWith('/api/saas/broker/status'))return {session_attestation_state:expired?'EXPIRED':'BOUND',pending_count:0};
+   if(path.endsWith('/messages'))return {messages:alreadyRequested?[{role:'USER',content:'LION cognitive synchronization bootstrap.'}]:[]};
+   throw Error('UNEXPECTED_GET '+path);
+  },
+  cmcPost:async (path,body)=>{
+   events.push('POST:'+path);
+   assert.equal(path,'/api/conversations');
+   assert.equal(body.mission_id,mission);
+   assert.equal(body.idempotency_key,'lpcl-sync-'+digest.slice(0,40));
+   return {state:'BOUND',conversation_id:'conv-canonical-r4',
+    current_binding:{mission_id:mission,binding_epoch:1}};
+  },
+  cmcRefreshList:async()=>events.push('LIST'),
+  cmcOpen:async id=>{
+   events.push('OPEN:'+id);
+   ctx.cmcActive={state:'BOUND',conversation_id:id,current_binding:{mission_id:mission,binding_epoch:1}};
+   ctx.cmcActiveId=id;
+  },
+  refreshCognitiveReadiness:async()=>({readiness:{readiness:ready?'READY':'WAITING'}}),
+  prepareCognitiveContext:async()=>events.push('DISPATCH_DUAL_SYNC'),
+  cmcPoll:async()=>events.push('POLL'),
+  encodeURIComponent,
+  Error,
+ };
+ vm.runInNewContext(source,ctx);
+ return {ctx,events,note:()=>lastNote};
+}
+
+(async()=>{
+ const ok=fixture();await ok.ctx.prepareBoundCognition();
+ assert.equal(ok.events.filter(x=>x==='DISPATCH_DUAL_SYNC').length,1);
+ assert.equal(ok.events.filter(x=>x==='POST:/api/conversations').length,1);
+ assert.match(ok.note(),/DUAL nadano/);
+ const bad=fixture({expired:true});
+ await assert.rejects(()=>bad.ctx.prepareBoundCognition(),/SAAS_SESSION_EXPIRED/);
+ assert.equal(bad.events.filter(x=>x.startsWith('POST:')).length,0);
+ assert.equal(bad.events.filter(x=>x==='DISPATCH_DUAL_SYNC').length,0);
+ const requested=fixture({alreadyRequested:true});
+ await requested.ctx.prepareBoundCognition();
+ assert.equal(requested.events.filter(x=>x==='DISPATCH_DUAL_SYNC').length,0);
+ assert.match(requested.note(),/bez ponowienia/);
+ const done=fixture({ready:true});
+ await done.ctx.prepareBoundCognition();
+ assert.equal(done.events.filter(x=>x==='DISPATCH_DUAL_SYNC').length,0);
+ console.log('PASS JS OPERATOR PANEL: 4 bounded scenarios; no auto activation');
+})().catch(e=>{console.error(e);process.exit(1)});
+'''
+        completed = subprocess.run([node, "-e", "const source=" + json.dumps(code) + ";\n" + probe],
+                                   text=True, capture_output=True, timeout=25)
+        self.assertEqual(completed.returncode, 0,
+                         completed.stderr[-2600:] + completed.stdout[-1200:])
+        self.assertIn("PASS JS OPERATOR PANEL", completed.stdout)
+
+
+if __name__ == "__main__":
+    unittest.main()

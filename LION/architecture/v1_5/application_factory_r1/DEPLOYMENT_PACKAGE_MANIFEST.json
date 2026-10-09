@@ -415,7 +415,7 @@
       "target": "static/app.css"
     },
     {
-      "sha256": "3baea82b0e2c8ae4d9b0eca36be2f7c755462b245e59c092adec47d85934ff9d",
+      "sha256": "e30244042c257b82babc355233e4b94c8ad8ca49b9348aca1f6544e6b367e285",
       "source": "deploy/mission-control/v3/app.js",
       "target": "static/app.js"
     },
