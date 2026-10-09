@@ -8,7 +8,7 @@
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R4_LPCL_SCAFFOLD_DOCKER_BOOTSTRAP.md",
-      "sha256": "f331a24a8823ad1c5eee83970f30365b2ddd9d67d293ecc0b42ed7a1a77a154f"
+      "sha256": "f96cbf2208ac11031e52f66dc12cc69d634cd0ea8bde92ea144e6c1759fe05c9"
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
@@ -247,6 +247,14 @@
       "sha256": "355af5b4073378adc4cc35254de4fc59ed6371fa125b3ffd27070a09ecad4b91"
     },
     {
+      "path": "cyber_lion/tests/test_host_authority_separation.py",
+      "sha256": "50353cc4db2beee4959a41051d1bf5acea1f3a16901c50445a1e19fac556f775"
+    },
+    {
+      "path": "cyber_lion/tests/test_p0_current_candidate_inventory_delta.py",
+      "sha256": "bd67fbb603ba47d106507ad72afb6cceba92bdf1256a11053c50282645a59422"
+    },
+    {
       "path": "cyber_lion/tests/test_r4_docker_fleet_bootstrap_executor.py",
       "sha256": "ef99fad0edc0e025413d87a487b498e4b02a4fbd93bb14b7ee724384c2f84feb"
     },
@@ -339,7 +347,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "cd913026ed89670af55a1e15474427353ea5d0d15681be914a596beb2b291ba9",
-  "purpose": "Current exact source-only candidate: mission-bound LOCAL/SAAS scaffolding, strict currentness, typed one-shot R24 Docker executor using pre-existing durable admission source and guard. No operator mission launch, Docker execution, PDP grant, runtime deployment or fleet ready claim.",
+  "package_digest": "f0fd2b42afdb42c55a56142284cc1ce42965b166b3d823d3ed347e589701b20c",
+  "purpose": "Exact source-only R4 candidate including LOC-invariant effect-census and historical P0 owner tests, bounded cognitive scaffold and admission-gated Docker plan/consumer. Historical effect receipts unchanged; no live runtime effect or permission.",
   "schema": "lion.source-package-manifest/v1"
 }
