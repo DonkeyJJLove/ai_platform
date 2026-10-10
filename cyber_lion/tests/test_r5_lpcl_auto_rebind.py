@@ -48,6 +48,21 @@ class ActivatedLpclAutoRebindTests(unittest.TestCase):
         finally:
             c.close()
 
+    def _fixture_reach_full_fleet_phase(self):
+        """Fixture only: later phase was already reconciled in an isolated DB.
+
+        The R5 binding assertion belongs after the 0/1 preparation phases,
+        not during the zero-worker cognitive contract.
+        """
+        c=self.mc.connect()
+        try:
+            c.execute(
+                "UPDATE mission_phases SET status='PASS',progress=100.0 "
+                "WHERE mission_id=? AND ordinal IN (1,2)",(self.mid,)
+            )
+            c.commit()
+        finally:c.close()
+
     def _observed_workers(self):
         stamp = self.mc.now()
         return {
@@ -108,6 +123,7 @@ class ActivatedLpclAutoRebindTests(unittest.TestCase):
     def test_activated_lpcl_rebinds_exactly_once_after_fleet_currentness(self):
         mc = self.mc
         self._fixture_operator_launch()
+        self._fixture_reach_full_fleet_phase()
         with (
             patch.object(mc.operator_control, "autonomy_allowed", return_value=True),
             patch.object(mc, "_docker_local_model_currentness", return_value=self._observed_workers()),
@@ -147,6 +163,7 @@ class ActivatedLpclAutoRebindTests(unittest.TestCase):
     def test_changed_observation_between_probe_and_binding_denied(self):
         mc = self.mc
         self._fixture_operator_launch()
+        self._fixture_reach_full_fleet_phase()
         first = self._observed_workers()
         second = dict(first, digest="e" * 64)
         with (

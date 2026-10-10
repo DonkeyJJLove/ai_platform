@@ -396,8 +396,40 @@ class HostAuthoritySeparationTests(unittest.TestCase):
                     for alias in node.names)
             for node in ast.walk(r9_tree)
         ))
-        self.assertEqual(len(sources), 424 + len(r4_added) + len(r8_added) + len(r9_added))
-        self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (573, 6))
+        r10_added = {
+            "cyber_lion/mission_control/native_cognitive_phase_zero.py",
+        }
+        self.assertTrue(r10_added.issubset(sources))
+        native_text = sources[next(iter(r10_added))]
+        native_ast=ast.parse(native_text)
+        # Unlike R8/R9, R10 intentionally adds a real, strictly fixed-endpoint
+        # native-model HTTP POST. It is a NEW externally observable effect
+        # surface and must never be hidden by the old 573 census.
+        native_surface=[
+            surface for surface in inv.surfaces
+            if "cyber_lion/mission_control/native_cognitive_phase_zero.py"
+               in surface.implementation_refs
+        ]
+        self.assertEqual(len(native_surface), 4)
+        self.assertEqual(
+            sorted(surface.effect_class for surface in native_surface),
+            ["external.network.post","persistent_state.write",
+             "persistent_state.write","persistent_state.write"],
+        )
+        self.assertIn('FIXED_ENDPOINT = "http://172.25.128.1:8772"',native_text)
+        self.assertIn("INDEPENDENT_SOURCE_CURRENTNESS_REQUIRED",native_text)
+        self.assertIn("OPERATOR_CONTROL_FENCE_DENIED",native_text)
+        self.assertIn("NATIVE_SEND_ALREADY_CONSUMED",native_text)
+        self.assertIn("ProxyHandler({})",native_text)
+        self.assertIn("_NoRedirect",native_text)
+        self.assertFalse(any(
+            isinstance(node,(ast.Import,ast.ImportFrom))
+            and any(alias.name in {"subprocess","socket","os"}
+                    for alias in node.names)
+            for node in ast.walk(native_ast)
+        ))
+        self.assertEqual(len(sources), 424 + len(r4_added) + len(r8_added) + len(r9_added) + len(r10_added))
+        self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (578, 6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",

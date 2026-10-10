@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from . import global_scheduler as sched
+from . import native_cognitive_phase_zero as native_phase0
 from cyber_lion.contracts.phase_execution_contract import compile_panel_phase_contracts, preflight_execution_contracts, PhaseExecutionContractError
 
 CAPABILITY_CLASS = "CONTROL_PLANE_RECONNAISSANCE"
@@ -900,15 +901,31 @@ def _parse_model_response(text: str, role: str) -> dict[str,Any]:
     return {"role":role,"structured":False,"claims":[{"claim_id":f"{role}:1","claim_text":raw[:4000],"claim_class":"MODEL_PROPOSAL_UNSTRUCTURED","supporting_evidence_ids":[],"contradicting_evidence_ids":[],"confidence_bucket":"UNKNOWN","unknowns":[],"suggested_followup_observation":None}],"unknowns":[],"summary":raw[:2000],"raw_digest":hashlib.sha256(raw.encode()).hexdigest()}
 
 
-def _analysis_from_trajectory_rows(conn: sqlite3.Connection, mission_id: str, phase_id: str, evidence_digest: str) -> dict[str,Any] | None:
+def _analysis_from_trajectory_rows(conn: sqlite3.Connection, mission_id: str, phase_id: str, evidence_digest: str, *, native_current_source=None, native_contract_digest=None) -> dict[str,Any] | None:
     rows=conn.execute("SELECT * FROM mission_recon_trajectories WHERE mission_id=? AND phase_id=? AND evidence_bundle_digest=? ORDER BY trajectory_role",(mission_id,phase_id,evidence_digest)).fetchall()
     if not rows:return None
     outputs=[]
     for row in rows:
-        if row["state"]!="PASS" or not row["assignment_id"]:return None
-        payload=sched.assignment_payload(conn,row["assignment_id"])
-        result=(payload or {}).get("result") or {}
-        outputs.append(_parse_model_response(result.get("response_text") or "",row["trajectory_role"]))
+        if row["state"]!="PASS":return None
+        if row["assignment_id"]:
+            payload=sched.assignment_payload(conn,row["assignment_id"])
+            result=(payload or {}).get("result") or {}
+            text=result.get("response_text") or ""
+        else:
+            if native_current_source is None or native_contract_digest is None:return None
+            call_id="native-recon-"+hashlib.sha256(
+                f"{mission_id}|{phase_id}|{row['trajectory_role']}|{evidence_digest}".encode("utf8")
+            ).hexdigest()[:32]
+            verified=native_phase0.read_response(
+                conn,call_id=call_id,mission_id=mission_id,phase_id=phase_id,
+                role=row["trajectory_role"],evidence_bundle_digest=evidence_digest,
+                current_source=native_current_source,
+                contract_digest=native_contract_digest,
+            )
+            if not verified or verified["response_digest"]!=row["response_digest"]:
+                return None
+            text=verified["response_text"]
+        outputs.append(_parse_model_response(text,row["trajectory_role"]))
     normalized=[]
     for out in outputs:
         for claim in out.get("claims",[]):
@@ -918,7 +935,18 @@ def _analysis_from_trajectory_rows(conn: sqlite3.Connection, mission_id: str, ph
     for _,text,_ in normalized:counts[text]=counts.get(text,0)+1
     roles=len(outputs);agreement=[claim for _,text,claim in normalized if counts[text]==roles and roles>1]
     disagreement=[{"role":role,"claim":claim} for role,text,claim in normalized if counts[text]!=roles]
-    return {"schema":LOCAL_ANALYSIS_SCHEMA,"evidence_bundle_digest":evidence_digest,"trajectories":outputs,"local_consensus":agreement,"local_disagreement_set":disagreement,"unknowns":[u for out in outputs for u in out.get("unknowns",[])],"majority_vote_used":False,"authority_effect":"NONE"}
+    value={"schema":LOCAL_ANALYSIS_SCHEMA,"evidence_bundle_digest":evidence_digest,
+           "trajectories":outputs,"local_consensus":agreement,
+           "local_disagreement_set":disagreement,
+           "unknowns":[u for out in outputs for u in out.get("unknowns",[])],
+           "majority_vote_used":False,"authority_effect":"NONE"}
+    if any(row["assignment_id"] is None for row in rows):
+        # Three distinct prompts do not make three independent models.
+        # Never promote their consensus to independent epistemic evidence.
+        value["independence_state"]="SHARED_NATIVE_LOCAL_MODEL_ANCESTOR"
+        value["model_attested"]=False
+        value["unknowns"].append("NATIVE_LOCAL_TRAJECTORIES_NOT_INDEPENDENT_MODELS")
+    return value
 
 
 def _trajectory_prompt(role: str, model_view: dict[str,Any], evidence_digest: str) -> list[dict[str,str]]:
@@ -963,6 +991,120 @@ def ensure_local_trajectories(conn: sqlite3.Connection, mission_id: str, phase_i
     complete=bool(states) and all(x=="PASS" for x in states)
     distinct=len(result_digests)==len(set(result_digests)) if complete else False
     return {"required":True,"complete":complete,"roles":list(roles),"states":states,"result_digests":result_digests,"response_digests":response_digests,"distinct_result_digests":distinct}
+
+
+def ensure_native_local_trajectories(
+    conn:sqlite3.Connection,mission_id:str,phase_id:str,contract:dict[str,Any],
+    evidence_digest:str,model_view:dict[str,Any],driver_generation:int,now_fn,
+    *,current_source,transport,
+)->dict[str,Any]:
+    """Exactly one bounded native LOCAL send per canonical scheduler iteration.
+
+    Unlike legacy worker trajectories, no synthetic MD id, lease or
+    assignment is created. A SEND_UNKNOWN halts automatic replay. Actual
+    bytes and request/response SHA are persisted by the native R10 ledger.
+    """
+    roles=trajectory_roles(contract)
+    if not roles or tuple(roles)!=TRAJECTORY_ROLES:
+        raise ValueError("native phase-zero trajectory roles mismatch")
+    _=native_phase0._source_and_launch(
+        conn,mission_id,phase_id,current_source,contract["contract_digest"]
+    )
+    stamp=now_fn()
+    outputs=[]
+    for role in roles:
+        messages=_trajectory_prompt(role,model_view,evidence_digest)
+        intent=native_phase0.prepare_intent(
+            conn,mission_id=mission_id,phase_id=phase_id,role=role,
+            evidence_bundle_digest=evidence_digest,messages=messages,
+            contract_digest=contract["contract_digest"],
+            current_source=current_source,now_fn=now_fn,
+        )
+        state=intent["state"]
+        if state=="INTENT_DURABLE":
+            try:
+                completed=native_phase0.send_once(
+                    conn,intent=intent,messages=messages,
+                    evidence_bundle_digest=evidence_digest,
+                    contract_digest=contract["contract_digest"],
+                    current_source=current_source,transport=transport,now_fn=now_fn,
+                )
+            except Exception:
+                return {
+                    "required":True,"complete":False,"roles":list(roles),
+                    "states":["SEND_UNKNOWN"],"result_digests":[],
+                    "response_digests":[],"distinct_result_digests":False,
+                    "gate":"NATIVE_LOCAL_SEND_UNKNOWN_RECONCILE_ONLY",
+                    "authority_effect":"NONE",
+                }
+            state=completed["state"]
+        if state=="SEND_UNKNOWN":
+            return {
+                "required":True,"complete":False,"roles":list(roles),
+                "states":["SEND_UNKNOWN"],"result_digests":[],
+                "response_digests":[],"distinct_result_digests":False,
+                "gate":"NATIVE_LOCAL_SEND_UNKNOWN_RECONCILE_ONLY",
+                "authority_effect":"NONE",
+            }
+        if state!="RESPONSE_RECONCILED":
+            return {
+                "required":True,"complete":False,"roles":list(roles),
+                "states":[state],"result_digests":[],
+                "response_digests":[],"distinct_result_digests":False,
+                "gate":"NATIVE_LOCAL_RECEIPT_MISSING",
+                "authority_effect":"NONE",
+            }
+        verified=native_phase0.read_response(
+            conn,call_id=intent["call_id"],mission_id=mission_id,
+            phase_id=phase_id,role=role,evidence_bundle_digest=evidence_digest,
+            current_source=current_source,contract_digest=contract["contract_digest"],
+        )
+        if not verified:
+            raise ValueError("native LOCAL response not independently reconciled")
+        tid="trajectory-"+hashlib.sha256(
+            f"{mission_id}|{phase_id}|{role}|{evidence_digest}".encode()
+        ).hexdigest()[:32]
+        old=conn.execute(
+            "SELECT assignment_id,state,result_digest,response_digest "
+            "FROM mission_recon_trajectories WHERE trajectory_id=?",(tid,)
+        ).fetchone()
+        if old:
+            if (old["assignment_id"] is not None
+                or old["state"]!="PASS"
+                or old["result_digest"]!=verified["receipt_digest"]
+                or old["response_digest"]!=verified["response_digest"]):
+                raise ValueError("native/worker trajectory identity substitution")
+        else:
+            conn.execute(
+                "INSERT INTO mission_recon_trajectories VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                (tid,mission_id,phase_id,role,evidence_digest,None,
+                 verified["receipt_digest"],verified["response_digest"],
+                 "PASS",stamp,stamp),
+            )
+            conn.commit()
+        outputs.append(verified)
+        # Slow one-role-per-tick flow; keep other missions schedulable. If
+        # the response just arrived, defer any next outbound POST.
+        if intent["state"]=="INTENT_DURABLE" and len(outputs)<len(roles):
+            return {
+                "required":True,"complete":False,"roles":list(roles),
+                "states":["PASS"]*len(outputs)+["WAIT"]*(len(roles)-len(outputs)),
+                "result_digests":[o["receipt_digest"] for o in outputs],
+                "response_digests":[o["response_digest"] for o in outputs],
+                "distinct_result_digests":False,
+                "gate":"NATIVE_LOCAL_NEXT_ROLE_PENDING",
+                "authority_effect":"NONE",
+            }
+    digests=[o["receipt_digest"] for o in outputs]
+    responses=[o["response_digest"] for o in outputs]
+    return {
+        "required":True,"complete":True,"roles":list(roles),
+        "states":["PASS"]*len(roles),
+        "result_digests":digests,"response_digests":responses,
+        "distinct_result_digests":len(set(digests))==len(digests),
+        "common_model_ancestor":True,"independent_providers":False,
+        "authority_effect":"NONE",
+    }
 
 
 def ensure_saas_advisory(conn: sqlite3.Connection, mission_id: str, phase_id: str, contract: dict[str,Any], evidence_digest: str, model_view: dict[str,Any], now_fn, *, create_request, request_status) -> dict[str,Any]:
@@ -1204,12 +1346,37 @@ def enrich_pre_baseline(conn: sqlite3.Connection, mission_id: str, observations:
     panel=(observations.get("domains") or {}).get("panel") or {};mc=(observations.get("domains") or {}).get("mission_control") or {};content.update({"captured_at":content.get("captured_at") or now_fn(),"panel_repo":panel.get("repo"),"panel_runtime":panel.get("runtime"),"mission_control_runtime":mc.get("runtime_identity"),"authority_effect":"NONE"});sched.put_artifact(conn,mission_id,"CONTROL_PLANE_RECON_BASELINE_PRE",content,now_fn,schema_id=BASELINE_SCHEMA)
 
 
-def execute_phase(conn: sqlite3.Connection, mission_id: str, phase_id: str, contract: dict[str,Any], *, db_path: Path, driver_generation: int, now_fn, create_saas_request, saas_request_status, allow_reacquire: bool=False) -> dict[str,Any]:
+def execute_phase(conn: sqlite3.Connection, mission_id: str, phase_id: str, contract: dict[str,Any], *, db_path: Path, driver_generation: int, now_fn, create_saas_request, saas_request_status, allow_reacquire: bool=False, native_current_source=None, native_transport=None) -> dict[str,Any]:
     plan=build_observation_plan(contract)
     if plan["unsupported_tokens"]:
         return {"state":"WAITING","gate":"EVIDENCE_INCOMPLETE","reason":"Unsupported reconnaissance recipes: "+",".join(plan["unsupported_tokens"]),"evidence":{"unsupported_tokens":plan["unsupported_tokens"],"authority_effect":"NONE"}}
-    leases=ensure_material_leases(conn,mission_id,phase_id,contract,now_fn)
+    native_mode=native_current_source is not None or native_transport is not None
+    if native_mode:
+        if native_current_source is None or not callable(native_transport):
+            raise ValueError("native phase zero requires both independent source and trusted transport")
+        # Gate before writing artifacts or sending model requests. A declared
+        # cognitive intent alone is never a user launch or a worker binding.
+        native_phase0._source_and_launch(
+            conn,mission_id,phase_id,native_current_source,contract["contract_digest"]
+        )
+        leases=[]  # phase-zero has 0 MD workers; never synthesize material leases
+    else:
+        leases=ensure_material_leases(conn,mission_id,phase_id,contract,now_fn)
     existing_bundle=sched.artifact(conn,mission_id,"RECON_EVIDENCE_BUNDLE",phase_id=phase_id)
+    if existing_bundle and native_mode:
+        bounded=existing_bundle.get("content")
+        if (not isinstance(bounded,dict)
+            or bounded.get("schema")!=EVIDENCE_BUNDLE_SCHEMA
+            or bounded.get("mission_id")!=mission_id
+            or bounded.get("phase_id")!=phase_id
+            or bounded.get("contract_digest")!=contract["contract_digest"]
+            or not isinstance(bounded.get("observations"),dict)
+            or not isinstance(bounded.get("model_view"),dict)
+            or bounded.get("authority_effect")!="NONE"
+            or existing_bundle.get("content_digest")!=digest(bounded)):
+            return {"state":"WAITING","gate":"NATIVE_EVIDENCE_BUNDLE_REACQUIRE_REQUIRED",
+                    "reason":"Existing evidence bundle is not a complete source-bound observation",
+                    "evidence":{"authority_effect":"NONE"}}
     if existing_bundle:
         _record_bundle_generation(conn,mission_id,phase_id,existing_bundle,now_fn)
         reacquire=evidence_reacquisition_request(conn,mission_id,phase_id,existing_bundle,contract,db_path=db_path,require_parked=not allow_reacquire)
@@ -1240,12 +1407,29 @@ def execute_phase(conn: sqlite3.Connection, mission_id: str, phase_id: str, cont
         bundle_content={"schema":EVIDENCE_BUNDLE_SCHEMA,"mission_id":mission_id,"phase_id":phase_id,"contract_digest":contract["contract_digest"],"observation_plan":plan,"observations":observations,"model_view":model_view,"source_fingerprint":source_fp,"observation_fingerprint":observation_fp,"reacquisition_generation":1,"reacquisition_trigger":"INITIAL_BOUNDED_OBSERVATION","authority_effect":"NONE"}
         bundle_art=sched.put_artifact(conn,mission_id,"RECON_EVIDENCE_BUNDLE",bundle_content,now_fn,phase_id=phase_id,schema_id=EVIDENCE_BUNDLE_SCHEMA);bundle_digest=bundle_art["content_digest"]
         sched.record_recon_evidence_generation(conn,mission_id,phase_id,1,observation_fp,bundle_digest,bundle_content,"INITIAL_BOUNDED_OBSERVATION",now_fn)
-    trajectories=ensure_local_trajectories(conn,mission_id,phase_id,contract,bundle_digest,model_view,driver_generation,now_fn)
+    trajectories=(
+        ensure_native_local_trajectories(
+            conn,mission_id,phase_id,contract,bundle_digest,model_view,
+            driver_generation,now_fn,current_source=native_current_source,
+            transport=native_transport,
+        )
+        if native_mode else
+        ensure_local_trajectories(
+            conn,mission_id,phase_id,contract,bundle_digest,
+            model_view,driver_generation,now_fn
+        )
+    )
     if trajectories["required"] and not trajectories["complete"]:
         return {"state":"WAITING","gate":"LOCAL_RECON_TRAJECTORIES","reason":"Waiting for independent LOCAL reconnaissance trajectories","evidence":{"evidence_bundle_digest":bundle_digest,"trajectory_states":trajectories.get("states"),"material_lease_count":len(leases),"authority_effect":"NONE"}}
     if trajectories["required"] and not trajectories.get("distinct_result_digests"):
         return {"state":"WAITING","gate":"LOCAL_RECON_TRAJECTORIES","reason":"LOCAL trajectory result digests are not independently bound","evidence":{"evidence_bundle_digest":bundle_digest,"trajectory_result_digests":trajectories.get("result_digests"),"authority_effect":"NONE"}}
-    local_analysis=_analysis_from_trajectory_rows(conn,mission_id,phase_id,bundle_digest) if trajectories["required"] else None
+    local_analysis=(
+        _analysis_from_trajectory_rows(
+            conn,mission_id,phase_id,bundle_digest,
+            native_current_source=native_current_source if native_mode else None,
+            native_contract_digest=contract["contract_digest"] if native_mode else None,
+        ) if trajectories["required"] else None
+    )
     if local_analysis:sched.put_artifact(conn,mission_id,"LOCAL_RECON_ANALYSIS",local_analysis,now_fn,phase_id=phase_id,schema_id=LOCAL_ANALYSIS_SCHEMA)
     saas=ensure_saas_advisory(conn,mission_id,phase_id,contract,bundle_digest,model_view,now_fn,create_request=create_saas_request,request_status=saas_request_status)
     baseline=sched.artifact(conn,mission_id,"CONTROL_PLANE_RECON_BASELINE_PRE");classes=_classification(observations,(baseline or {}).get("content"))
