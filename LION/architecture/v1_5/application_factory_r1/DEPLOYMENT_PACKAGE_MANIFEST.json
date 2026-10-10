@@ -260,7 +260,7 @@
       "target": "cyber_lion/mission_control/cooperative_materialization_registry.py"
     },
     {
-      "sha256": "45c082d45e024e43edc62e2f5f555d11eb1c8f2438e66ae1686a865f76c2245a",
+      "sha256": "1e59a23e6536135ddbacb5a8f232cd2102e56d33944f97ff4638fca743bcfd79",
       "source": "cyber_lion/mission_control/cooperative_preactivation.py",
       "target": "cyber_lion/mission_control/cooperative_preactivation.py"
     },

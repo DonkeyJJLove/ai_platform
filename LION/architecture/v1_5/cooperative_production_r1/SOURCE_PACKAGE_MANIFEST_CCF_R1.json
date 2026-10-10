@@ -8,7 +8,7 @@
     },
     {
       "path": "LION/architecture/v1_5/application_factory_r1/DEPLOYMENT_PACKAGE_MANIFEST.json",
-      "sha256": "babc0b10a39c15852b9d8269f34248b63fe1da780d08c507c6d9e2fb5ba917ea"
+      "sha256": "c3a1d062b229410bd5ab84bdebc8dc5bd00dba1a5f8ddb1b8b39f802aff28565"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R10_NATIVE_PHASE_ZERO_COGNITIVE_RECEIPTS_R1.md",
@@ -416,7 +416,7 @@
     },
     {
       "path": "tools/lion_effect_admission_broker.py",
-      "sha256": "a9a2489e7d5a3b6a36ad7a1f3b3d0d6de79da3a173bcd69bce5aafcce8568450"
+      "sha256": "5e2073f2b3fa83e085c7b308d09cad8bffb3090cf3b8bf066ed14fbdd2f1604c"
     },
     {
       "path": "tools/lion_firefox_broker_relay.py",
@@ -475,7 +475,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "c10984e09c4f09fc0dc63001a39cc8d18c5bce23e2560e853b1d3dac5b703000",
+  "package_digest": "cd44e3f27e5b84af382710c2e086be5efde3cf1a6af02712919cefb230793a00",
   "purpose": "R10 exact Application Factory phase-zero native LOCAL model proposal with durable SEND_UNKNOWN, real request/response byte digest and shared-model ancestor; original single MC scheduler and 93-file deployment, no Docker or LPCL autoactivation. Requires separate source/authority review for new HTTP POST effect surface.",
   "schema": "lion.source-package-manifest/v1"
 }
