@@ -34,6 +34,20 @@ AUTHORITY_EFFECT="NONE"
 EXECUTION_EFFECT="NONE"
 _WORKER=re.compile(r"^MD[0-9]{3}$")
 
+# Canonical R6.17 producer domain; the SHA is over the unwrapped evidence,
+# never over worker-bootstrap metadata or a caller-controlled digest field.
+_QUALIFICATION_DOMAIN=b"LION/COOPERATIVE-WORKER-QUALIFICATION/1\0"
+_QUALIFICATION_FIELDS=frozenset({
+    "schema","assignment_id","mission_id","worker_id","lease_generation",
+    "release_evidence_digest","control_plane_evidence_digest",
+    "private_context_pin_sha256","private_transfer_sha256",
+    "private_materialization_digest","runtime_admission_digest",
+    "provider_id","context_resolver","execution_engine",
+    "writer_factory_built","execution_performed","authority_effect",
+})
+_WORKER_BOOTSTRAP_FIELDS=frozenset({"bootstrap_version","bootstrap_mode"})
+
+
 
 class CooperativePreactivationError(RuntimeError):
     pass
@@ -128,23 +142,69 @@ def _validate_qualification(
     worker_id:str,
     release:Mapping[str,Any],
 )->dict[str,Any]:
+    """Bind canonical R6.17 receipt to both release-ledger and provider digests.
+
+    The R6.17 *release_evidence_digest* is the SHA-256 of the entire persisted
+    release JSON, not the nested materializer's evidence_digest.  The latter
+    is returned separately as *control_plane_evidence_digest*.
+    """
     _require(isinstance(result,Mapping),"qualification result")
     value=dict(result)
+    extra=set(value)-_QUALIFICATION_FIELDS-{"qualification_digest"}
+    _require(
+        not extra or extra==_WORKER_BOOTSTRAP_FIELDS,
+        "qualification unexpected result fields",
+    )
+    if extra:
+        _require(value.get("bootstrap_version")=="1.0.0"
+                 and value.get("bootstrap_mode")=="UNBOUND",
+                 "qualification worker bootstrap evidence")
+    evidence={k:v for k,v in value.items() if k in _QUALIFICATION_FIELDS}
+    _require(set(evidence)==_QUALIFICATION_FIELDS,"qualification evidence schema")
+
+    _require(isinstance(release,Mapping) and isinstance(release.get("evidence"),Mapping),
+             "qualification canonical release unavailable")
+    release_evidence=release["evidence"]
+    outer=_sha(release.get("evidence_digest"),"qualification ledger release digest")
+    inner=_sha(release_evidence.get("evidence_digest"),"qualification control plane digest")
+    _require(global_scheduler.digest(dict(release_evidence))==outer,
+             "qualification ledger release digest mismatch")
+    _require(release.get("assignment_id")==assignment["assignment_id"]
+             and release.get("mission_id")==assignment["mission_id"],
+             "qualification canonical release identity")
     _require(value.get("schema")==QUALIFICATION_SCHEMA,"qualification schema")
-    _require(value.get("assignment_id")==assignment["assignment_id"],"qualification assignment substitution")
-    _require(value.get("mission_id")==assignment["mission_id"],"qualification mission substitution")
+    _require(value.get("assignment_id")==assignment["assignment_id"],
+             "qualification assignment substitution")
+    _require(value.get("mission_id")==assignment["mission_id"],
+             "qualification mission substitution")
     _require(value.get("worker_id")==worker_id,"qualification worker substitution")
     _require(value.get("lease_generation")==int(assignment["lease_generation"]),
              "qualification generation substitution")
-    _require(value.get("release_evidence_digest")==release.get("evidence_digest"),
+    _require(value.get("release_evidence_digest")==outer,
              "qualification release evidence substitution")
+    _require(value.get("control_plane_evidence_digest")==inner,
+             "qualification control-plane evidence substitution")
     _require(value.get("provider_id")==cp.WRITE_PROVIDER_ID,"qualification runtime provider")
     _require(value.get("writer_factory_built") is True,"qualification writer factory")
     _require(value.get("execution_performed") is False,"qualification executed effect")
     _require(value.get("authority_effect")=="NONE","qualification authority")
-    _sha(value.get("qualification_digest"),"qualification digest")
-    _sha(value.get("runtime_admission_digest"),"qualification runtime admission digest")
-    _sha(value.get("control_plane_evidence_digest"),"qualification control-plane digest")
+    for key in (
+        "release_evidence_digest","control_plane_evidence_digest",
+        "private_context_pin_sha256","private_transfer_sha256",
+        "private_materialization_digest","runtime_admission_digest",
+    ):
+        _sha(value.get(key),"qualification "+key)
+    for key in ("context_resolver","execution_engine"):
+        _require(isinstance(value.get(key),str) and bool(value[key].strip()),
+                 "qualification "+key)
+    declared=_sha(value.get("qualification_digest"),"qualification digest")
+    try:
+        canonical=json.dumps(evidence,sort_keys=True,separators=(",",":"),
+                             ensure_ascii=False,allow_nan=False).encode("utf-8")
+    except (TypeError,ValueError,UnicodeError) as exc:
+        raise CooperativePreactivationError("qualification canonical evidence invalid") from exc
+    expected=sha256(_QUALIFICATION_DOMAIN+canonical).hexdigest()
+    _require(declared==expected,"qualification canonical digest mismatch")
     return value
 
 
@@ -320,7 +380,7 @@ def advance_preactivation(
             result,
             assignment=assignment,
             worker_id=provider.worker_id,
-            release=release["evidence"],
+            release=release,
         )
     except Exception as exc:
         _put_journal(
