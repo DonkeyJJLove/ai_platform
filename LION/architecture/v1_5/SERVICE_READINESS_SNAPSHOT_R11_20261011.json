@@ -1,0 +1,153 @@
+{
+  "authority_effect": "NONE",
+  "captured_at_utc": "2026-10-10T22:23:54Z",
+  "consuming_merge_execution_preparation": {
+    "failure_policy": "NEVER_BLIND_RETRY; RECONCILE_GITHUB_AND_GRANT_CONSUMPTION",
+    "github_merge": "NOT_EXECUTED",
+    "installed_library_nonconsuming_admission": "ALLOW",
+    "installed_library_process_local_replay": "DENY",
+    "isolated_durable_consumption_replay": "DENIED",
+    "production_consume": "NOT_EXECUTED",
+    "requires_operator_root_preflight_and_one_shot_durable_consume": true,
+    "staged_installer": "/var/lib/sentinelx/uploads/lion-r11-pr445-exact-merge-consumption-v1.py",
+    "staged_installer_sha256": "e8876d8bf56ed97f5cb60e5e45545bc245adfc36febda9fc2da5142bd7ab27b4"
+  },
+  "expected_launch_date": "UNKNOWN_NO_GROUNDED_DURATION",
+  "git": {
+    "master_head": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
+    "master_tree": "68dd5043e6ede09eb5c2c2f348c40205cf2f44b6",
+    "pr445": {
+      "base_sha": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
+      "draft": false,
+      "head_sha": "7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "mergeable_state": "clean",
+      "merged": false,
+      "state": "open"
+    },
+    "pr446": {
+      "base_sha": "7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "draft": true,
+      "head_sha": "1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "merged": false
+    },
+    "pr447": {
+      "draft": true,
+      "merged": false,
+      "observed_old_head": "09d2e7a1075815140f47aec278a13864b36adf8e",
+      "role": "source-only documentation candidate; rebase after PR445"
+    },
+    "repository": "DonkeyJJLove/ai_platform"
+  },
+  "launch_condition": "After exact PR445/PR446 integration, deployment, LOCAL/SaaS binding, exact deployed-head LPCL registration, then explicit operator launch. Full fleet 32/32 later at material BUILD.",
+  "observability_limitations": [
+    "PR445 CI observer is positive evidence, not GitHub merge permission",
+    "Root-only durable merge consumption not yet executed",
+    "GitHub merge and durable consumption are separate non-atomic effects; never retry automatically",
+    "R11 source package not yet deployed as current Application Factory runtime",
+    "PR447 documentation candidate must remain unmerged until exact-base PR445 resolves",
+    "Snapshot does not refresh itself"
+  ],
+  "operator_application_factory": {
+    "canary_health_8782": "HTTP_200",
+    "full_fleet_required_before_build_verify": true,
+    "full_fleet_required_before_first_cognitive_phase": false,
+    "mission_control_8766": "HTTP_200",
+    "mission_id": "LION-APPLICATION-FACTORY-CROSS-MODEL-R1",
+    "operator_lpcl_launch": false,
+    "program_phase_count": 5,
+    "qualified_32_worker_fleet": "NOT_PROVEN",
+    "ready_to_launch": false,
+    "registered_in_live_mission_control": false,
+    "saas_binding_current": false,
+    "source_compilation_equivalence": "PASS",
+    "windows_panel_health_8780": "HTTP_200"
+  },
+  "pr445_signed_production": {
+    "independent_ci": {
+      "attempt": 3,
+      "authority_current": "YES",
+      "authority_effect": "NO",
+      "bootstrap_cardinality": 1,
+      "consumed": "NO",
+      "epoch_current": "YES",
+      "expired": "NO",
+      "job_id": 114325801039,
+      "lineage_cardinality": 1,
+      "merge_authorization_inferred": "NO",
+      "merge_method_exact": "YES",
+      "observation_digest": "2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488",
+      "observed_at_utc": "2026-10-10T22:12:10.450897Z",
+      "resource_exact": "YES",
+      "revoked": "NO",
+      "run_id": 38066162833,
+      "signature_valid": "YES",
+      "workflow": "Cyber-Lion Merge Authority Observation"
+    },
+    "merge_grant": {
+      "admitted_lineage_digest": "9e579be6d140203521c644d06aae5b70a3a9677d864d71fc92046dedd90b7e8e",
+      "current_durable_consumption": "AVAILABLE_AT_CI_20261010T221210Z; MUST_RECHECK_BEFORE_EFFECT",
+      "digest_domain_relation": "DISTINCT_NOT_INTERCHANGEABLE",
+      "grant_digest": "6daa256249751fc7d1d845cbead3c9cff16516c801d8fa14b7e6b00deb8dd469",
+      "grant_id": "lion-r11-pr445-merge-root",
+      "source_lineage_digest": "105ddde7101bf3cdb31dddcdeed85263c6d5439704f10d0fef3ba9757cef61e5"
+    },
+    "operator_bootstrap_count": 1,
+    "operator_lineage_count": 1,
+    "operator_live_http_readback": "PASS",
+    "operator_receipt_sha256": "f42bb6ee9cf3b4e1544e4e78777a24b7c075ecbdf5cd903843f3fd54a0b81c32",
+    "provisioning_operator_result": "PASS_EXACT_PR445_PRODUCTION_PROVISIONING",
+    "signed_policy_expiry_utc": "2026-10-12T20:23:44Z",
+    "transaction_digest": "558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+  },
+  "readiness_gate_vector": [
+    {
+      "gate": "G01_UI",
+      "status": "PASS"
+    },
+    {
+      "gate": "G02_TRUSTED_CP",
+      "status": "PASS"
+    },
+    {
+      "gate": "G03_PR445_PRODUCTION_AUTHORITY",
+      "status": "PASS_VERIFIED_CI"
+    },
+    {
+      "gate": "G04_PR445_DURABLE_CONSUMPTION_AND_GIT_MERGE",
+      "status": "NEXT_INCOMPLETE"
+    },
+    {
+      "gate": "G05_PR446_REBIND_NEW_GRANT_AND_MERGE",
+      "status": "BLOCKED"
+    },
+    {
+      "gate": "G06_BROKER_MISSION_CONTROL_DEPLOYED_CURRENT_MASTER",
+      "status": "BLOCKED"
+    },
+    {
+      "gate": "G07_LOCAL_SAAS_ACTIVE_BINDINGS",
+      "status": "BLOCKED"
+    },
+    {
+      "gate": "G08_APPLICATION_FACTORY_EXACT_HEAD_REGISTRATION",
+      "status": "BLOCKED"
+    },
+    {
+      "gate": "G09_EXPLICIT_USER_LPCL_START",
+      "status": "NOT_YET_ADMISSIBLE"
+    },
+    {
+      "gate": "G10_FULL_32_WORKER_BUILD_READINESS",
+      "status": "UNKNOWN_LATER_MATERIAL_PHASE"
+    }
+  ],
+  "runtime_effect": "NONE",
+  "schema": "lion.r11-service-readiness-snapshot/v2",
+  "service_ledger": {
+    "actual_merge_task": "SVC-0007",
+    "event_chain_head": "33eb639c63f44e25984ba677b6f0f3bf4abc4e52fb6ac87ce689a346c4733b7c",
+    "ready_next_task": "SVC-0006",
+    "revision": 22
+  },
+  "supersedes": "LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261010.json"
+}

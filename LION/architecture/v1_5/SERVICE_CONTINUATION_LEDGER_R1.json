@@ -1,0 +1,851 @@
+{
+  "authority_effect": "NONE",
+  "baseline": {
+    "evidence_refs": [
+      "GITHUB:DonkeyJJLove/ai_platform:master:222d52e57ebf17b950322e2a097f9ed94271cf9c",
+      "GITHUB:DonkeyJJLove/ai_platform:PR445:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "GITHUB:DonkeyJJLove/ai_platform:PR446:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "OPERATOR:LAB-DEBIAN:2026-10-10T21:19:56Z:PASS_VERIFIER_ONLY_REBIND",
+      "RUNTIME:LAB-DEBIAN:2026-10-10T21:20:38Z:PID27457:HTTP401",
+      "TEST:LAB-DEBIAN:ADD_VERIFIER_11_FACTORY_5_ENDPOINT_PASS",
+      "SIGNED:MOON:PR445:5_SIGNED_DOCUMENTS:TRANSACTION_SHA256:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+    ],
+    "limitations": [
+      "The PR445 signed package was not assembled into a single production installer artifact.",
+      "PR445 authoritative pr_bootstrap and authority_lineage cardinalities were zero at the recorded observation.",
+      "Production source file and protected runtime.env were not independently readable through the unprivileged SentinelX account.",
+      "PR445 and PR446 remained draft/open/unmerged; no CI authority_current YES evidence exists.",
+      "Verifier-only operator approval never authorizes authority database provisioning, merge, deployment or LPCL activation.",
+      "PR445 signature validity expires 2026-10-12T20:23:44Z; revalidate on any later run.",
+      "The ledger is versioned source evidence, not a live watcher, scheduler, signed receipt or authority."
+    ],
+    "source_head": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
+    "source_tree": "68dd5043e6ede09eb5c2c2f348c40205cf2f44b6"
+  },
+  "event_chain_head": "039347a76d6f826d2a535fc0ad1d4100c524d2031b26b689f84bce94b1601ec2",
+  "events": [
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "6b324703b3d9b5d8efd6994f7698242216eececc305f7065008d7e1224ca0190",
+      "evidence_refs": [
+        "CHECKPOINT:MOON:LION_R11_PR445_SIGNED_PROVISIONING_REVIEW_PACKAGE_20261010.json@sha256:2544f26b7e47dacd0b2252e372ec12b1015c0953cdc904507f4cdbf52b560f92"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "sequence": 1,
+      "task_id": "SVC-0001",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "242fece467a3765b644add083fc186b5ed2ed99c660ab32e453c3ff2b96c1d78",
+      "evidence_refs": [
+        "CHECKPOINT:MOON:LION_R11_PR445_SIGNED_PROVISIONING_REVIEW_PACKAGE_20261010.json@sha256:2544f26b7e47dacd0b2252e372ec12b1015c0953cdc904507f4cdbf52b560f92",
+        "SIGNED:MOON:PR445_TRANSACTION:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "6b324703b3d9b5d8efd6994f7698242216eececc305f7065008d7e1224ca0190",
+      "sequence": 2,
+      "task_id": "SVC-0001",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "dc3d79a8bdf7ebc748158b7f1f5a2313f92e8ec17110f876102b69a4d85ec0f9",
+      "evidence_refs": [
+        "CHECKPOINT:MOON:LION_R11_PR445_SIGNED_PROVISIONING_REVIEW_PACKAGE_20261010.json@sha256:2544f26b7e47dacd0b2252e372ec12b1015c0953cdc904507f4cdbf52b560f92",
+        "TEST:MOON:PR445_SIGNED_REVIEW_PACKAGE_READBACK_5_SIGNATURES"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "242fece467a3765b644add083fc186b5ed2ed99c660ab32e453c3ff2b96c1d78",
+      "sequence": 3,
+      "task_id": "SVC-0001",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "a68c2edc33ef976c373e2adf42457577e96c06dab37abd688c2aeeb62f7fb2e9",
+      "evidence_refs": [
+        "CHECKPOINT:MOON:LION_R11_PR445_SIGNED_PROVISIONING_REVIEW_PACKAGE_20261010.json@sha256:2544f26b7e47dacd0b2252e372ec12b1015c0953cdc904507f4cdbf52b560f92"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "dc3d79a8bdf7ebc748158b7f1f5a2313f92e8ec17110f876102b69a4d85ec0f9",
+      "sequence": 4,
+      "task_id": "SVC-0002",
+      "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "2c23201bbe65d56fba1ccc15c6a5954993cdbef1c90fa51a57a0033b5182bb5b",
+      "evidence_refs": [
+        "CHECKPOINT:MOON:LION_R11_PR445_SIGNED_PROVISIONING_REVIEW_PACKAGE_20261010.json@sha256:2544f26b7e47dacd0b2252e372ec12b1015c0953cdc904507f4cdbf52b560f92"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "a68c2edc33ef976c373e2adf42457577e96c06dab37abd688c2aeeb62f7fb2e9",
+      "sequence": 5,
+      "task_id": "SVC-0002",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "466fd2de89b44bc91290f3e4d2bd7c83881081a456df5518e0a7ad70da39c49e",
+      "evidence_refs": [
+        "TEST:MOON:PR445_ISOLATED_SQLITE_PROVISIONING_ONE_BOOTSTRAP_ONE_LINEAGE_TWO_RECEIPTS_AND_REPLAY_DENIED",
+        "TEST:MOON:PR445_SIGNED_STORE_ORIGINAL_CONTRACT"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "2c23201bbe65d56fba1ccc15c6a5954993cdbef1c90fa51a57a0033b5182bb5b",
+      "sequence": 6,
+      "task_id": "SVC-0002",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "7d9867f18402fba34769ba02e3ab9c36e0ae17f5471c0af879966e3fcee11ce0",
+      "evidence_refs": [
+        "TEST:MOON:PR445_ISOLATED_SQLITE_PROVISIONING_ONE_BOOTSTRAP_ONE_LINEAGE_TWO_RECEIPTS_AND_REPLAY_DENIED",
+        "TEST:MOON:PR445_ISOLATED_REPLAY_DENIAL"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "466fd2de89b44bc91290f3e4d2bd7c83881081a456df5518e0a7ad70da39c49e",
+      "sequence": 7,
+      "task_id": "SVC-0002",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "14df4399524fc2b4f65b10554b6018acaa205ad32223ca436ff9d079b5b17114",
+      "evidence_refs": [
+        "TEST:MOON:PR445_ISOLATED_SQLITE_PROVISIONING_ONE_BOOTSTRAP_ONE_LINEAGE_TWO_RECEIPTS_AND_REPLAY_DENIED",
+        "OPERATOR:SEPARATE_PROVISIONING_APPROVAL_STILL_REQUIRED_NOT_GIVEN"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "7d9867f18402fba34769ba02e3ab9c36e0ae17f5471c0af879966e3fcee11ce0",
+      "sequence": 8,
+      "task_id": "SVC-0003",
+      "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "e3d681263e6619640b2012cafc58227a5f95064fa4e35d934c7eb2c43f266de1",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR447:head:b573ff54cd90c79a4989858f2a5ce60a20280534",
+        "TEST:MOON:17_SERVICE_CONTRACT_22_FORMALIZATION_6_FEDERATED_PASS"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "14df4399524fc2b4f65b10554b6018acaa205ad32223ca436ff9d079b5b17114",
+      "sequence": 9,
+      "task_id": "SVC-0016",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "95153fc9e22826964c5908710343c079746f0757733a4e35b0440bdfe7429536",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:R11_PR445_EXACT_PROVISION_APPROVED_AND_EXECUTED",
+        "SIGNED:MOON:PR445_TRANSACTION_DIGEST:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "e3d681263e6619640b2012cafc58227a5f95064fa4e35d934c7eb2c43f266de1",
+      "sequence": 10,
+      "task_id": "SVC-0003",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "c766c6daf740c76507ea90a114a6eb167e63bc0f41d369ad1c4b740124417bdf",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:R11_PR445_EXACT_PROVISION_APPROVED_AND_EXECUTED",
+        "OPERATOR:LAB-DEBIAN:20261010T221004Z:PR445_PROVISIONING_RECEIPT_SHA256:f42bb6ee9cf3b4e1544e4e78777a24b7c075ecbdf5cd903843f3fd54a0b81c32",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "95153fc9e22826964c5908710343c079746f0757733a4e35b0440bdfe7429536",
+      "sequence": 11,
+      "task_id": "SVC-0003",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "e80c2db6b27cdf11581a4402dff46cf5ea0ef333e58eec537269f8c6bae61071",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:R11_PR445_EXACT_PROVISION_APPROVED_AND_EXECUTED",
+        "RUNTIME:LAB-DEBIAN:20261010T221004Z:PR445_BOOTSTRAP_1_LINEAGE_1_LIVE_HTTP_PASS",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "c766c6daf740c76507ea90a114a6eb167e63bc0f41d369ad1c4b740124417bdf",
+      "sequence": 12,
+      "task_id": "SVC-0003",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "93771632f724d6f2b5817d839f9b027abe3a40ed8426685b8d8037d4ad7639b8",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:R11_PR445_EXACT_PROVISION_APPROVED_AND_EXECUTED",
+        "OPERATOR:LAB-DEBIAN:20261010T221004Z:PR445_PROVISIONING_RECEIPT_SHA256:f42bb6ee9cf3b4e1544e4e78777a24b7c075ecbdf5cd903843f3fd54a0b81c32"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "e80c2db6b27cdf11581a4402dff46cf5ea0ef333e58eec537269f8c6bae61071",
+      "sequence": 13,
+      "task_id": "SVC-0004",
+      "to_state": "READY"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "6aae3240886023140184434af39e568f58a8f4bc0579b623a286ad1874c06f0e",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:20261010T221004Z:PR445_PROVISIONING_RECEIPT_SHA256:f42bb6ee9cf3b4e1544e4e78777a24b7c075ecbdf5cd903843f3fd54a0b81c32",
+        "SIGNED:MOON:PR445_TRANSACTION_DIGEST:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "93771632f724d6f2b5817d839f9b027abe3a40ed8426685b8d8037d4ad7639b8",
+      "sequence": 14,
+      "task_id": "SVC-0004",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "f59fb8f7bf70fb6a923f1f0c00b5628261092dbc1f4bc712cfe9633811bd989a",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:20261010T221004Z:PR445_PROVISIONING_RECEIPT_SHA256:f42bb6ee9cf3b4e1544e4e78777a24b7c075ecbdf5cd903843f3fd54a0b81c32",
+        "RUNTIME:LAB-DEBIAN:20261010T221004Z:PR445_BOOTSTRAP_1_LINEAGE_1_LIVE_HTTP_PASS",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "6aae3240886023140184434af39e568f58a8f4bc0579b623a286ad1874c06f0e",
+      "sequence": 15,
+      "task_id": "SVC-0004",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "31d6f7f066d103cc4ccd659fb0d4449e21d7f1b0e972734de504b1046bbaf3c8",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:R11_PR445_EXACT_PROVISION_APPROVED_AND_EXECUTED",
+        "RUNTIME:LAB-DEBIAN:20261010T221004Z:PR445_BOOTSTRAP_1_LINEAGE_1_LIVE_HTTP_PASS",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "f59fb8f7bf70fb6a923f1f0c00b5628261092dbc1f4bc712cfe9633811bd989a",
+      "sequence": 16,
+      "task_id": "SVC-0004",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "bc3f300f2333b699404068e71ae40010d955cc3c027cbf1175000a5ac238a84d",
+      "evidence_refs": [
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:HEAD_7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:BASE_222d52e57ebf17b950322e2a097f9ed94271cf9c:READY_FOR_REVIEW"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "31d6f7f066d103cc4ccd659fb0d4449e21d7f1b0e972734de504b1046bbaf3c8",
+      "sequence": 17,
+      "task_id": "SVC-0005",
+      "to_state": "READY"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "979e0945d6dce12a3d711323b4eb81eea7a890298937290c5c0024d372960238",
+      "evidence_refs": [
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:HEAD_7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:BASE_222d52e57ebf17b950322e2a097f9ed94271cf9c:READY_FOR_REVIEW"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "bc3f300f2333b699404068e71ae40010d955cc3c027cbf1175000a5ac238a84d",
+      "sequence": 18,
+      "task_id": "SVC-0005",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "163ab6b909996b689870312db99829c25bbd2fca05d52bb54c9fbbb39886e757",
+      "evidence_refs": [
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:HEAD_7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:BASE_222d52e57ebf17b950322e2a097f9ed94271cf9c:READY_FOR_REVIEW"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "979e0945d6dce12a3d711323b4eb81eea7a890298937290c5c0024d372960238",
+      "sequence": 19,
+      "task_id": "SVC-0005",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "67afd9e5b2aae458d60cdfdbf6a9a065e900c29cc7bb905289e3fdd1a754146c",
+      "evidence_refs": [
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:HEAD_7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:BASE_222d52e57ebf17b950322e2a097f9ed94271cf9c:READY_FOR_REVIEW"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "163ab6b909996b689870312db99829c25bbd2fca05d52bb54c9fbbb39886e757",
+      "sequence": 20,
+      "task_id": "SVC-0005",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "33eb639c63f44e25984ba677b6f0f3bf4abc4e52fb6ac87ce689a346c4733b7c",
+      "evidence_refs": [
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:HEAD_7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:BASE_222d52e57ebf17b950322e2a097f9ed94271cf9c:READY_FOR_REVIEW"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "67afd9e5b2aae458d60cdfdbf6a9a065e900c29cc7bb905289e3fdd1a754146c",
+      "sequence": 21,
+      "task_id": "SVC-0006",
+      "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "55e5d7498f56d4b97f7fc54bd62f1562a2a2150abeee0522119ecef98595273c",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:20261010:APPROVES_EXACT_PR445_MERGE_AFTER_CONSUMPTION",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "33eb639c63f44e25984ba677b6f0f3bf4abc4e52fb6ac87ce689a346c4733b7c",
+      "sequence": 22,
+      "task_id": "SVC-0006",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "ab2185b8523d00f04aab66d08e5bd03dab015896e25d064c7bccfb7d969df406",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:20261010:APPROVES_EXACT_PR445_MERGE_AFTER_CONSUMPTION",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488",
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "55e5d7498f56d4b97f7fc54bd62f1562a2a2150abeee0522119ecef98595273c",
+      "sequence": 23,
+      "task_id": "SVC-0006",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "01c8ae1a4fe9479a66262c69b59b50a26f559d195ef22a6149e47eb70652e91a",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:20261010:APPROVES_EXACT_PR445_MERGE_AFTER_CONSUMPTION",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488",
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "ab2185b8523d00f04aab66d08e5bd03dab015896e25d064c7bccfb7d969df406",
+      "sequence": 24,
+      "task_id": "SVC-0006",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "898163febd2f26b46cd5c7cc6ab07a481d48b21b2a7f55547ba02b477af83f9b",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "01c8ae1a4fe9479a66262c69b59b50a26f559d195ef22a6149e47eb70652e91a",
+      "sequence": 25,
+      "task_id": "SVC-0007",
+      "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "b99443a3364c4ae669945c7e36541b1009b093fb6b4fa4d85935aaa0cc5e117e",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86",
+        "OPERATOR:CURRENT_THREAD:20261010:APPROVES_EXACT_PR445_MERGE_AFTER_CONSUMPTION"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "898163febd2f26b46cd5c7cc6ab07a481d48b21b2a7f55547ba02b477af83f9b",
+      "sequence": 26,
+      "task_id": "SVC-0007",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "92b4b93317f52ae2887575d8a675ae4fc8f4929cae3e65eef9404129106cd661",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGED_COMMIT:d367e47cf4f72e450cc212908b2cdfed14ceb805",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGE_PARENTS:222d52e57ebf17b950322e2a097f9ed94271cf9c+7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+        "GITHUB:DonkeyJJLove/ai_platform:MASTER_TREE:b92133d258b6fbf2c7f1d16d992e08d2a3609a0c",
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "b99443a3364c4ae669945c7e36541b1009b093fb6b4fa4d85935aaa0cc5e117e",
+      "sequence": 27,
+      "task_id": "SVC-0007",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "2e6ffa3ce78d5bae22a3184142af4d777a813d5aaa35de57412639347a58725a",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:20261010:APPROVES_EXACT_PR445_MERGE_AFTER_CONSUMPTION",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGED_COMMIT:d367e47cf4f72e450cc212908b2cdfed14ceb805",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGE_PARENTS:222d52e57ebf17b950322e2a097f9ed94271cf9c+7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+        "GITHUB:DonkeyJJLove/ai_platform:MASTER_TREE:b92133d258b6fbf2c7f1d16d992e08d2a3609a0c",
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "92b4b93317f52ae2887575d8a675ae4fc8f4929cae3e65eef9404129106cd661",
+      "sequence": 28,
+      "task_id": "SVC-0007",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "6297ae37d277281ba15079b3c3efedd35e9fd55e4ad4f7bfa31c61813837394b",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGED_COMMIT:d367e47cf4f72e450cc212908b2cdfed14ceb805",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGE_PARENTS:222d52e57ebf17b950322e2a097f9ed94271cf9c+7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "2e6ffa3ce78d5bae22a3184142af4d777a813d5aaa35de57412639347a58725a",
+      "sequence": 29,
+      "task_id": "SVC-0008",
+      "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "039347a76d6f826d2a535fc0ad1d4100c524d2031b26b689f84bce94b1601ec2",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:BASE:d367e47cf4f72e450cc212908b2cdfed14ceb805:HEAD:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGED_COMMIT:d367e47cf4f72e450cc212908b2cdfed14ceb805"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "6297ae37d277281ba15079b3c3efedd35e9fd55e4ad4f7bfa31c61813837394b",
+      "sequence": 30,
+      "task_id": "SVC-0008",
+      "to_state": "IN_PROGRESS"
+    }
+  ],
+  "ledger_id": "LION-R11-SERVICE-CONTINUATION-20261010",
+  "owner_repository": "DonkeyJJLove/ai_platform",
+  "recorded_at": "2026-10-10T21:31:34Z",
+  "revision": 31,
+  "runtime_effect": "NONE",
+  "schema": "lion.service-continuation-ledger/v1",
+  "tasks": [
+    {
+      "acceptance": [
+        "All five signatures verified",
+        "Transaction digest equals 558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf",
+        "No credentials or private PEM in package"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [],
+      "effect_class": "NONE",
+      "first_action": "Reconstruct PRAuthorityProvisioningTransaction from signed epoch, root, policy, grant and decision; verify five signatures and exact SHA.",
+      "initial_state": "READY",
+      "intent": "Assemble five already signed canonical documents into one immutable, non-authorizing transaction package.",
+      "owner": "ai_platform / authority provisioning",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "SIGNED:MOON:/mnt/c/Users/d2j3/lion-r11-pr445-public/pr445-ceremony/round3/decision.sig",
+        "CHECKPOINT:MOON:LION_R11_PR445_FIVE_SIGNED_READBACK_AND_TRUST_BINDING_PENDING_20261010.json"
+      ],
+      "task_id": "SVC-0001",
+      "title": "Signed PR445 package"
+    },
+    {
+      "acceptance": [
+        "Exact trial bootstraps and lineage 1/1",
+        "Replay rejected",
+        "Production database not opened for writing"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0001"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Run bootstrap_authority_context followed by provision_pr_authority on an isolated SQLite database; independently verify both records.",
+      "initial_state": "BLOCKED",
+      "intent": "Exercise the original SQLiteAuthorityProvisioningStore against a disposable database with the exact signed package, including replay rejection and digest-bound readback.",
+      "owner": "ai_platform / authority provisioning",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "SOURCE:cyber_lion/enterprise/authority_provisioning.py",
+        "SIGNED:MOON:PR445_TRANSACTION_DIGEST:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+      ],
+      "task_id": "SVC-0002",
+      "title": "Isolated provisioning rehearsal"
+    },
+    {
+      "acceptance": [
+        "Explicit approval binds PR445 exact head/base, database, scope, roles and write class",
+        "No inference from existing verifier approval"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0002"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Present verified transaction digest and exact database target for independent, role-separated approval; preserve the decision reference.",
+      "initial_state": "BLOCKED",
+      "intent": "Request and record independent explicit authorization for creating a production root context and PR445 signed grant in the original trusted store.",
+      "owner": "operator / authorized provisioning owner",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "SOURCE:LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE_CONTRACT.json",
+        "CHECKPOINT:LAB-DEBIAN:LION_R11_PR445_VERIFIER_REBIND_POSTREADBACK_20261010.json"
+      ],
+      "task_id": "SVC-0003",
+      "title": "Separate authority provision approval"
+    },
+    {
+      "acceptance": [
+        "Production bootstrap cardinality 1 and lineage cardinality 1",
+        "Store receipts independently read back",
+        "No direct SQL grant insertion"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0003"
+      ],
+      "effect_class": "AUTHORITY_WRITE",
+      "first_action": "Reacquire PR state and runtime, read approved grant, snapshot DB, call original store bootstrap/provision and reconcile receipts.",
+      "initial_state": "BLOCKED",
+      "intent": "After separate approval, provision signed root context and exact PR445 grant exclusively through original SQLiteAuthorityProvisioningStore.",
+      "owner": "authorized provisioning executor / LAB-DEBIAN",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "SOURCE:cyber_lion/enterprise/authority_provisioning.py",
+        "SIGNED:MOON:PR445_TRANSACTION_DIGEST:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+      ],
+      "task_id": "SVC-0004",
+      "title": "Production PR445 provisioning"
+    },
+    {
+      "acceptance": [
+        "Provider available and response valid",
+        "Signer and scope valid, epoch current, not expired, not consumed",
+        "Observer authority_current=YES without merge authorization inferred"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0004"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Read back production store 1/1 and perform a bounded GitHub Merge Authority Observation job for exact PR445.",
+      "initial_state": "BLOCKED",
+      "intent": "Observe the exact signed PR445 authority through the live CI observer after provisioning without inferring merge authorization.",
+      "owner": "ai_platform / CI observer",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "SOURCE:cyber_lion/enterprise/merge_authority_observation.py",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445"
+      ],
+      "task_id": "SVC-0005",
+      "title": "Independent PR445 authority observation"
+    },
+    {
+      "acceptance": [
+        "Approval identity specific to PR445, repository, method and current SHA",
+        "No scope inheritance from verifier or provisioning approvals"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0005"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Present exact PR445 head/base and green CI with current authority observation for explicit merge decision.",
+      "initial_state": "BLOCKED",
+      "intent": "Obtain a separate exact authorization to perform PR445 merge after current evidence and required CI.",
+      "owner": "operator / merge authority owner",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR445",
+        "SOURCE:LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE_CONTRACT.json"
+      ],
+      "task_id": "SVC-0006",
+      "title": "Explicit PR445 merge approval"
+    },
+    {
+      "acceptance": [
+        "Merge receipt consumed once",
+        "GitHub merged state, parents and master tree independently read back",
+        "No deployment inferred from merge"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0006"
+      ],
+      "effect_class": "MERGE",
+      "first_action": "Reacquire exact GitHub state; use consuming merge-authority path and reconcile merged head/tree; stop on drift.",
+      "initial_state": "BLOCKED",
+      "intent": "Under current merge admission execute at most one exact GitHub merge for PR445 and reconcile parents/master/readback.",
+      "owner": "authorized GitHub merge executor",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR445",
+        "SOURCE:cyber_lion/enterprise/merge_admission.py"
+      ],
+      "task_id": "SVC-0007",
+      "title": "Merge PR445 and reconcile"
+    },
+    {
+      "acceptance": [
+        "Source candidate matches fresh master without losing peer changes",
+        "Tests and CI bind the new head and tree",
+        "Old PR445 or PR446 grants not reused"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0007"
+      ],
+      "effect_class": "REPOSITORY_WRITE",
+      "first_action": "Read fresh master and PR446 head/base; construct non-conflicting source candidate, run targeted tests and obtain separate publishing approval.",
+      "initial_state": "BLOCKED",
+      "intent": "After PR445 integration rebase or restack PR446 onto newly observed master; regenerate its exact candidate hash and dependent evidence.",
+      "owner": "ai_platform / source integration",
+      "scope": "DonkeyJJLove/ai_platform:PR446:base:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:head:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446",
+        "SOURCE:LION/architecture/v1_5/cooperative_production_r1/R11_SOURCE_BOUND_ONE_WORKER_PREACTIVATION_R1.md"
+      ],
+      "task_id": "SVC-0008",
+      "title": "Rebind stacked PR446"
+    },
+    {
+      "acceptance": [
+        "New PR446 context/epoch and exact signed grants",
+        "No PR445 grant reused",
+        "Independent provider readback confirms signature/lineage"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0008"
+      ],
+      "effect_class": "AUTHORITY_WRITE",
+      "first_action": "Rebuild exact PR446 authority request from fresh refs; obtain new signed root/decision and separate admission for DB write.",
+      "initial_state": "BLOCKED",
+      "intent": "Perform a new authorized role-separated signature and provisioning ceremony for PR446 after its HEAD/BASE is rebound.",
+      "owner": "authorized provisioning owner",
+      "scope": "DonkeyJJLove/ai_platform:PR446:base:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:head:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446",
+        "SOURCE:cyber_lion/enterprise/authority_provisioning.py"
+      ],
+      "task_id": "SVC-0009",
+      "title": "Issue exact PR446 authority"
+    },
+    {
+      "acceptance": [
+        "Required CI PASS at exact head",
+        "authority_current=YES; no merge_authorization inferred"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0009"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Check PR446 CI and signed authority provider with fresh master, read-only.",
+      "initial_state": "BLOCKED",
+      "intent": "Run exact CI observation for the newly bound PR446 head/base before any merge.",
+      "owner": "ai_platform / CI observer",
+      "scope": "DonkeyJJLove/ai_platform:PR446:base:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:head:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446",
+        "SOURCE:cyber_lion/enterprise/merge_authority_observation.py"
+      ],
+      "task_id": "SVC-0010",
+      "title": "Observe PR446 current authority"
+    },
+    {
+      "acceptance": [
+        "Distinct PR446 merge approval",
+        "No automatic carry-over from PR445"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0010"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Review current SHA, signed grant and merge admission scope; record explicit operator approval.",
+      "initial_state": "BLOCKED",
+      "intent": "Acquire a separate exact merge approval for PR446 after fresh CI.",
+      "owner": "operator / merge authority owner",
+      "scope": "DonkeyJJLove/ai_platform:PR446:base:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:head:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446",
+        "SOURCE:LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE_CONTRACT.json"
+      ],
+      "task_id": "SVC-0011",
+      "title": "Authorize PR446 merge"
+    },
+    {
+      "acceptance": [
+        "Merge observed in GitHub",
+        "Successor master commit and tree independently verified"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0011"
+      ],
+      "effect_class": "MERGE",
+      "first_action": "Perform only current consumed GitHub merge for PR446; observe parent chain and master head after completion.",
+      "initial_state": "BLOCKED",
+      "intent": "Execute one authorized, exact PR446 merge then read back resulting tree and CI.",
+      "owner": "authorized GitHub merge executor",
+      "scope": "DonkeyJJLove/ai_platform:PR446:base:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:head:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446",
+        "SOURCE:cyber_lion/enterprise/merge_admission.py"
+      ],
+      "task_id": "SVC-0012",
+      "title": "Merge and reconcile PR446"
+    },
+    {
+      "acceptance": [
+        "Exact deployed module matches integrated master",
+        "Mission Control health/read-model pass",
+        "No LPCL activation from deployment"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0012"
+      ],
+      "effect_class": "DEPLOY",
+      "first_action": "Reacquire source/deployment digests; run regression, install with approved effect path, and verify service/DB readback.",
+      "initial_state": "BLOCKED",
+      "intent": "Qualify and separately admit deployment of merged R11 source to Mission Control, preserving DB and LPCL inactive.",
+      "owner": "Mission Control owner",
+      "scope": "LION-R11-MISSION-CONTROL",
+      "source_refs": [
+        "SOURCE:cyber_lion/mission_control/cooperative_preactivation_bootstrap.py",
+        "SOURCE:LION/architecture/v1_5/application_factory_r1/README.md"
+      ],
+      "task_id": "SVC-0013",
+      "title": "Mission Control deployment readiness"
+    },
+    {
+      "acceptance": [
+        "Exact LPCL identity, admitted effects and source digests current",
+        "Explicit operator launch action",
+        "Material execution observed, no self-activation"
+      ],
+      "authorization_gate": "EXPLICIT_EXACT_LPCL_OPERATOR_LAUNCH",
+      "dependencies": [
+        "SVC-0013"
+      ],
+      "effect_class": "LPCL_ACTIVATE",
+      "first_action": "Compile exact program and capability preflight; present bounded launch for explicit human start. Do not self-launch.",
+      "initial_state": "BLOCKED",
+      "intent": "After separate capability/readiness checks, operator explicitly launches the exact Application Factory LPCL 1.2.",
+      "owner": "operator / LPCL Mission Control",
+      "scope": "LION-APPLICATION-FACTORY-R1",
+      "source_refs": [
+        "SOURCE:LION/architecture/v1_5/application_factory_r1/PANEL_LPCL_1_2.txt",
+        "SOURCE:LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE_CONTRACT.json"
+      ],
+      "task_id": "SVC-0014",
+      "title": "Application Factory LPCL launch"
+    },
+    {
+      "acceptance": [
+        "No expired grants interpreted as current",
+        "Runtime verification reobserved after restart",
+        "No background automation implied"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [],
+      "effect_class": "NONE",
+      "first_action": "Read current trusted clock and service health; if after 2026-10-12T20:23:44Z, mark authority signing inputs stale and prepare new ceremony.",
+      "initial_state": "READY",
+      "intent": "Independently monitor time-bound PR445 signature validity and post-restart verifier readiness before relying on either.",
+      "owner": "ai_platform / service operator",
+      "scope": "LAB-DEBIAN/R11",
+      "source_refs": [
+        "CHECKPOINT:LAB-DEBIAN:LION_R11_PR445_VERIFIER_REBIND_POSTREADBACK_20261010.json",
+        "SIGNED:MOON:PR445_POLICY_EXPIRY:2026-10-12T20:23:44Z"
+      ],
+      "task_id": "SVC-0015",
+      "title": "Grant expiry and restart observation"
+    },
+    {
+      "acceptance": [
+        "Contract and replay tests pass",
+        "Formalization registry and semantic owner map route exact paths",
+        "PR review and required CI present; merge separately admitted"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [],
+      "effect_class": "REPOSITORY_WRITE",
+      "first_action": "Implement and test source candidate in isolated checkout; publish only to separate review branch, then independently check CI and governance gate before integration.",
+      "initial_state": "READY",
+      "intent": "Introduce versioned ledger contract, schema, first journal, CLI, negative tests and documentation discovery via separate source PR.",
+      "owner": "ai_platform / architecture knowledge",
+      "scope": "LION-V1_5-SERVICE-CONTINUATION-R1",
+      "source_refs": [
+        "SOURCE:LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+        "SOURCE:cyber_lion/contracts/formalization_registry.py"
+      ],
+      "task_id": "SVC-0016",
+      "title": "Integrate service ledger architecture"
+    }
+  ]
+}

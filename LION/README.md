@@ -19,6 +19,10 @@ V1.5 wprowadza federacyjne architecture knowledge i traktuje dokumentację jako 
 
 Root `README.md`, ten dokument oraz `architecture/v1_5/README.md` są deklarowanymi entrypointami architecture knowledge. Zmiana epoki lub źródeł unieważnia ich claim do bieżącego stanu, dopóki nie zostaną ponownie zrekonsyliowane.
 
+## Trwała kontynuacja serwisowa
+
+Zobowiązania, blokady, dowody i dokładny następny krok przechowuje [SERVICE_CONTINUATION_LEDGER_R1.json](architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json). Formalny opis ownera, stanów, append-only lineage i integracji z architekturą znajduje się w [SERVICE_CONTINUATION_LEDGER.md](architecture/v1_5/SERVICE_CONTINUATION_LEDGER.md); schemat w [SERVICE_CONTINUATION_LEDGER.schema.json](architecture/v1_5/SERVICE_CONTINUATION_LEDGER.schema.json). To jest warstwa handoff/source, nie live mission controller ani źródło zgody na efekt.
+
 ## Zasada dowodowa
 
 ```text
@@ -104,3 +108,9 @@ The Semantic Cloud research line is integrated only as a candidate semantic cont
 ## Edge Yoke R6 — source candidate
 
 [Repozytoryjna kwalifikacja produktu, osobny obserwator i weto R5](../docs/architecture/edge-yoke/README.md). Zachowany owner procesu/admission; kod kandydata nie jest automatyczną aktywacją misji lub wdrożeniem.
+
+[Raport gotowości R11 i Panelu LPCL](architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261010.md) oddziela działające usługi od zdolności uruchomienia konkretnej misji.
+
+Aktualny wpis serwisowy: [raport R11 po produkcyjnym provisioningu PR445](architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261011.md) i [snapshot v2](architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261011.json).
+
+Nowy raport usług: [po merge PR #445](architecture/v1_5/SERVICE_READINESS_REPORT_R11_POST_PR445_MERGE_20261011.md) i [snapshot v3](architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_POST_PR445_MERGE_20261011.json).

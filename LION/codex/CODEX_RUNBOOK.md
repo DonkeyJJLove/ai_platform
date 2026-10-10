@@ -99,6 +99,10 @@ Przeprowadź self-evaluation z istniejących case IDs. Sukces dotyczy tylko zlec
 
 Dla analizy bez obserwacji Git zapisuj master=null oraz jawny unknown zamiast wymyślać SHA. Pole dependency_graph zawiera DAG; sprawdzaj unikalność węzłów, końce krawędzi, brak cykli i zakończenie poprzedników pierwszego kroku. Graf TIGER może zawierać pętle hipotez, ale wykonawczy DAG zależności wymaga ich rozstrzygnięcia. Schema validity nie dowodzi prawdziwości krawędzi.
 
+## Service continuation handoff
+
+For operator-paused multi-turn tasks, read [Service Continuation Ledger](../architecture/v1_5/SERVICE_CONTINUATION_LEDGER.md) and validate [the tracked R11 instance](../architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json). The pure contract and stdout-only CLI do not grant authority; check current PR/host/provider independently. Completed effects require explicit exact approval and independent readback. Append digest-chained events only to a proposed new Git revision and publish through the governed source path. A ledger status cannot launch LPCL or merge a PR.
+
 ## Process Contract preflight
 
 Dla LPCL/1.2 lub zmiany semantyki fazy odczytaj `LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md`. Przed aktywacją wymagaj semantic compile do `PhaseExecutionContract[]` oraz `lion.mission-execution-preflight/v1`. `INVALID` blokuje aktywację; `VALID_UNBOUND_WAITING` jest dozwolone wyłącznie przy jawnej dynamic binding/missing-capability policy. Dla `VERIFY_THEN_REPAIR` najpierw sprawdź completion predicates; już spełnione postconditions zamykaj read-only reconciliation zamiast powtarzać naprawę.

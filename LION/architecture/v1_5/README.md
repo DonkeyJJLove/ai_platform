@@ -21,6 +21,12 @@ The foundation is integrated; individual successor increments remain candidates 
 
 Public/project entrypoints are `README.md`, `LION/README.md` and this file. They are architecture knowledge and must route to the same current epoch.
 
+## Service Continuation Ledger R1 — source candidate
+
+[Service Continuation Ledger](SERVICE_CONTINUATION_LEDGER.md) formalizes a versioned service handoff and task-dependency contract. The canonical source instance [SERVICE_CONTINUATION_LEDGER_R1.json](SERVICE_CONTINUATION_LEDGER_R1.json) records incomplete R11 work, evidence references, explicit separate authorization gates and first concrete next actions. Its [JSON Schema](SERVICE_CONTINUATION_LEDGER.schema.json), Python contract, validation CLI and negative tests are owned by the service_continuation entry in semantic_owners.json and registered in FORMALIZATION_REGISTRY_FEDERATION_R1.json.
+
+This is a **non-authorizing SOURCE CANDIDATE** until its own Git/CI/admission/merge closure; it is not a deployed Mission Control feed. Read live Git, CI, authority state and host runtime independently. It must never initiate a new LPCL merely because a dependency becomes READY.
+
 ## Core invariant
 
 ```text
@@ -137,3 +143,9 @@ See [LION Evolution Fitness Standard](../../standards/LION_EVOLUTION_FITNESS_STA
 The [Application Factory R1 package](application_factory_r1/README.md) is the finite successor candidate for the roadmap acceptance named above. It uses one mission artifact ledger to retain independent LOCAL trajectories and a responded SaaS advisory, binds the resulting `CONTROL_PLANE_INTELLIGENCE_BUNDLE` digest into cooperative material production, performs one-worker preactivation before the unchanged full-fleet readiness gate, and requires a distinct verifier.
 
 The package is source-only. Its `REGISTRATION_PREVIEW.json` is intentionally not a live registration payload; exact deployed HEAD/TREE must be reacquired and the payload regenerated immediately before any separate registration/activation action.
+
+The [R11 readiness report](SERVICE_READINESS_REPORT_R11_20261010.md) and [typed snapshot](SERVICE_READINESS_SNAPSHOT_R11_20261010.json) record observed LPCL gates and explicit unknowns without conferring permission or projecting a launch date.
+
+The source-bound [R11 readiness successor](SERVICE_READINESS_REPORT_R11_20261011.md) / [typed snapshot v2](SERVICE_READINESS_SNAPSHOT_R11_20261011.json) records PR445 authority_current=YES without inferring permission to merge or launch LPCL.
+
+The [post-PR445 merge report](SERVICE_READINESS_REPORT_R11_POST_PR445_MERGE_20261011.md) and [source-bound readiness v3](SERVICE_READINESS_SNAPSHOT_R11_POST_PR445_MERGE_20261011.json) supersede earlier observations but do not confer authority.
