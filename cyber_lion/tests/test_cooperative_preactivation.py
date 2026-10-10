@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from hashlib import sha256
+import json
 from pathlib import Path
 from types import SimpleNamespace
 import tempfile
@@ -8,6 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from cyber_lion.mission_control import cooperative_preactivation as pre
+from cyber_lion.enterprise.cooperative_runtime_root import QUALIFICATION_DOMAIN
 from cyber_lion.mission_control import cooperative_preactivation_bootstrap as boot
 from cyber_lion.mission_control import global_scheduler
 from cyber_lion.tests.test_cooperative_runtime_preparation_provider import (
@@ -47,15 +49,15 @@ class CooperativePreactivationTests(unittest.TestCase):
                 "SELECT * FROM mission_execution_assignments WHERE assignment_id=?",
                 (assignment_id,),
             ).fetchone())
-            release=global_scheduler.held_assignment_release_evidence(db,assignment_id)["evidence"]
-        return {
+            release=global_scheduler.held_assignment_release_evidence(db,assignment_id)
+        evidence={
             "schema":"lion.cooperative-worker-qualification/v1",
             "assignment_id":assignment_id,
             "mission_id":row["mission_id"],
             "worker_id":worker_id,
             "lease_generation":int(row["lease_generation"]),
             "release_evidence_digest":release["evidence_digest"],
-            "control_plane_evidence_digest":D("control-plane:"+assignment_id),
+            "control_plane_evidence_digest":release["evidence"]["evidence_digest"],
             "private_context_pin_sha256":D("pin:"+assignment_id),
             "private_transfer_sha256":D("transfer:"+assignment_id),
             "private_materialization_digest":D("materialization:"+assignment_id),
@@ -66,7 +68,14 @@ class CooperativePreactivationTests(unittest.TestCase):
             "writer_factory_built":True,
             "execution_performed":False,
             "authority_effect":"NONE",
-            "qualification_digest":D("qualification:"+assignment_id),
+        }
+        return {
+            **evidence,
+            "qualification_digest":sha256(
+                QUALIFICATION_DOMAIN
+                + json.dumps(evidence,sort_keys=True,separators=(",",":"),
+                             ensure_ascii=False,allow_nan=False).encode("utf-8")
+            ).hexdigest(),
         }
 
     def provider(self,*,qualifier=None):
@@ -128,6 +137,75 @@ class CooperativePreactivationTests(unittest.TestCase):
         self.assertEqual(again["state"],"PASS")
         self.assertEqual(self.calls,{"materialize":1,"qualify":1})
 
+    def test_canonical_r617_release_receipt_and_digest_are_consumed(self):
+        self.assertEqual(QUALIFICATION_DOMAIN,pre._QUALIFICATION_DOMAIN)
+        self.assertEqual(self.advance()["state"],"PASS")
+        import sqlite3
+        with sqlite3.connect(self.db) as db:
+            db.row_factory=sqlite3.Row
+            assignment=dict(db.execute(
+                "SELECT * FROM mission_execution_assignments "
+                "WHERE mission_id='M1' AND phase_id='PREACTIVATE__COOP_PREACTIVATE'"
+            ).fetchone())
+            release=global_scheduler.held_assignment_release_evidence(
+                db,assignment["assignment_id"]
+            )
+        self.assertNotEqual(
+            release["evidence_digest"],release["evidence"]["evidence_digest"]
+        )
+        canonical=self.qualifier(assignment["assignment_id"],"MD029")
+        value=pre._validate_qualification(
+            canonical,assignment=assignment,worker_id="MD029",release=release
+        )
+        self.assertEqual(value["release_evidence_digest"],release["evidence_digest"])
+        self.assertEqual(
+            value["control_plane_evidence_digest"],
+            release["evidence"]["evidence_digest"],
+        )
+        wrapped={
+            **canonical,"bootstrap_version":"1.0.0","bootstrap_mode":"UNBOUND",
+        }
+        self.assertEqual(
+            pre._validate_qualification(
+                wrapped,assignment=assignment,worker_id="MD029",release=release
+            ),wrapped,
+        )
+
+    def test_qualification_digest_and_release_substitution_fail_closed(self):
+        self.assertEqual(self.advance()["state"],"PASS")
+        import sqlite3
+        with sqlite3.connect(self.db) as db:
+            db.row_factory=sqlite3.Row
+            assignment=dict(db.execute(
+                "SELECT * FROM mission_execution_assignments "
+                "WHERE mission_id='M1' AND phase_id='PREACTIVATE__COOP_PREACTIVATE'"
+            ).fetchone())
+            release=global_scheduler.held_assignment_release_evidence(
+                db,assignment["assignment_id"]
+            )
+        canonical=self.qualifier(assignment["assignment_id"],"MD029")
+        forged=dict(canonical,qualification_digest=D("fake-qualification"))
+        with self.assertRaisesRegex(
+            pre.CooperativePreactivationError,"canonical digest mismatch"
+        ):
+            pre._validate_qualification(
+                forged,assignment=assignment,worker_id="MD029",release=release
+            )
+        wrong_release=dict(canonical,release_evidence_digest=release["evidence"]["evidence_digest"])
+        with self.assertRaisesRegex(
+            pre.CooperativePreactivationError,"release evidence substitution"
+        ):
+            pre._validate_qualification(
+                wrong_release,assignment=assignment,worker_id="MD029",release=release
+            )
+        wrong_control=dict(canonical,control_plane_evidence_digest=D("wrong-control"))
+        with self.assertRaisesRegex(
+            pre.CooperativePreactivationError,"control-plane evidence substitution"
+        ):
+            pre._validate_qualification(
+                wrong_control,assignment=assignment,worker_id="MD029",release=release
+            )
+
     def test_qualification_exception_is_journaled_unknown_and_not_retried(self):
         def fail(*_):
             self.calls["qualify"]+=1
@@ -156,6 +234,47 @@ class CooperativePreactivationTests(unittest.TestCase):
         row=pre.capability_registry_entries()[pre.CAPABILITY_CLASS][0]
         self.assertEqual(row["capability_id"],pre.CAPABILITY_ID)
         self.assertEqual(row["effect_ceiling"],"NONE")
+
+
+class CooperativePreactivationR617ProducerContractTests(unittest.TestCase):
+    def test_real_r617_producer_schema_and_digests_bind_to_r622_consumer(self):
+        # Full canonical R6.16 -> R6.17 producer path with disposable SQLite and
+        # fixture runtime owners. This is NOT live RuntimeAdmission on a host.
+        from cyber_lion.tests.test_cooperative_worker_qualification import (
+            CooperativeWorkerQualificationTests,
+        )
+        import sqlite3
+
+        fixture=CooperativeWorkerQualificationTests(
+            "test_released_projection_qualifies_one_worker_without_claim_or_effect"
+        )
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        release_result=fixture.release()
+        qualification=fixture.worker().qualify_released_write_assignment(
+            fixture.aid,material_worker_id="MD001"
+        )
+        with sqlite3.connect(fixture.control.fixture.db) as db:
+            db.row_factory=sqlite3.Row
+            assignment=dict(db.execute(
+                "SELECT * FROM mission_execution_assignments WHERE assignment_id=?",
+                (fixture.aid,),
+            ).fetchone())
+            release=global_scheduler.held_assignment_release_evidence(db,fixture.aid)
+
+        self.assertEqual(assignment["state"],"READY")
+        self.assertEqual(release_result["authority_effect"],"NONE")
+        self.assertEqual(
+            qualification["release_evidence_digest"],release["evidence_digest"]
+        )
+        self.assertEqual(
+            pre._validate_qualification(
+                qualification,assignment=assignment,
+                worker_id="MD001",release=release,
+            ),qualification,
+        )
+        self.assertEqual(fixture.assignment_receipt_count(),0)
+        self.assertEqual(list(fixture.artifacts.iterdir()), [])
 
 
 class CooperativePreactivationBootstrapTests(unittest.TestCase):
