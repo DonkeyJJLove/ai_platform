@@ -72,6 +72,23 @@ class CooperativeMissionControlWiringTests(unittest.TestCase):
             registry_text.index("bootstrap_readiness"),
         )
 
+    def test_application_factory_requires_source_bound_r11_provider(self):
+        tree=ast.parse(self.source())
+        fn=next(
+            x for x in tree.body if isinstance(x,ast.FunctionDef)
+            and x.name=="drive_cooperative_once"
+        )
+        body=ast.unparse(fn)
+        self.assertIn("LION-APPLICATION-FACTORY-CROSS-MODEL-R1",body)
+        from cyber_lion.mission_control.application_factory_program import MISSION_ID
+        self.assertEqual(MISSION_ID,"LION-APPLICATION-FACTORY-CROSS-MODEL-R1")
+        self.assertIn("cooperative_preactivation_bootstrap.SOURCE_BOUND_MODE",body)
+        self.assertIn("R11_SOURCE_BOUND_PREACTIVATION_REQUIRED",body)
+        self.assertLess(
+            body.index("R11_SOURCE_BOUND_PREACTIVATION_REQUIRED"),
+            body.index("advance_preactivation"),
+        )
+
     def test_live_stepper_requires_canonical_worker_provider_before_assignments(self):
         source=(ROOT/"cyber_lion/mission_control/cooperative_production.py").read_text(encoding="utf-8")
         self.assertIn('"provider_id": "COOPERATIVE_RUNTIME_WRITER_R5"',source)

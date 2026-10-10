@@ -217,7 +217,7 @@ class PinnedCooperativeContextResolver:
         _require(sha256(raw).hexdigest() == pin.sha256, "context pin mismatch")
         return _decode(raw)
 
-    def _snapshot(self, assignment_id):
+    def _snapshot(self, assignment_id, *, qualification: bool = False):
         db = _path(self._db, directory=False)
         st = db.stat()
         _require((st.st_dev, st.st_ino) == self._db_identity, "Mission Control DB replaced")
@@ -247,6 +247,51 @@ class PinnedCooperativeContextResolver:
             conn.execute("SELECT capability FROM operator_capability_revocations WHERE mission_id=? LIMIT 0", (mid,))
             _require(operator_control.assignment_allowed(conn, mid, assignment["dispatch_authority"], assignment["control_epoch"]), "operator control fence")
             _require(not operator_control.is_capability_revoked(conn, mid, capability), "capability revoked")
+            if qualification and assignment["state"] == "READY":
+                # READY is a qualification-only view. A worker execution lease
+                # does not exist yet; require the canonical HELD->READY release
+                # and its full ledger digest before allowing lease-free readback.
+                from cyber_lion.mission_control import global_scheduler
+                from cyber_lion.mission_control.cooperative_production import (
+                    WRITE_MATERIALIZATION_KIND, WRITE_PROVIDER_ID,
+                )
+                released = global_scheduler.held_assignment_release_evidence(
+                    conn, assignment_id,
+                )
+                _require(released is not None, "qualification release evidence unavailable")
+                evidence = released["evidence"]
+                _require(
+                    type(evidence) is dict
+                    and set(evidence) == global_scheduler._RELEASE_EVIDENCE_FIELDS,
+                    "qualification release evidence fields",
+                )
+                _require(
+                    evidence.get("schema") == global_scheduler.ASSIGNMENT_RELEASE_EVIDENCE_SCHEMA
+                    and evidence.get("authority_effect") == "NONE"
+                    and released.get("mission_id") == mid
+                    and released.get("assignment_id") == assignment_id,
+                    "qualification release authority/identity",
+                )
+                expected = (
+                    assignment_id, mid, assignment["material_drone_id"],
+                    int(assignment["lease_generation"]), int(assignment["control_epoch"]),
+                    int(assignment["context_revision"]), int(assignment["plan_revision"]),
+                    capability, WRITE_MATERIALIZATION_KIND, WRITE_PROVIDER_ID,
+                )
+                actual = tuple(evidence.get(key) for key in (
+                    "assignment_id", "mission_id", "material_drone_id",
+                    "lease_generation", "control_epoch", "context_revision",
+                    "plan_revision", "capability", "materialization_kind", "provider_id",
+                ))
+                _require(actual == expected, "qualification release coordinates")
+                raw = json.dumps(
+                    evidence, sort_keys=True, separators=(",", ":"),
+                    ensure_ascii=False, allow_nan=False,
+                ).encode("utf-8")
+                _require(
+                    sha256(raw).hexdigest() == released.get("evidence_digest"),
+                    "qualification release digest mismatch",
+                )
             result.update(assignment=assignment, input=inp)
             return result
         except sqlite3.Error as exc:
@@ -257,7 +302,7 @@ class PinnedCooperativeContextResolver:
     def _resolve(self, assignment_id: str, *, assignment_state: str) -> CooperativeRuntimeContext:
         _require(assignment_state in {"CLAIMED", "READY"}, "resolver assignment state")
         _require(type(assignment_id) is str and assignment_id in self._pins, "assignment context pin unavailable")
-        snap = self._snapshot(assignment_id)
+        snap = self._snapshot(assignment_id, qualification=assignment_state == "READY")
         record = self._record(self._pins[assignment_id])
         _require(record["schema"] == SCHEMA, "context schema")
         coords = _exact(record["coordinates"], COORDINATES, "coordinates")
@@ -278,7 +323,14 @@ class PinnedCooperativeContextResolver:
         _require(all(control[n] == a[n] for n in ("control_epoch", "context_revision", "plan_revision")), "stale control/context/plan revision")
         now = self._now()
         _require(isinstance(now, datetime) and now.tzinfo is not None, "trusted zoned clock required")
-        _require(now < _utc(a["lease_expires_at"]) and now < _utc(driver["lease_expires_at"]), "expired assignment/driver lease")
+        _require(now < _utc(driver["lease_expires_at"]), "expired driver lease")
+        if assignment_state == "CLAIMED":
+            # Effect execution still demands a live, claimed assignment lease.
+            _require(a["lease_expires_at"] is not None, "claimed assignment lease missing")
+            _require(now < _utc(a["lease_expires_at"]), "expired assignment lease")
+        elif a["lease_expires_at"] is not None:
+            # Even qualification cannot revive a previously expired lease.
+            _require(now < _utc(a["lease_expires_at"]), "expired assignment lease")
         _require(spec["authority_state"] == "EXPLICIT_USER_ACTIVATION", "LPCL not explicitly activated")
         lpcl = spec["lpcl_text"]
         _require(type(lpcl) is str and sha256(lpcl.encode("utf-8")).hexdigest() == spec["lpcl_digest"] == mission["spec_digest"], "LPCL byte binding mismatch")

@@ -8,7 +8,7 @@
     },
     {
       "path": "LION/architecture/v1_5/application_factory_r1/DEPLOYMENT_PACKAGE_MANIFEST.json",
-      "sha256": "c3a1d062b229410bd5ab84bdebc8dc5bd00dba1a5f8ddb1b8b39f802aff28565"
+      "sha256": "a4b6dbf342379b8195320157a4d30379a16e8071d6f03809ea7fc81badbc25fc"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R10_NATIVE_PHASE_ZERO_COGNITIVE_RECEIPTS_R1.md",
@@ -140,7 +140,7 @@
     },
     {
       "path": "cyber_lion/enterprise/cooperative_context_resolver.py",
-      "sha256": "84c669b7eaef07250e770135d91aa328c5b18c30ca7404da677dd5a24489a0a6"
+      "sha256": "6bf5b9667c69ffcd892a746bcd2cbb310f08959c33599b1ae901ef749badab07"
     },
     {
       "path": "cyber_lion/enterprise/cooperative_control_plane_materializer.py",
@@ -416,7 +416,7 @@
     },
     {
       "path": "tools/lion_effect_admission_broker.py",
-      "sha256": "5e2073f2b3fa83e085c7b308d09cad8bffb3090cf3b8bf066ed14fbdd2f1604c"
+      "sha256": "acee6410649b5d60b33a1283a6d3019c43032ae3c0e1646602fde84f30d62275"
     },
     {
       "path": "tools/lion_firefox_broker_relay.py",
@@ -436,7 +436,7 @@
     },
     {
       "path": "tools/lion_mission_control_v3.py",
-      "sha256": "0d695000bc656c3ff4d85255a427271ff59c0041b22c938a5961743a7e02cfb8"
+      "sha256": "ec455cd364b2461b0f1ae62b5a1cf63e84a769af7adb5bee8cd9c8d66e9e347f"
     },
     {
       "path": "tools/lion_mission_lifecycle_db.py",
@@ -475,7 +475,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "cd44e3f27e5b84af382710c2e086be5efde3cf1a6af02712919cefb230793a00",
+  "package_digest": "0f3b19eaeae01901c7f7df2d98b3ce1aa8471ee4f994fdea48387dd322cf79b7",
   "purpose": "R10 exact Application Factory phase-zero native LOCAL model proposal with durable SEND_UNKNOWN, real request/response byte digest and shared-model ancestor; original single MC scheduler and 93-file deployment, no Docker or LPCL autoactivation. Requires separate source/authority review for new HTTP POST effect surface.",
   "schema": "lion.source-package-manifest/v1"
 }
