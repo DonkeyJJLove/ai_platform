@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from pathlib import Path
 import ast
-from hashlib import sha256
 import json
 import subprocess
 import unittest
@@ -27,12 +26,24 @@ ADDED_PROVIDER_PATHS = frozenset({
     "cyber_lion.enterprise.cooperative_runtime_preparation_provider.py",
     "cyber_lion.mission_control.control_plane_reconnaissance.py",
     "cyber_lion.app_coordination.conversation_chat.py",
+    "cyber_lion.mission_control.native_cognitive_phase_zero.py",
 })
-# Source-local location-based surface IDs are not a semantic owner or an
-# admission. These offsets are grounded in the exact historical and R4 source
-# scanner output, and each relocated call site must retain its effect class.
+# Historical source P0 is reconstructed from its Git object and checked
+# against the frozen tree/scan digest by pinned_p0_inventory. Compare old
+# and new AST in the *same* current Python interpreter: ast.dump bytes vary
+# between Python 3.12 and 3.13, although the SQL call is unchanged.
+RECON_RELOCATED_LINES = {
+    62: 63,
+    218: 219,
+    225: 226,
+    933: 983,
+    938: 988,
+    957: 1121,
+    962: 1126,
+    1276: 1482,
+}
+R10_NEW_RECON_CALLSITE = 1078
 RELOCATED_CALLSITE_OFFSETS = {
-    "cyber_lion.mission_control.control_plane_reconnaissance.py": (5, 22),
     "cyber_lion.app_coordination.conversation_chat.py": (15, 1),
 }
 
@@ -98,15 +109,17 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
     def test_candidate_has_exactly_accounted_delta_and_resolved_taxonomy(self):
         previous = set(self.historical_surfaces)
         current = set(self.candidate_surfaces)
-        # Historical 567 remains frozen. Current source adds exactly six
-        # genuinely new cooperative runtime preparation write surfaces.
-        # Fifteen conversation calls shifted +1 source line when R4 added its
-        # mission-scaffold import, and five reconnaissance calls shifted +22
-        # since the pinned historical P0 source. Neither shift adds an effect.
-        self.assertEqual(len(previous & current), 547)
-        self.assertEqual(len(current - previous), 26)
-        self.assertEqual(len(previous - current), 20)
-        self.assertEqual(len(current), 573)
+        # Historical P0 (567) is immutable. R10 has 23 relocations of
+        # the *same* semantic callsites: 15 conversation-chat (+1 line)
+        # and eight recon records at explicitly verified AST locations.
+        # Of 34 newly minted location IDs, only 11 are new effects:
+        # six cooperative writes, one native-recon journal write,
+        # and four native-model ledger/HTTP effects.
+        self.assertEqual(len(previous & current), 544)
+        self.assertEqual(len(current - previous), 34)
+        self.assertEqual(len(previous - current), 23)
+        self.assertEqual(len(current), 578)
+        self.assertEqual(len(current - previous) - len(previous - current), 11)
         self.assertFalse(self.candidate.unclassified_refs)
         self.assertFalse(self.candidate_taxonomy.unresolved_refs)
         self.assertNotEqual(
@@ -123,28 +136,40 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
             {s.effect_provider for s in new.values()}, ADDED_PROVIDER_PATHS
         )
         self.assertEqual(
-            {s.effect_class for s in new.values()}, {"persistent_state.write"}
+            {s.effect_class for s in new.values()},
+            {"persistent_state.write", "external.network.post"},
         )
         self.assertEqual(
-            {s.authority_class for s in new.values()}, {"local_write"}
+            {s.authority_class for s in new.values()},
+            {"local_write", "external_write"},
         )
         self.assertEqual(
-            {s.target_class for s in new.values()}, {"runtime"}
+            {s.target_class for s in new.values()}, {"runtime", "external"}
         )
         from collections import Counter
         providers = Counter(s.effect_provider for s in new.values())
+        self.assertEqual(providers, Counter({
+            "cyber_lion.enterprise.cooperative_runtime_preparation_provider.py": 6,
+            "cyber_lion.mission_control.control_plane_reconnaissance.py": 9,
+            "cyber_lion.app_coordination.conversation_chat.py": 15,
+            "cyber_lion.mission_control.native_cognitive_phase_zero.py": 4,
+        }))
+        native = [
+            s for s in new.values()
+            if s.effect_provider == "cyber_lion.mission_control.native_cognitive_phase_zero.py"
+        ]
+        self.assertEqual(Counter(s.effect_class for s in native), Counter({
+            "persistent_state.write": 3,
+            "external.network.post": 1,
+        }))
         self.assertEqual(
-            providers["cyber_lion.enterprise.cooperative_runtime_preparation_provider.py"],
-            6,
+            {(s.authority_class, s.target_class) for s in native
+             if s.effect_class == "external.network.post"},
+            {("external_write", "external")},
         )
-        self.assertEqual(
-            providers["cyber_lion.mission_control.control_plane_reconnaissance.py"],
-            5,
-        )
-        self.assertEqual(
-            providers["cyber_lion.app_coordination.conversation_chat.py"],
-            15,
-        )
+        # Neither a new model HTTP POST nor its three durable writes
+        # inherits an old P0 admission or historical closure.
+        self.assertFalse(set(new) & set(self.historical_surfaces))
 
     def test_relocated_effects_keep_class_and_exact_callsite_identity(self):
         old = self.historical_surfaces
@@ -183,30 +208,117 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
                     "An unknown new callsite cannot inherit the old P0 inventory",
                 )
 
-    def test_r4_location_shift_did_not_change_sql_write_calls(self):
-        # Independent AST freeze from exact predecessor
-        # ai_platform@e0e979d5affca433743dc3eb2db8ed7cc7b40374:
-        # 71 conn.execute expressions were observed in conversation_chat.py.
-        # Rebinding LOCAL/SAAS scaffolds adds an import but no new SQL effect.
-        path = self.root / "cyber_lion/app_coordination/conversation_chat.py"
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        calls = sorted(
-            ast.dump(node, include_attributes=False)
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and isinstance(node.func.value, ast.Name)
-            and node.func.value.id == "conn"
-            and node.func.attr == "execute"
-        )
-        self.assertEqual(len(calls), 71)
-        digest = sha256(json.dumps(
-            calls, sort_keys=True, separators=(",", ":")
-        ).encode("utf-8")).hexdigest()
+        # R10 inserted a genuine LOCAL-trajectory write, moving the eight
+        # original recon writes by different offsets. Reclassify only those
+        # eight after matching their exact AST expressions independently.
+        recon = "cyber_lion.mission_control.control_plane_reconnaissance.py"
+        recon_old = [s for s in removed if s.effect_provider == recon]
+        recon_new = [s for s in added if s.effect_provider == recon]
+        self.assertEqual((len(recon_old), len(recon_new)), (8, 9))
+
+        def one_line(surface):
+            self.assertEqual(len(surface.entrypoints), 1)
+            path, location, call = surface.entrypoints[0].split(":")
+            self.assertEqual(path,
+                             "cyber_lion/mission_control/control_plane_reconnaissance.py")
+            self.assertEqual(call, "conn.execute")
+            return int(location)
+
+        old_by_line = {one_line(surface): surface for surface in recon_old}
+        new_by_line = {one_line(surface): surface for surface in recon_new}
+        self.assertEqual(set(old_by_line), set(RECON_RELOCATED_LINES))
         self.assertEqual(
-            digest,
-            "ef76fd6792d3ae27d58887c2aea0d324a788f1d50ed656c72689d10f63e51bd8",
-            "A changed SQL effect must not be classified as a harmless line shift",
+            set(new_by_line),
+            set(RECON_RELOCATED_LINES.values()) | {R10_NEW_RECON_CALLSITE},
+        )
+        path = "cyber_lion/mission_control/control_plane_reconnaissance.py"
+        historical_bytes = subprocess.run(
+            ["git", "show", f"{HISTORICAL_HEAD}:{path}"],
+            cwd=self.root, check=True, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, timeout=30,
+        ).stdout
+        historical_tree = ast.parse(historical_bytes.decode("utf-8", "strict"))
+        current_tree = ast.parse((self.root / path).read_text(encoding="utf-8"))
+
+        def exact_sql_call_at(tree, location):
+            nodes = [
+                node for node in ast.walk(tree)
+                if isinstance(node, ast.Call)
+                and node.lineno == location
+                and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "conn"
+                and node.func.attr == "execute"
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[0].value, str)
+                and node.args[0].value.lstrip().upper().startswith(
+                    ("INSERT", "UPDATE", "DELETE", "REPLACE", "CREATE",
+                     "DROP", "ALTER", "PRAGMA")
+                )
+            ]
+            self.assertEqual(len(nodes), 1)
+            return ast.dump(nodes[0], include_attributes=False), nodes[0]
+
+        for previous_line, present_line in RECON_RELOCATED_LINES.items():
+            with self.subTest(historical_line=previous_line, current_line=present_line):
+                self.assertEqual(
+                    normalized(old_by_line[previous_line]),
+                    normalized(new_by_line[present_line]),
+                )
+                old_ast, _ = exact_sql_call_at(historical_tree, previous_line)
+                present_ast, _ = exact_sql_call_at(current_tree, present_line)
+                self.assertEqual(
+                    old_ast, present_ast,
+                    "Relocated SQL must match the pinned P0 Git object, "
+                    "parsed under this same interpreter",
+                )
+
+        new_line = R10_NEW_RECON_CALLSITE
+        _, new_node = exact_sql_call_at(current_tree, new_line)
+        self.assertEqual(
+            (new_by_line[new_line].effect_class,
+             new_by_line[new_line].authority_class,
+             new_by_line[new_line].target_class),
+            ("persistent_state.write", "local_write", "runtime"),
+        )
+        self.assertEqual(
+            ast.literal_eval(new_node.args[0]),
+            "INSERT INTO mission_recon_trajectories VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+        )
+
+    def test_r4_location_shift_did_not_change_sql_write_calls(self):
+        # R4 imported an additional source but did not change any of the
+        # 71 conversation SQL calls. The original historical P0 commit is
+        # already verified by pinned_p0_inventory; compare its full AST with
+        # current source under the *same* Python interpreter. Hashing
+        # ast.dump output from Python 3.12 and comparing on 3.13 is invalid.
+        rel = "cyber_lion/app_coordination/conversation_chat.py"
+        historic = subprocess.run(
+            ["git", "show", f"{HISTORICAL_HEAD}:{rel}"],
+            cwd=self.root, check=True, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, timeout=30,
+        ).stdout.decode("utf-8", "strict")
+        current = (self.root / rel).read_text(encoding="utf-8")
+
+        def sql_call_bodies(source):
+            return sorted(
+                ast.dump(node, include_attributes=False)
+                for node in ast.walk(ast.parse(source))
+                if isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "conn"
+                and node.func.attr == "execute"
+            )
+
+        old_calls = sql_call_bodies(historic)
+        new_calls = sql_call_bodies(current)
+        self.assertEqual(len(old_calls), 71)
+        self.assertEqual(len(new_calls), 71)
+        self.assertEqual(
+            new_calls, old_calls,
+            "R4/R10 conversation SQL must retain all 71 pinned P0 calls",
         )
 
     def test_historical_seven_still_exist_without_inheriting_current_closure(self):

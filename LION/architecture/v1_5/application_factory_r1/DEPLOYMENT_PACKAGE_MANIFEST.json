@@ -2,7 +2,7 @@
   "authority_effect": "NONE",
   "candidate_source_parent": "34cdc8a17fcd235807bee6340762839bc8a71fb0",
   "execution_effect": "NONE",
-  "file_count": 92,
+  "file_count": 93,
   "files": [
     {
       "sha256": "ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8",
@@ -245,7 +245,7 @@
       "target": "cyber_lion/mission_control/artifact_transfer.py"
     },
     {
-      "sha256": "c44a30d3505aba200c000a72e4bb6129d76ad0dc3136a1a0a7ffe250bb3ebc7c",
+      "sha256": "db5091e6475486ebd93f12bb2e69723ae8905174539518a98694f901f1892994",
       "source": "cyber_lion/mission_control/control_plane_reconnaissance.py",
       "target": "cyber_lion/mission_control/control_plane_reconnaissance.py"
     },
@@ -335,6 +335,11 @@
       "target": "cyber_lion/mission_control/model_calls.py"
     },
     {
+      "sha256": "99c6451662092ab9b4d3a5d0792f9eefd977853664bb2eb982ca0334c5fd643c",
+      "source": "cyber_lion/mission_control/native_cognitive_phase_zero.py",
+      "target": "cyber_lion/mission_control/native_cognitive_phase_zero.py"
+    },
+    {
       "sha256": "694ca04ba6f7ff19375a3d378eb7d4bc17d16c82afa784bd28a85713f431a697",
       "source": "cyber_lion/mission_control/operator_control.py",
       "target": "cyber_lion/mission_control/operator_control.py"
@@ -410,7 +415,7 @@
       "target": "mission_control_compat.py"
     },
     {
-      "sha256": "5a49e1f8ca800b5a74bc831b8ecd9c3dced070677710431192e776e81a437588",
+      "sha256": "0d695000bc656c3ff4d85255a427271ff59c0041b22c938a5961743a7e02cfb8",
       "source": "tools/lion_mission_control_v3.py",
       "target": "mission_control_v3.py"
     },

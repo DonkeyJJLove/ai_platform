@@ -174,6 +174,14 @@ class DockerNeedTests(unittest.TestCase):
             c=self.mc.connect()
             try:
                 first=c.execute("SELECT driver_id FROM mission_execution_drivers WHERE mission_id=?",(self.mid,)).fetchone()[0]
+                # Simulate prior 0-worker recon and 1-worker qualification in
+                # this disposable fixture. Full 32-MD rebinding is legitimate
+                # only from the later, explicit 32-worker phase.
+                c.execute(
+                    "UPDATE mission_phases SET status='PASS',progress=100.0 "
+                    "WHERE mission_id=? AND ordinal IN (1,2)",(self.mid,)
+                )
+                c.commit()
             finally:c.close()
             with patch.object(self.mc,"_docker_local_model_currentness",return_value=self.ready_observation()):
                 res=self.mc.reconcile_activated_unbound_docker_once(force=True)

@@ -26,6 +26,7 @@ from cyber_lion.contracts.cognitive_continuity import (
 from cyber_lion.contracts.mission_contract_profiles import migrated_contract_for, GENERIC_ADAPTER_REPAIR_MISSION, SAAS_AUTOMATIC_MEDIATOR_MISSION, FIREFOX_PROJECT_MEDIATOR_SUCCESSOR_MISSION
 from cyber_lion.mission_control.mission_reconciliation import evaluate_completion_predicates
 from cyber_lion.mission_control import control_plane_reconnaissance as control_recon
+from cyber_lion.mission_control import native_cognitive_phase_zero as native_phase_zero
 from cyber_lion.mission_control import cooperative_production as cooperative_prod
 from cyber_lion.mission_control import cooperative_process_bootstrap as cooperative_process_bootstrap
 from cyber_lion.mission_control import cooperative_preactivation as cooperative_preactivation
@@ -204,6 +205,7 @@ def migrate():
  global_sched.migrate(c,now)
  operator_control.migrate(c,now)
  model_call_ledger.migrate(c,now)
+ native_phase_zero.migrate(c)
  # Capture the pre-capability execution preflight before startup reconciliation
  # recomputes it against the current capability registry.
  control_recon.capture_pre_recon_baselines(c,now)
@@ -2403,6 +2405,8 @@ def reconcile_control_plane_late_saas():
 def global_scheduler_once():
     try:reconcile_activated_unbound_docker_once()
     except Exception:pass
+    try:advance_native_cognitive_phase_zero_once()
+    except Exception:pass
     try:reconcile_control_plane_late_saas()
     except Exception:pass
     c=connect()
@@ -2849,6 +2853,110 @@ def main():
 _LAST_ACTIVATED_UNBOUND_DOCKER_RECONCILE = 0.0
 
 
+def advance_native_cognitive_phase_zero_once():
+    """R10 single-scheduler native LOCAL route before any 32-MD binding.
+
+    Only an explicitly operator-activated *exact* Application Factory
+    mission is eligible. All requests retain the R7 WAIT driver.
+    No MD identity or material lease is synthesized or exposed.
+    """
+    from cyber_lion.mission_control.application_factory_program import MISSION_ID
+    c=connect()
+    try:
+      row=c.execute(
+        """SELECT m.mission_id,m.state,m.source_head,m.source_tree,m.adapter,
+                  m.material_target,p.authority_state,ph.status AS phase_status
+           FROM missions m
+           JOIN mission_process_specs p ON p.mission_id=m.mission_id
+           JOIN mission_phases ph ON ph.mission_id=m.mission_id
+           WHERE m.mission_id=? AND ph.phase_id='CROSS_MODEL_RECON'
+             AND ph.ordinal=1
+             AND ph.status IN ('PENDING','RUNNING','WAITING')
+             AND p.authority_state='EXPLICIT_USER_ACTIVATION'
+             AND m.adapter='LPCL_MISSION'
+             AND m.state IN ('AUTHORIZED','WAITING','RUNNING')
+             AND m.material_target=32""",
+        (MISSION_ID,),
+      ).fetchone()
+      if row is None:return {"state":"NOT_APPLICABLE","effect":"NONE"}
+      if not operator_control.autonomy_allowed(c,MISSION_ID):
+        return {"state":"WAITING_OPERATOR_FENCE","effect":"NONE"}
+      contract=global_sched.phase_execution_contract(c,MISSION_ID,"CROSS_MODEL_RECON")
+      if not contract or contract.get("execution_class")!="COGNITIVE" or contract.get("effect_ceiling")!="NONE":
+        return {"state":"BLOCKED_CONTRACT","effect":"NONE"}
+      # GitHub is an independent read source, not the mission's self-reported
+      # HEAD/TREE. A failed read or any revision drift denies the provider.
+      try: head,tree=_current_master_identity()
+      except Exception:return {"state":"WAITING_SOURCE_CURRENTNESS","effect":"NONE"}
+      current={"head":head,"tree":tree}
+      if head!=row["source_head"] or tree!=row["source_tree"]:
+        return {"state":"WAITING_SOURCE_DRIFT","effect":"NONE"}
+      native_phase_zero._source_and_launch(
+        c,MISSION_ID,"CROSS_MODEL_RECON",current,contract["contract_digest"]
+      )
+      driver=driver_snapshot(c,MISSION_ID)
+      def create_saas(mid,question):
+        return saas_broker.create_request(
+          c,mid,question,now,scope_type="MISSION",scope_id=mid,
+          authority_effect="NONE"
+        )
+      def query_saas(request_id):
+        return saas_broker.request_status(c,request_id,now)
+      result=control_recon.execute_phase(
+        c,MISSION_ID,"CROSS_MODEL_RECON",contract,db_path=DB,
+        driver_generation=int(driver["generation"]),now_fn=now,
+        create_saas_request=create_saas,saas_request_status=query_saas,
+        native_current_source=current,
+        native_transport=native_phase_zero.native_llamacpp_transport,
+      )
+      if result.get("state")=="PASS":
+        summary=result.get("evidence") or {}
+        completed={"event":"R10_ZERO_WORKER_COGNITIVE_PHASE_PASS",
+                   "evidence_bundle_digest":summary.get("evidence_bundle_digest"),
+                   "local_trajectories":summary.get("local_trajectories"),
+                   "saas_advisory":summary.get("saas_advisory"),
+                   "authority_effect":"NONE","material_effect":"NONE"}
+        _driver_phase_result(
+          c,MISSION_ID,"CROSS_MODEL_RECON","PASS",
+          "Native LOCAL and SaaS evidence reconciled with no material lease",
+          completed,"VALIDATION",
+        )
+        # The next phase demands ONE material worker. Do not treat a
+        # cognitive PASS as a bootstrap admission for any Docker effect.
+        driver_wait_for_execution_binding(
+          c,MISSION_ID,now,
+          blocking_gate="PHASE1_ONE_WORKER_PREACTIVATION_REQUIRED",
+          waiting_reason="Phase zero complete; one separately admitted builder required",
+          next_action="WAIT_FOR_ADMITTED_ONE_WORKER",commit=False,
+        )
+        c.commit()
+        return {"state":"PASS","phase_id":"CROSS_MODEL_RECON",
+                "next_gate":"PHASE1_ONE_WORKER_PREACTIVATION_REQUIRED",
+                "authority_effect":"NONE","material_effect":"NONE"}
+      gate=str(result.get("gate") or "COGNITIVE_EVIDENCE_INCOMPLETE")[:128]
+      waiting_reason=str(result.get("reason") or "Native phase zero is waiting for actual evidence")[:1024]
+      # The phase-zero gate must be visible and durable rather than reset to
+      # the obsolete R7 all-fleet wait on the next scheduler iteration.
+      previous=driver_snapshot(c,MISSION_ID)
+      if (previous and (previous.get("blocking_gate")!=gate
+                        or previous.get("next_action")!="WAIT_FOR_PHASE_ZERO_EVIDENCE")):
+        driver_wait_for_execution_binding(
+          c,MISSION_ID,now,blocking_gate=gate,
+          waiting_reason=waiting_reason,
+          next_action="WAIT_FOR_PHASE_ZERO_EVIDENCE",commit=False,
+        )
+        _process_message(c,MISSION_ID,"CONTROL","NATIVE_COGNITIVE_PHASE_ZERO",
+                         "MISSION_CONTROL","CROSS_MODEL_RECON",
+                         {"event":"PHASE_ZERO_EVIDENCE_WAIT","gate":gate,
+                          "authority_effect":"NONE","material_effect":"NONE"},
+                         "INTERNAL")
+        c.commit()
+      return {"state":"WAITING","gate":gate,
+              "authority_effect":"NONE","material_effect":"NONE"}
+    finally:
+      c.close()
+
+
 _DOCKER_BOOTSTRAP_WAIT_GATES=frozenset({
     "DOCKER_FLEET_CURRENTNESS_REQUIRED",
     "DOCKER_FLEET_SOURCE_CURRENTNESS_DRIFT",
@@ -3020,6 +3128,33 @@ def reconcile_activated_unbound_docker_once(*, force=False):
         continue
       if selected!=LPCL_DOCKER_LOCAL_MODEL_ADAPTER:
         continue
+      # Exact Application Factory phase 0/1 has a compiled material demand
+      # of 0/1, not 32. Its durable R10 cognitive wait / next one-worker
+      # gate takes precedence over the legacy full-fleet R7 rebinder.
+      from cyber_lion.mission_control.application_factory_program import MISSION_ID as _FACTORY_MISSION
+      early_ordinal=None
+      if mid==_FACTORY_MISSION:
+        phase_db=connect()
+        try:
+          phase=phase_db.execute(
+            "SELECT ordinal FROM mission_phases WHERE mission_id=? "
+            "AND status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED') "
+            "ORDER BY ordinal LIMIT 1",(mid,)
+          ).fetchone()
+          early_ordinal=int(phase['ordinal']) if phase else None
+          current_driver=driver_snapshot(phase_db,mid)
+          if (early_ordinal in (1,2) and current_driver
+              and current_driver.get('next_action') in {
+                'WAIT_FOR_PHASE_ZERO_EVIDENCE','WAIT_FOR_ADMITTED_ONE_WORKER'
+              }):
+            waiting.append({'mission_id':mid,
+                            'gate':current_driver.get('blocking_gate') or 'PHASE_SCOPED_WAIT'})
+            continue
+        finally:
+          phase_db.close()
+        if early_ordinal==2:
+          waiting.append({'mission_id':mid,'gate':'PHASE1_ONE_WORKER_PREACTIVATION_REQUIRED'})
+          continue
       try:
         observed=_docker_local_model_currentness(int(row['material_target']))
       except Exception:
@@ -3043,6 +3178,20 @@ def reconcile_activated_unbound_docker_once(*, force=False):
             waiting.append({'mission_id':mid,'gate':'DOCKER_FLEET_SOURCE_CURRENTNESS_DRIFT'})
         except Exception as exc:
           waiting.append({'mission_id':mid,'gate':'RUNTIME_NEED_NOT_PERSISTED','error_class':type(exc).__name__})
+        continue
+      if mid==_FACTORY_MISSION and early_ordinal==1:
+        # Even if a live 32-worker cohort exists, do not bind it before
+        # the exact zero-worker cognitive phase has completed. A demand
+        # record is not permission to bypass the phase contract.
+        try:
+          parked=park_activated_docker_lpcl_runtime_need(
+            mid,gate='DOCKER_FLEET_CURRENTNESS_REQUIRED'
+          )
+          waiting.append({'mission_id':mid,'gate':'PHASE_ZERO_COGNITIVE_FIRST',
+                          'state':parked.get('state')})
+        except Exception as exc:
+          waiting.append({'mission_id':mid,'gate':'RUNTIME_NEED_NOT_PERSISTED',
+                          'error_class':type(exc).__name__})
         continue
       try:
         # Original binder independently checks the operator fence, activated
