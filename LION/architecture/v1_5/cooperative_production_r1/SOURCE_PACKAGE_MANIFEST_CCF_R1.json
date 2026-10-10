@@ -27,6 +27,10 @@
       "sha256": "a0478647977cfca3f7cc6b461f8d0ab4b4b418f16d2279a479efc914aacd7877"
     },
     {
+      "path": "LION/architecture/v1_5/cooperative_production_r1/R6_1_BRIDGE_RUNTIME_SOURCE_PIN_AND_PORT_RECOVERY.md",
+      "sha256": "09493297e87ed46d8207b760b6b30cd6ceac3fd1fb0468e7e4637e5173e2abc4"
+    },
+    {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R6_WINDOWS_WSL_8783_BRIDGE_DELTA.md",
       "sha256": "fa3a102647a6c65eeefb339634f6c5d7ab862f25093fcc3e96d57feeb2ba64a8"
     },
@@ -303,6 +307,10 @@
       "sha256": "bde3b05146a35d4b02d25eba63d06ee8041c8d0a4ac81349bc796ad04920f88a"
     },
     {
+      "path": "cyber_lion/tests/test_r6_scoped_readonly_bridge_8783.py",
+      "sha256": "fa2d00bc1728bc06478f747a9e846bc8a148ab8a715baa41bd895c8fadee73c7"
+    },
+    {
       "path": "cyber_lion/tests/test_r6_windows_cognitive_bridge_port.py",
       "sha256": "af5ff71d4693f82ab86a43a543bd87bdbb924e5a1e48eeb9fceda88ba8428089"
     },
@@ -325,6 +333,14 @@
     {
       "path": "deploy/mission-control/v3/lion-windows-8780-readonly-bridge.service",
       "sha256": "1732b6df7848851757e0ceedf260e89d30ae801511c0a35a3984e910bd2aa1a4"
+    },
+    {
+      "path": "deploy/mission-control/v3/lion-windows-cognitive-readonly-bridge.py",
+      "sha256": "030abf4e03e0261daabbb050b3bd4d1fcb8b46055dff0c810cf7ac13473bad71"
+    },
+    {
+      "path": "deploy/mission-control/v3/lion-windows-cognitive-readonly-bridge.sha256",
+      "sha256": "693764c27a8bcd15c3d4e7f21e5cd345b540d2ab38928708dc8477f815f03bec"
     },
     {
       "path": "deploy/mission-control/v3/passive.js",
@@ -399,7 +415,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "3aed422136d02f7726b1c57b35c69ca0c7390b4d78ecde636a6e8596c0d5955a",
-  "purpose": "Source-only R6 scoped WSL-to-Windows cognitive bridge port isolation, using native Windows 8780 and WSL 8783 with existing Mission Control Env+readback; no runtime effect authority or LPCL activation.",
+  "package_digest": "0b06d96073c1ec4d20c3cfa13e16205d6d0b4835448be687748495c23e60388e",
+  "purpose": "Source-only R6.1 SHA-pinned WSL cognitive bridge runtime compatible with exact loopback listeners 8780 rollback and 8783 current source, preserving Windows canonical 8780 and action/mutation denial. Not runtime authority.",
   "schema": "lion.source-package-manifest/v1"
 }
