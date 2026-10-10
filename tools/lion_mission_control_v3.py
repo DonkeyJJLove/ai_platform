@@ -1999,6 +1999,15 @@ def drive_cooperative_once(mid):
       generation=int((driver_snapshot(c,mid) or {}).get('generation') or 1)
 
       if capability==cooperative_preactivation.CAPABILITY_ID:
+       # Application Factory R11 must never accept a raw provider whose
+       # dependencies were not source-bound to canonical R6.21/R6.16/R6.17.
+       if (mid=='LION-APPLICATION-FACTORY-CROSS-MODEL-R1'
+           and COOPERATIVE_PREACTIVATION_BOOTSTRAP.get('mode')
+           !=cooperative_preactivation_bootstrap.SOURCE_BOUND_MODE):
+        _cooperative_wait(c,mid,pid,gate='R11_SOURCE_BOUND_PREACTIVATION_REQUIRED',
+                          reason='Application Factory requires source-bound R6.21/R6.16/R6.17 provider',
+                          status='BLOCKED')
+        return
        provider=COOPERATIVE_PREACTIVATION.current()
        if provider is None:
         _cooperative_wait(c,mid,pid,gate='COOPERATIVE_PREACTIVATION_NOT_BOUND',reason='Trusted cooperative preactivation provider is not installed');return

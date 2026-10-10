@@ -104,9 +104,52 @@ class CooperativeContextResolverTests(unittest.TestCase):
         self.assertEqual(list(self.f.root.iterdir()), [])
 
     def test_ready_state_is_qualification_only_and_effect_resolver_stays_claimed_only(self):
+        # Historical resolver fixture did not have an R6.16 release ledger.
+        # A manually set READY state must now fail qualification (not be
+        # interpreted as a legitimate release or execution permission).
+        from cyber_lion.mission_control import global_scheduler
+        from cyber_lion.mission_control.cooperative_production import (
+            WRITE_MATERIALIZATION_KIND, WRITE_PROVIDER_ID,
+        )
         self.sql("UPDATE mission_execution_assignments SET state='READY'")
         with self.assertRaisesRegex(CooperativeContextResolutionError, 'assignment/driver not active'):
             self.resolver(self.aid)
+        with sqlite3.connect(self.db) as c:
+            c.executescript("""
+                CREATE TABLE mission_assignment_release_evidence(
+                    assignment_id TEXT PRIMARY KEY,
+                    mission_id TEXT NOT NULL,
+                    evidence_digest TEXT NOT NULL,
+                    evidence_json TEXT NOT NULL,
+                    released_at TEXT NOT NULL
+                );
+            """)
+        with self.assertRaisesRegex(CooperativeContextResolutionError, 'qualification release evidence unavailable'):
+            self.resolver.resolve_for_qualification(self.aid)
+
+        # Only the independently produced canonical release has the requisite
+        # full digest, coordinates, and runtime-context provider identity.
+        evidence = {
+            "schema": global_scheduler.ASSIGNMENT_RELEASE_EVIDENCE_SCHEMA,
+            "assignment_id": self.aid,
+            "mission_id": "M1",
+            "material_drone_id": "MD001",
+            "lease_generation": 1,
+            "control_epoch": 1,
+            "context_revision": 0,
+            "plan_revision": 0,
+            "capability": "COOPERATIVE_ARTIFACT_PRODUCTION",
+            "materialization_kind": WRITE_MATERIALIZATION_KIND,
+            "provider_id": WRITE_PROVIDER_ID,
+            "evidence_digest": "e"*64,
+            "authority_effect": "NONE",
+        }
+        with sqlite3.connect(self.db) as c:
+            c.execute(
+                "INSERT INTO mission_assignment_release_evidence VALUES(?,?,?,?,?)",
+                (self.aid, "M1", global_scheduler.digest(evidence),
+                 global_scheduler._canon(evidence), self.f.now.isoformat()),
+            )
         before = self.db.read_bytes()
         context = self.resolver.resolve_for_qualification(self.aid)
         self.assertEqual(context, self.f.context(self.aid))
