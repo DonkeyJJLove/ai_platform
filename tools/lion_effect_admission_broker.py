@@ -1668,6 +1668,7 @@ MISSION_CONTROL_V3_UNIT="lion-mission-control.service"
 MISSION_CONTROL_V3_DROPIN_TEXT='''[Service]
 WorkingDirectory=/var/lib/sentinelx/uploads/lion-mission-control-v3
 Environment="PYTHONPATH=/var/lib/sentinelx/uploads/lion-mission-control-v3"
+Environment="LION_COGNITIVE_READINESS_URL=http://127.0.0.1:8783"
 ExecStart=
 ExecStart=/usr/bin/python3 /var/lib/sentinelx/uploads/lion-mission-control-v3/mission_control_v3.py --host 127.0.0.1 --port 8766 --listen-state /run/lion-mission-control/listen.json --legacy-listen-state /run/lion-vkt-mission-control/listen.json
 InaccessiblePaths=
