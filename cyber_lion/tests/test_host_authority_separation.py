@@ -360,7 +360,32 @@ class HostAuthoritySeparationTests(unittest.TestCase):
             "cyber_lion/mission_control/docker_fleet_bootstrap_executor.py",
         }
         self.assertTrue(r4_added.issubset(sources))
-        self.assertEqual(len(sources), 424 + len(r4_added))
+        # R8 introduces one typed adapter to the already-inventoried R24
+        # DockerFleetBootstrapExecutor. It delegates the effect to the exact
+        # original executor; no new standalone process, transport, shell or
+        # authority issuer is created. Observe its call site explicitly:
+        # current EffectSurfaceScanner counts remain 573/6, not +1.
+        r8_added = {
+            "cyber_lion/mission_control/docker_bootstrap_need_consumer.py",
+        }
+        self.assertTrue(r8_added.issubset(sources))
+        r8_ast=ast.parse(sources[next(iter(r8_added))])
+        effect_calls=[
+            node for node in ast.walk(r8_ast)
+            if isinstance(node,ast.Call)
+            and isinstance(node.func,ast.Attribute)
+            and node.func.attr=="execute"
+        ]
+        self.assertEqual(len(effect_calls),1)
+        self.assertIsInstance(effect_calls[0].func.value,ast.Attribute)
+        self.assertEqual(effect_calls[0].func.value.attr,"executor")
+        self.assertFalse(any(
+            isinstance(node,(ast.Import,ast.ImportFrom))
+            and any(alias.name in {"subprocess","socket","os"}
+                    for alias in node.names)
+            for node in ast.walk(r8_ast)
+        ))
+        self.assertEqual(len(sources), 424 + len(r4_added) + len(r8_added))
         self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (573, 6))
 
     def test_p1_fake_world_harness_not_skipped(self):
