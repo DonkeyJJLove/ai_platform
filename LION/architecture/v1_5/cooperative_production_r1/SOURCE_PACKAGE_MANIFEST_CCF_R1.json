@@ -8,7 +8,7 @@
     },
     {
       "path": "LION/architecture/v1_5/application_factory_r1/DEPLOYMENT_PACKAGE_MANIFEST.json",
-      "sha256": "2e35a493e268dad3d9155c95a56cfead10644e93c798799c12b25dfc59214b08"
+      "sha256": "f48f3ab6164639e9bd66a94808588fa867adff72145472844bcb252ad4f941af"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R4_CANARY_SAAS_STATUS_AND_LPCL_CURRENTNESS_R1.md",
@@ -33,6 +33,10 @@
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R6_WINDOWS_WSL_8783_BRIDGE_DELTA.md",
       "sha256": "fa3a102647a6c65eeefb339634f6c5d7ab862f25093fcc3e96d57feeb2ba64a8"
+    },
+    {
+      "path": "LION/architecture/v1_5/cooperative_production_r1/R7_DURABLE_ACTIVATED_DOCKER_RUNTIME_NEED.md",
+      "sha256": "37cccbb273682da42eadd59741fb34cc3d39400eb34a0ea0d13a12a9a66f41be"
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
@@ -315,6 +319,10 @@
       "sha256": "af5ff71d4693f82ab86a43a543bd87bdbb924e5a1e48eeb9fceda88ba8428089"
     },
     {
+      "path": "cyber_lion/tests/test_r7_activated_docker_runtime_need.py",
+      "sha256": "e70179d5023e9c58eb7e09e602525b06d3b47dde84c1c11201fd2c433e1e8d34"
+    },
+    {
       "path": "deploy/mission-control/v3/app.css",
       "sha256": "9073f785fd0d49a44161be34df6acea22484e0d9c995a917d9afacd07e1f4078"
     },
@@ -360,7 +368,7 @@
     },
     {
       "path": "tools/lion_effect_admission_broker.py",
-      "sha256": "f5f7c0feac7e46f7b96dfca8bd4280ecd1e8fc88b145982636a90ebcd567ac43"
+      "sha256": "263ef2df763f61617f0e476a5ae57a4009ff9219f848336f2823e52dddd249bd"
     },
     {
       "path": "tools/lion_firefox_broker_relay.py",
@@ -376,7 +384,7 @@
     },
     {
       "path": "tools/lion_mission_control_v3.py",
-      "sha256": "128bc594e0ac0222700d79ac2a7dc402aa61b6eb5dc904fbe583bdd4ef824d59"
+      "sha256": "67d18c7dc576503f09cbc69540f7198ae69b3144e4f10a6537320e16880a6b54"
     },
     {
       "path": "tools/lion_mission_lifecycle_db.py",
@@ -415,7 +423,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "0b06d96073c1ec4d20c3cfa13e16205d6d0b4835448be687748495c23e60388e",
-  "purpose": "Source-only R6.1 SHA-pinned WSL cognitive bridge runtime compatible with exact loopback listeners 8780 rollback and 8783 current source, preserving Windows canonical 8780 and action/mutation denial. Not runtime authority.",
+  "package_digest": "83747fed1cda2eb5e0cba664d78a2aff691d329f2c7f848db333eedb81760997",
+  "purpose": "R7 single activated LPCL durable source-bound Docker runtime need in existing global scheduler before actual 32-worker observation; no synthetic material or authority. Maintains R6.1 pinned cognitive bridge and all canonical carriers.",
   "schema": "lion.source-package-manifest/v1"
 }

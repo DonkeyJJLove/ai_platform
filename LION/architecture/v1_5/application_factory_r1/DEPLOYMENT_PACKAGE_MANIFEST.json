@@ -405,7 +405,7 @@
       "target": "mission_control_compat.py"
     },
     {
-      "sha256": "128bc594e0ac0222700d79ac2a7dc402aa61b6eb5dc904fbe583bdd4ef824d59",
+      "sha256": "67d18c7dc576503f09cbc69540f7198ae69b3144e4f10a6537320e16880a6b54",
       "source": "tools/lion_mission_control_v3.py",
       "target": "mission_control_v3.py"
     },
