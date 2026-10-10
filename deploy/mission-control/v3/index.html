@@ -24,6 +24,11 @@
       <div><p class="cluster-kicker">MISSION CONTROL</p><h2>Mission lifecycle control</h2><p id="mcV3Meta" class="hint">Loading mission state…</p></div>
       <div class="mc-picker"><label>Mission <select id="mcMissionSelect"></select></label><button type="button" id="mcHistoryToggle">History / Legacy</button><button type="button" id="mcReturnFocus" hidden>Return to focus</button><div id="mcV3Authority" class="pill">CONTROL UNKNOWN</div></div>
     </div>
+    <section id="mcActiveEcosystem" class="mc-ecosystem" aria-labelledby="mcEcosystemTitle">
+      <div class="panel-head"><div><p class="cluster-kicker">MISSION-BOUND RUNTIME</p><h3 id="mcEcosystemTitle">Active Ecosystem</h3></div><a href="#cluster" id="mcEcosystemClusterLink">Cluster — szczegóły i dowody</a></div>
+      <p id="mcEcosystemStatus" role="status">NO CURRENT MISSION · awaiting canonical Mission Control readback</p>
+      <div id="mcEcosystemMap"></div>
+    </section>
     <div id="mcV3Cards" class="cards mc-cards"></div>
     <article class="mc-objective"><div class="k">MISSION OBJECTIVE</div><div id="mcObjective" class="objective">—</div><div id="mcDescription" class="hint"></div></article>
     <div id="mcSchemaNotice" class="mc-schema-notice current"></div>
@@ -47,6 +52,11 @@
   <section class="panel cluster-panel" id="cluster">
     <div class="panel-head"><div><p class="cluster-kicker">CLUSTER OBSERVATORY</p><h2>Drone fleet</h2></div><label class="cluster-picker">Run <select id="clusterRun"><option value="">Follow latest fleet</option></select></label></div>
     <p id="clusterState" role="status" class="hint">Waiting for fleet evidence…</p>
+    <section id="mcClusterEvidence" class="mc-ecosystem-detail" aria-label="Current Mission Control runtime evidence">
+      <h3>Selected mission — runtime evidence</h3>
+      <p id="mcClusterScope" class="hint">No active mission selected. Historical run inventory below is not evidence of current workers.</p>
+      <div id="mcClusterEvidenceRows"></div>
+    </section>
     <div id="clusterMap"></div>
     <p class="hint">Clickable squares represent identified pods; select one for its UID and state. Outlined count cells are aggregates, not identified pods. Grouping shows fleet membership, not network links.</p>
     <pre id="clusterPodDetail" hidden></pre>

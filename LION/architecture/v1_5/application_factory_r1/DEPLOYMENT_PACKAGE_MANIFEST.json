@@ -405,12 +405,12 @@
       "target": "mission_control_compat.py"
     },
     {
-      "sha256": "4dab86001b26f6be1474cd5113a8d59ed2c53ee29d2b522babcbb66c6b067b63",
+      "sha256": "128bc594e0ac0222700d79ac2a7dc402aa61b6eb5dc904fbe583bdd4ef824d59",
       "source": "tools/lion_mission_control_v3.py",
       "target": "mission_control_v3.py"
     },
     {
-      "sha256": "0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c",
+      "sha256": "9073f785fd0d49a44161be34df6acea22484e0d9c995a917d9afacd07e1f4078",
       "source": "deploy/mission-control/v3/app.css",
       "target": "static/app.css"
     },
@@ -420,12 +420,12 @@
       "target": "static/app.js"
     },
     {
-      "sha256": "e7aaa6c32251df70079eb6af838e6c541f0835928d90ce06376cc22fe9041de0",
+      "sha256": "cfde879d86d1949310464ca925bff392fb565f7e06128530ad61105e974be5ff",
       "source": "deploy/mission-control/v3/control-v3.js",
       "target": "static/control-v3.js"
     },
     {
-      "sha256": "c08fa2840e317c69c868ffe4c1c992d3b0d364a4716ff567c5937e52a16dca9a",
+      "sha256": "d750fc8e07426319e895560a0969b23f8adf5d7256f92e656b3b2339fa993471",
       "source": "deploy/mission-control/v3/index.html",
       "target": "static/index.html"
     },

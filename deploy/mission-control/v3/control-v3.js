@@ -221,6 +221,67 @@ function mcRender(s,registry,sources){
   patchHtml(MC('mcV3Sources'),(sources||[]).map(x=>`<article class="source-card"><b>${mcesc(x.source_id||x.name)}</b> · <span class="${x.available?'mc-live':'mc-bad'}">${x.available?'AVAILABLE':'MISSING'}</span><div>${mcesc(x.path)}</div><div class="tables">${mcesc(Object.entries(x.tables||{}).map(([k,v])=>k+'='+v).join(' · '))}</div><div class="tables">mode=${mcesc(x.mode)} · currentness=${mcesc(x.currentness)}</div></article>`).join(''));
 }
 
+// Read-only mission ecosystem read model. No deployment/currentness inference from stored topology.
+function projectActiveEcosystem(m,broker){
+ const p=m?.process||{},d=m?.execution_driver||{},sch=m?.scheduler||{};
+ const workers=Array.isArray(m?.workers)?m.workers:[], saas=m?.recon_saas_advisories||[],local=m?.recon_trajectories||[];
+ const activated=p.authority_state==='EXPLICIT_USER_ACTIVATION';
+ const active=activated&&['AUTHORIZED','RUNNING','WAITING','BLOCKED'].includes(m?.state);
+ const replied=saas.filter(x=>x.state==='RESPONDED'&&x.receipt_digest&&x.response_digest).length;
+ const localReceipts=local.filter(x=>x.state==='PASS'&&x.response_digest).length;
+ const transport=broker?.automatic_hop==='AVAILABLE'&&broker?.channel_state==='SENTINELX_MCP_READY'&&broker?.pending_count===0;
+ return {
+   status:!m?'NO_CURRENT_MISSION':active?'ACTIVATED_RUNTIME_UNVERIFIED':'RECORDED_NOT_ACTIVE',
+   id:m?.mission_id||null,head:m?.source_head||null,tree:m?.source_tree||null,digest:m?.spec_digest||null,
+   phase:p.current_phase||d.current_phase||null,auth:p.authority_state||'NONE',
+   scheduler:(sch.state||'UNKNOWN')+' / '+(sch.scheduler_id||'GLOBAL_MISSION_SCHEDULER_V1'),
+   driver:d.state||'NOT_BOUND',generation:d.generation??null,gate:d.blocking_gate||d.next_action||'NONE',
+   saas:replied?'RESPONDED_'+replied+'_RECEIPTS':transport?'TRANSPORT_READY_NO_MISSION_RECEIPT':'UNVERIFIED',
+   session:broker?.session_attestation_state||'UNKNOWN',
+   local:localReceipts?'RECEIPTS_'+localReceipts:'NOT_OBSERVED',
+   fleet:workers.length?'RECORDED_'+workers.length+'_WORKERS_CURRENTNESS_UNVERIFIED':'NO_CURRENT_MATERIAL_FLEET',
+   workers:workers,logical:m?.logical_count??null,material:m?.material_target??null,
+   bindings:m?.phase_capability_bindings||[],artifacts:m?.mission_artifacts||[],
+   adapter:m?.adapter||'UNBOUND',completion:m?.state==='COMPLETE'?'RECORDED_COMPLETE_VERIFIER_REQUIRED':'NOT_OBSERVED',
+   source_currentness:'UNVERIFIED'
+ };
+}
+function renderActiveEcosystem(m,broker){
+ const p=projectActiveEcosystem(m,broker);
+ const status=MC('mcEcosystemStatus'),map=MC('mcEcosystemMap'),scope=MC('mcClusterScope'),detail=MC('mcClusterEvidenceRows');
+ if(!status||!map||!scope||!detail)return p;
+ status.textContent=p.status+(p.id?' · '+p.id:'')+' · source currentness UNVERIFIED · material heartbeat UNKNOWN';
+ const rows=[
+  ['LPCL',p.digest||'NONE',p.head||'NO SOURCE HEAD'],
+  ['SCHEDULER',p.scheduler,p.driver+' / generation '+(p.generation??'UNKNOWN')],
+  ['SAAS',p.saas,'session '+p.session],
+  ['LOCAL',p.local,'durable trajectory readback'],
+  ['FLEET',p.fleet,'declared '+(p.logical??'?')+' logical / '+(p.material??'?')+' material'],
+  ['ARTIFACT',p.completion,p.artifacts.length+' recorded metadata']
+ ];
+ patchHtml(map,'<div class="ecosystem-grid">'+rows.map(x=>'<div class="ecosystem-node ecosystem-unverified"><small>'+
+  mcesc(x[0])+'</small><b>'+mcesc(x[1])+'</b><span>'+mcesc(x[2])+'</span></div>').join('')+'</div>');
+ scope.textContent=(p.id||'NO CURRENT MISSION')+' · recorded membership is not verified live runtime';
+ const info=[
+  ['Mission / phase',(p.id||'NONE')+' / '+(p.phase||'NONE')],
+  ['HEAD / TREE',(p.head||'UNKNOWN')+' / '+(p.tree||'UNKNOWN')],
+  ['LPCL / authority',(p.digest||'UNKNOWN')+' / '+p.auth],
+  ['Adapter / generation',p.adapter+' / '+(p.generation??'UNKNOWN')],
+  ['Scheduler / driver',p.scheduler+' / '+p.driver],
+  ['SAAS / LOCAL',p.saas+' / '+p.local+' · session '+p.session],
+  ['Fleet',p.fleet+' · declared '+(p.logical??'?')+'/'+(p.material??'?')],
+  ['Capability bindings',p.bindings.map(x=>(x.phase_id||'?')+':'+(x.capability_class||x.capability_id||'?')+'='+x.state).join(' · ')||'NONE'],
+  ['Artifact metadata',p.artifacts.length+' records; actual bytes require independent verifier'],
+  ['Current gate',p.gate]
+ ];
+ for(const w of p.workers.slice(0,32))info.push(['Worker '+(w.logical_id||'?'),
+  (w.pod_name||'?')+' · UID '+(w.pod_uid||'?')+' · recorded ready '+(w.ready??'?')+' · '+(w.observed_at||'NO FRESH OBSERVATION')]);
+ patchHtml(detail,info.map(x=>'<div class="mc-cluster-row"><b>'+mcesc(x[0])+'</b><span>'+mcesc(x[1])+'</span></div>').join(''));
+ const link=MC('mcEcosystemClusterLink');
+ if(link)link.onclick=()=>MC('cluster')?.scrollIntoView({behavior:'smooth'});
+ return p;
+}
+
 async function mcRefresh(){
   if(MC_REFRESHING){MC_REFRESH_PENDING=true;return}MC_REFRESHING=true;
   try{
@@ -231,17 +292,17 @@ async function mcRefresh(){
       MC_DATA=null;MC_PINNED=false;MC_LAST_RENDER_KEY=null;
       for(const id of ['mcMissionSelect','mcV3Cards','mcDriverState','mcLivenessCards','mcWaitingDetail','mcPhases','mcV3Logical','mcV3Workers','mcV3Registry','mcV3Commands','mcSchemaNotice','mcLifecycleInfo','mcProgressLabel','mcPhaseLabel','mcLifecycleActions','mcV3Actions','mcCapabilityMatrix','mcCurrentPhase','mcPhaseControlResult','mcProtocolFilters','mcV3Sources','mcObjective','mcDescription','mcProtocols','mcProtocolFeed']){if(MC(id))MC(id).replaceChildren()}
       MC('mcV3Meta').textContent='NO ACTIVE MISSIONS';MC('mcV3Authority').textContent='CONTROL: NONE';MC('mcProgressBar').style.width='0%';if(MC('mcProgressTrack'))MC('mcProgressTrack').className='mc-progress';if(MC('mcLivenessLine'))MC('mcLivenessLine').textContent='NO ACTIVE MISSION';MC_LAST_HEARTBEAT_SIGNATURE=null;
-      mcRenderSupervisor((await mcget('/api/v3/saas-broker/status')).supervisor_projection);return;
+      const broker=await mcget('/api/v3/saas-broker/status').catch(()=>null);mcRenderSupervisor(broker?.supervisor_projection);renderActiveEcosystem(null,broker);return;
     }
     const requestedMissionId=MC_SELECTED;
     const [s,supervisor]=await Promise.all([mcget(missionPath(requestedMissionId,'/process')),mcget('/api/v3/saas-broker/status').catch(()=>null)]);
     if(requestedMissionId!==MC_SELECTED){MC_REFRESH_PENDING=true;return}
-    mcRenderSupervisor(supervisor?.supervisor_projection);
+    mcRenderSupervisor(supervisor?.supervisor_projection);renderActiveEcosystem(s,supervisor);
     const vp=mcCaptureViewport();
     const select=MC('mcMissionSelect');patchHtml(select,registry.map(x=>`<option value="${mcesc(x.mission_id)}" title="${mcesc(x.title||x.mission_id)} · ${mcesc(x.state)}">${mcesc((x.title||x.mission_id).slice(0,48))}${(x.title||x.mission_id).length>48?'…':''}${x.mission_id===MC_FOCUS?' · FOCUS':''}</option>`).join(''));
     select.value=MC_SELECTED;select.onchange=()=>{MC_SELECTED=select.value;MC_PINNED=MC_SELECTED!==MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()};const rf=MC('mcReturnFocus');if(rf){rf.hidden=!MC_PINNED;rf.onclick=()=>{MC_PINNED=false;MC_SELECTED=MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()}};
     const key=mcRenderKey(s,registry,src.sources||[]);if(key!==MC_LAST_RENDER_KEY){mcRender(s,registry,src.sources||[]);MC_LAST_RENDER_KEY=key}else{mcRenderHeader(s);mcRenderLiveness(s)}mcRestoreViewport(vp);
-  }catch(e){mcRenderSupervisor(null);mcMarkDisconnected(e)}
+  }catch(e){mcRenderSupervisor(null);mcMarkDisconnected(e);renderActiveEcosystem(null,null)}
   finally{MC_REFRESHING=false;if(MC_REFRESH_PENDING){MC_REFRESH_PENDING=false;queueMicrotask(mcRefresh)}}
 }
 mcRefresh();setInterval(mcRefresh,3000);
