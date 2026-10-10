@@ -162,3 +162,11 @@ Nie oznaczono żadnej z tych powierzchni jako automatycznie
 zaautoryzowanej, zaobserwowanej w produkcji lub odziedziczonej
 z historycznego P0. Test historii P0 i osobny freeze fingerprint
 `conversation_chat.py` pozostają bez zmiany.
+
+Druga kontrola między interpreterami objęła historyczny test R4:
+dawny skrót SHA-256 z serializacji `ast.dump` 71 wywołań
+`conn.execute` również był wrażliwy na wersję Pythona. Zastąpiono
+go bezpośrednim porównaniem **wszystkich 71 pełnych struktur AST**
+z kodem oryginalnego, przypiętego drzewa P0, parsowanych przez tę
+samą wersję Pythona. Różnice semantyczne SQL nadal są błędem;
+różnice serializacji Pythona 3.12/3.13 nie unieważniają wydania.

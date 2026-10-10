@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from pathlib import Path
 import ast
-from hashlib import sha256
 import json
 import subprocess
 import unittest
@@ -289,29 +288,37 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
         )
 
     def test_r4_location_shift_did_not_change_sql_write_calls(self):
-        # Independent AST freeze from exact predecessor
-        # ai_platform@e0e979d5affca433743dc3eb2db8ed7cc7b40374:
-        # 71 conn.execute expressions were observed in conversation_chat.py.
-        # Rebinding LOCAL/SAAS scaffolds adds an import but no new SQL effect.
-        path = self.root / "cyber_lion/app_coordination/conversation_chat.py"
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        calls = sorted(
-            ast.dump(node, include_attributes=False)
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and isinstance(node.func.value, ast.Name)
-            and node.func.value.id == "conn"
-            and node.func.attr == "execute"
-        )
-        self.assertEqual(len(calls), 71)
-        digest = sha256(json.dumps(
-            calls, sort_keys=True, separators=(",", ":")
-        ).encode("utf-8")).hexdigest()
+        # R4 imported an additional source but did not change any of the
+        # 71 conversation SQL calls. The original historical P0 commit is
+        # already verified by pinned_p0_inventory; compare its full AST with
+        # current source under the *same* Python interpreter. Hashing
+        # ast.dump output from Python 3.12 and comparing on 3.13 is invalid.
+        rel = "cyber_lion/app_coordination/conversation_chat.py"
+        historic = subprocess.run(
+            ["git", "show", f"{HISTORICAL_HEAD}:{rel}"],
+            cwd=self.root, check=True, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, timeout=30,
+        ).stdout.decode("utf-8", "strict")
+        current = (self.root / rel).read_text(encoding="utf-8")
+
+        def sql_call_bodies(source):
+            return sorted(
+                ast.dump(node, include_attributes=False)
+                for node in ast.walk(ast.parse(source))
+                if isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "conn"
+                and node.func.attr == "execute"
+            )
+
+        old_calls = sql_call_bodies(historic)
+        new_calls = sql_call_bodies(current)
+        self.assertEqual(len(old_calls), 71)
+        self.assertEqual(len(new_calls), 71)
         self.assertEqual(
-            digest,
-            "ef76fd6792d3ae27d58887c2aea0d324a788f1d50ed656c72689d10f63e51bd8",
-            "A changed SQL effect must not be classified as a harmless line shift",
+            new_calls, old_calls,
+            "R4/R10 conversation SQL must retain all 71 pinned P0 calls",
         )
 
     def test_historical_seven_still_exist_without_inheriting_current_closure(self):
