@@ -2824,6 +2824,125 @@ def main():
 _LAST_ACTIVATED_UNBOUND_DOCKER_RECONCILE = 0.0
 
 
+_DOCKER_BOOTSTRAP_WAIT_GATES=frozenset({
+    "DOCKER_FLEET_CURRENTNESS_REQUIRED",
+    "DOCKER_FLEET_SOURCE_CURRENTNESS_DRIFT",
+})
+
+
+def park_activated_docker_lpcl_runtime_need(mid, *, gate):
+    """Persist a single, source-bound runtime need in the canonical scheduler.
+
+    The record is *not* an admission, execution assignment, proof of material
+    workers or Docker instruction. It enables durable operator visibility and
+    leaves the existing R5 source-bound auto-rebinder as the only resume path.
+    """
+    if gate not in _DOCKER_BOOTSTRAP_WAIT_GATES:
+      raise ValueError("unrecognized Docker runtime wait gate")
+    from cyber_lion.mission_control.lpcl_runtime_selection import require_runtime_selection
+    c=connect()
+    try:
+      mission=c.execute(
+        "SELECT mission_id,state,adapter,spec_digest,source_head,source_tree,logical_count,material_target,materialized,ready,runtime_state "
+        "FROM missions WHERE mission_id=?",(mid,)
+      ).fetchone()
+      process=c.execute(
+        "SELECT authority_state,lpcl_text FROM mission_process_specs WHERE mission_id=?",(mid,)
+      ).fetchone()
+      if not mission or not process:return {"state":"NOT_FOUND","authority_effect":"NONE"}
+      if (mission["state"] not in {"AUTHORIZED","WAITING","BLOCKED"}
+          or process["authority_state"]!="EXPLICIT_USER_ACTIVATION"
+          or mission["adapter"] not in (None,"LPCL_MISSION")
+          or not operator_control.autonomy_allowed(c,mid)):
+        return {"state":"NOT_ELIGIBLE","authority_effect":"NONE"}
+      selected=require_runtime_selection(
+        _lpcl_pairs(process["lpcl_text"]),
+        int(mission["logical_count"]),int(mission["material_target"])
+      )
+      if selected!=LPCL_DOCKER_LOCAL_MODEL_ADAPTER:
+        return {"state":"NON_DOCKER_RUNTIME","authority_effect":"NONE"}
+      if any(not _hex(mission[k],40) for k in ("source_head","source_tree")) or not _hex(mission["spec_digest"],64):
+        raise ValueError("activated source identity unavailable")
+      # A status/need is not a resource. No synthetic logical/material workers,
+      # no physical uid, no effect request and no new runtime process is added.
+      need={
+        "schema":"lion.lpcl-runtime-capability-need/v1",
+        "mission_id":mid,
+        "source_head":mission["source_head"],
+        "source_tree":mission["source_tree"],
+        "lpcl_digest":mission["spec_digest"],
+        "material_runtime":"DOCKER_LOCAL_MODEL",
+        "logical_target":int(mission["logical_count"]),
+        "material_target":int(mission["material_target"]),
+        "runtime_resource":"docker://MOON/lion-r24-autonomy",
+        "required_capability_class":"DOCKER_FLEET_BOOTSTRAP",
+        "effect_class":"BOUNDED_MATERIAL",
+        "required_admission":"CANONICAL_RUNTIME_ADMISSION_AND_EXPLICIT_LPCL",
+        "gate":gate,
+        "authority_effect":"NONE",
+        "runtime_effect":"NONE",
+      }
+      need_digest=_payload_digest(need)
+      current=driver_snapshot(c,mid)
+      already=(current is not None
+               and current["state"]=="WAITING"
+               and current.get("blocking_gate")==gate
+               and current.get("next_action")=="WAIT_FOR_ADMITTED_DOCKER_FLEET"
+               and mission["runtime_state"]=="DOCKER_FLEET_WAITING_FOR_ADMISSION"
+               and int(mission["materialized"] or 0)==0
+               and int(mission["ready"] or 0)==0)
+      if already:
+        # A persisted gate alone is not proof of the exact immutable need.
+        # Require the original canonical message and its source-bound digest
+        # before reporting an idempotent WAIT after restart.
+        existing=c.execute(
+          "SELECT payload_json FROM protocol_messages "
+          "WHERE mission_id=? AND protocol='CONTROL' "
+          "AND payload_json LIKE '%DOCKER_FLEET_BOOTSTRAP_CAPABILITY_NEED%' "
+          "ORDER BY id DESC LIMIT 1",(mid,)
+        ).fetchone()
+        try:
+          evidence=json.loads(existing["payload_json"]) if existing else None
+        except (TypeError,ValueError,KeyError):
+          evidence=None
+        if (not isinstance(evidence,dict)
+            or evidence.get("event")!="DOCKER_FLEET_BOOTSTRAP_CAPABILITY_NEED"
+            or evidence.get("need")!=need
+            or evidence.get("need_digest")!=need_digest):
+          raise RuntimeError("canonical Docker runtime need journal missing or changed")
+        return {"state":"WAITING","idempotent":True,"gate":gate,
+                "need_digest":need_digest,"authority_effect":"NONE","runtime_effect":"NONE"}
+      if current and current["state"] not in {"WAITING","ACTIVE"}:
+        return {"state":"DRIVER_NOT_ELIGIBLE","gate":gate,
+                "authority_effect":"NONE","runtime_effect":"NONE"}
+      if current is None:
+        ensure_driver(c,mid,now,initial_state="WAITING")
+      driver_wait_for_execution_binding(
+        c,mid,now,
+        blocking_gate=gate,
+        waiting_reason="Exact current 32-worker Docker cohort and canonical runtime admission required",
+        next_action="WAIT_FOR_ADMITTED_DOCKER_FLEET",
+        commit=False,
+      )
+      c.execute(
+        "UPDATE missions SET runtime_state=?,materialized=0,ready=0,updated_at=? "
+        "WHERE mission_id=? AND adapter IS ?",
+        ("DOCKER_FLEET_WAITING_FOR_ADMISSION",now(),mid,mission["adapter"]),
+      )
+      _process_message(
+        c,mid,"CONTROL","GLOBAL_MISSION_SCHEDULER_V1","MISSION_CONTROL",None,
+        {"event":"DOCKER_FLEET_BOOTSTRAP_CAPABILITY_NEED",
+         "need":need,"need_digest":need_digest,
+         "operator_activation_preserved":True,"authority_effect":"NONE"},
+        "INTERNAL",
+      )
+      c.commit()
+      return {"state":"WAITING","idempotent":False,"gate":gate,
+              "need_digest":need_digest,"authority_effect":"NONE","runtime_effect":"NONE"}
+    finally:
+      c.close()
+
+
 def reconcile_activated_unbound_docker_once(*, force=False):
     """Reacquire the missing runtime binding for an *already launched* LPCL.
 
@@ -2880,11 +2999,25 @@ def reconcile_activated_unbound_docker_once(*, force=False):
         observed=_docker_local_model_currentness(int(row['material_target']))
       except Exception:
         # Unavailable, stale or partial observations are not worker readiness.
-        waiting.append({'mission_id':mid,'gate':'DOCKER_FLEET_CURRENTNESS_REQUIRED'})
+        try:
+          staged=park_activated_docker_lpcl_runtime_need(mid,gate='DOCKER_FLEET_CURRENTNESS_REQUIRED')
+          if staged.get('state')!='WAITING':
+            waiting.append({'mission_id':mid,'gate':'RUNTIME_NEED_NOT_PERSISTED','state':staged.get('state')})
+          else:
+            waiting.append({'mission_id':mid,'gate':'DOCKER_FLEET_CURRENTNESS_REQUIRED'})
+        except Exception as exc:
+          waiting.append({'mission_id':mid,'gate':'RUNTIME_NEED_NOT_PERSISTED','error_class':type(exc).__name__})
         continue
       if (observed.get('source_head')!=row['source_head']
           or observed.get('source_tree')!=row['source_tree']):
-        waiting.append({'mission_id':mid,'gate':'DOCKER_FLEET_SOURCE_CURRENTNESS_DRIFT'})
+        try:
+          staged=park_activated_docker_lpcl_runtime_need(mid,gate='DOCKER_FLEET_SOURCE_CURRENTNESS_DRIFT')
+          if staged.get('state')!='WAITING':
+            waiting.append({'mission_id':mid,'gate':'RUNTIME_NEED_NOT_PERSISTED','state':staged.get('state')})
+          else:
+            waiting.append({'mission_id':mid,'gate':'DOCKER_FLEET_SOURCE_CURRENTNESS_DRIFT'})
+        except Exception as exc:
+          waiting.append({'mission_id':mid,'gate':'RUNTIME_NEED_NOT_PERSISTED','error_class':type(exc).__name__})
         continue
       try:
         # Original binder independently checks the operator fence, activated
