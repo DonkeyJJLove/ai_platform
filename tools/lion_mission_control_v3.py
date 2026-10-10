@@ -528,9 +528,9 @@ def _docker_local_model_currentness(expected_material):
     for w in workers:
         if not w.get("ready") or w.get("container_state")!="running" or w.get("model")!="gpt-oss-20b-MXFP4":raise ValueError("docker worker readiness")
         normalized.append({"material_worker_id":w["material_worker_id"],"pod_name":w["container_name"],"pod_uid":w["container_id"],"container_id":w["container_id"],"ready":1,"phase":"DOCKER_LOCAL_MODEL","restarts":0,"pod_ip":None,"model":w["model"]})
-    return {"digest":dg,"observed_at":value["observed_at"],"workers":normalized,"physical_failure_domains":int(value.get("physical_failure_domains") or 1)}
+    return {"digest":dg,"observed_at":value["observed_at"],"workers":normalized,"physical_failure_domains":int(value.get("physical_failure_domains") or 1),"source_head":value.get("source_head"),"source_tree":value.get("source_tree")}
 
-def bind_lpcl_execution(mid):
+def bind_lpcl_execution(mid, *, expected_auto_rebind_digest=None):
     c=connect()
     try:
       m=c.execute('SELECT mission_id,state,spec_digest,source_head,source_tree,logical_count,material_target,adapter FROM missions WHERE mission_id=?',(mid,)).fetchone()
@@ -559,6 +559,12 @@ def bind_lpcl_execution(mid):
       if docker_mode:
        if continuation_ok or source_mid is not None:raise ValueError('docker local model binding requires fresh mission')
        observed=_docker_local_model_currentness(int(m['material_target']))
+       if expected_auto_rebind_digest is not None:
+        if (not _hex(expected_auto_rebind_digest,64)
+            or observed.get('digest')!=expected_auto_rebind_digest
+            or observed.get('source_head')!=m['source_head']
+            or observed.get('source_tree')!=m['source_tree']):
+         raise ValueError('docker fleet changed between currentness observation and rebind')
        if m['adapter']==LPCL_DOCKER_LOCAL_MODEL_ADAPTER:
         own=c.execute('SELECT pod_uid,ready FROM material_workers WHERE mission_id=?',(mid,)).fetchall()
         logical_total=c.execute('SELECT COUNT(*) FROM logical_drones WHERE mission_id=?',(mid,)).fetchone()[0]
@@ -2370,6 +2376,8 @@ def reconcile_control_plane_late_saas():
 
 
 def global_scheduler_once():
+    try:reconcile_activated_unbound_docker_once()
+    except Exception:pass
     try:reconcile_control_plane_late_saas()
     except Exception:pass
     c=connect()
@@ -2813,4 +2821,94 @@ def main():
    relay.terminate()
    try:relay.wait(timeout=5)
    except subprocess.TimeoutExpired:relay.kill()
+_LAST_ACTIVATED_UNBOUND_DOCKER_RECONCILE = 0.0
+
+
+def reconcile_activated_unbound_docker_once(*, force=False):
+    """Reacquire the missing runtime binding for an *already launched* LPCL.
+
+    This runs inside the original global scheduler. It does not start Docker,
+    launch another mission, issue authority, or synthesize fleet currentness.
+    Until 32 actual workers are observed, there is no binding or effect.
+    """
+    global _LAST_ACTIVATED_UNBOUND_DOCKER_RECONCILE
+    checked_at=time.monotonic()
+    if not force and checked_at-_LAST_ACTIVATED_UNBOUND_DOCKER_RECONCILE < 10.0:
+      return {'schema':'lion.lpcl-activated-docker-autorebind/v1',
+              'rebound':[],'waiting':[],'state':'RATE_LIMITED',
+              'authority_effect':'NONE','material_effect':'NONE'}
+    _LAST_ACTIVATED_UNBOUND_DOCKER_RECONCILE=checked_at
+
+    from cyber_lion.mission_control.lpcl_runtime_selection import require_runtime_selection
+    c=connect()
+    try:
+      # LPCL registration sets adapter=LPCL_MISSION. An optional NULL is
+      # accepted for historical/uninitialized rows, but not other adapters.
+      candidates=[
+        dict(row) for row in c.execute(
+          """SELECT m.mission_id,m.logical_count,m.material_target,
+                    m.source_head,m.source_tree,p.lpcl_text
+               FROM missions AS m
+               JOIN mission_process_specs AS p ON p.mission_id=m.mission_id
+               WHERE (m.adapter IS NULL OR m.adapter='LPCL_MISSION')
+                 AND m.state IN ('AUTHORIZED','WAITING','BLOCKED')
+                 AND p.authority_state='EXPLICIT_USER_ACTIVATION'
+               ORDER BY m.updated_at LIMIT 32"""
+        ).fetchall()
+      ]
+      authorized=[row for row in candidates
+                  if operator_control.autonomy_allowed(c,row['mission_id'])]
+    finally:
+      c.close()
+
+    rebound=[]
+    waiting=[]
+    for row in authorized:
+      mid=row['mission_id']
+      try:
+        selected=require_runtime_selection(
+          _lpcl_pairs(row['lpcl_text']),
+          int(row['logical_count']),int(row['material_target'])
+        )
+      except (ValueError, TypeError, KeyError):
+        # This helper is never an alternate LPCL parser or a way to
+        # reinterpret a non-Docker mission's execution class.
+        continue
+      if selected!=LPCL_DOCKER_LOCAL_MODEL_ADAPTER:
+        continue
+      try:
+        observed=_docker_local_model_currentness(int(row['material_target']))
+      except Exception:
+        # Unavailable, stale or partial observations are not worker readiness.
+        waiting.append({'mission_id':mid,'gate':'DOCKER_FLEET_CURRENTNESS_REQUIRED'})
+        continue
+      if (observed.get('source_head')!=row['source_head']
+          or observed.get('source_tree')!=row['source_tree']):
+        waiting.append({'mission_id':mid,'gate':'DOCKER_FLEET_SOURCE_CURRENTNESS_DRIFT'})
+        continue
+      try:
+        # Original binder independently checks the operator fence, activated
+        # mission identity, full cohort and exact physical worker identities.
+        bind_lpcl_execution(mid,expected_auto_rebind_digest=observed['digest'])
+        check=connect()
+        try:
+          actual=check.execute(
+            'SELECT adapter,materialized,ready FROM missions WHERE mission_id=?',
+            (mid,)
+          ).fetchone()
+        finally:
+          check.close()
+        if (actual and actual['adapter']==LPCL_DOCKER_LOCAL_MODEL_ADAPTER
+                and actual['materialized']==32 and actual['ready']==32):
+          rebound.append(mid)
+        else:
+          waiting.append({'mission_id':mid,'gate':'RUNTIME_BINDING_READBACK_REQUIRED'})
+      except Exception as exc:
+        waiting.append({'mission_id':mid,'gate':'RUNTIME_BINDING_NOT_CONFIRMED',
+                        'error_class':type(exc).__name__})
+    return {'schema':'lion.lpcl-activated-docker-autorebind/v1',
+            'rebound':rebound,'waiting':waiting,
+            'authority_effect':'NONE','material_effect':'NONE'}
+
+
 if __name__=='__main__':main()
