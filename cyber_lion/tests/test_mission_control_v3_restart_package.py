@@ -78,6 +78,7 @@ SOURCE_MAP = {
     'cyber_lion/mission_control/execution_driver_contract.py': ROOT / 'cyber_lion/mission_control/execution_driver_contract.py',
     'cyber_lion/mission_control/global_scheduler.py': ROOT / 'cyber_lion/mission_control/global_scheduler.py',
     'cyber_lion/mission_control/lpcl_runtime_selection.py': ROOT / 'cyber_lion/mission_control/lpcl_runtime_selection.py',
+    'cyber_lion/mission_control/material_fleet_lifecycle.py': ROOT / 'cyber_lion/mission_control/material_fleet_lifecycle.py',
     'cyber_lion/mission_control/mission_reconciliation.py': ROOT / 'cyber_lion/mission_control/mission_reconciliation.py',
     'cyber_lion/mission_control/model_calls.py': ROOT / 'cyber_lion/mission_control/model_calls.py',
     'cyber_lion/mission_control/operator_control.py': ROOT / 'cyber_lion/mission_control/operator_control.py',
@@ -139,6 +140,7 @@ class MissionControlV3RestartPackageTests(unittest.TestCase):
              for target,source in SOURCE_MAP.items()},
         )
         for path in (
+            "cyber_lion/mission_control/material_fleet_lifecycle.py",
             "cyber_lion/mission_control/cooperative_process_bootstrap.py",
             "cyber_lion/mission_control/cooperative_preactivation.py",
             "cyber_lion/mission_control/cooperative_preactivation_bootstrap.py",

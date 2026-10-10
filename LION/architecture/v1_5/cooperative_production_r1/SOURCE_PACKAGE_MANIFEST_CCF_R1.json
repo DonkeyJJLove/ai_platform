@@ -8,7 +8,7 @@
     },
     {
       "path": "LION/architecture/v1_5/application_factory_r1/DEPLOYMENT_PACKAGE_MANIFEST.json",
-      "sha256": "7ec36a9b13ca4f3476b293f0f29dac60ad114be08360df96a918f147863f0ae4"
+      "sha256": "5d692a5ccba3a7caf89cef7bad6ff107814f4b4abf756d99d3f87ec08b709e49"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R4_CANARY_SAAS_STATUS_AND_LPCL_CURRENTNESS_R1.md",
@@ -41,6 +41,10 @@
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R8_ADMITTED_DOCKER_BOOTSTRAP_NEED_CONSUMER.md",
       "sha256": "7015205cc6e4d455f10430b3c1b7dab4d8f47101e7ee68100b7b24254b2ef696"
+    },
+    {
+      "path": "LION/architecture/v1_5/cooperative_production_r1/R9_PHASE_SCOPED_MATERIAL_FLEET_PROJECTION_R1.md",
+      "sha256": "1aa7019823bd7f26b06e1288054e5069d98f61f6889e2f92d0b8386870c9f3e0"
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
@@ -247,6 +251,10 @@
       "sha256": "3804b73c8d12378538f4e3c51897c557c4d3220003ff74d54f9a78386730bff1"
     },
     {
+      "path": "cyber_lion/mission_control/material_fleet_lifecycle.py",
+      "sha256": "8bdd472ccae3efe8da971c1815be61527f27aae483099b150241cf96bbda8466"
+    },
+    {
       "path": "cyber_lion/mission_control/material_worker_runtime.py",
       "sha256": "1f086e6af21ef1244a16dbcbc7f0594c6919cc67e1934944587f32ea7142f1cd"
     },
@@ -284,7 +292,7 @@
     },
     {
       "path": "cyber_lion/tests/test_host_authority_separation.py",
-      "sha256": "9575cba065935aa9b779b1d39c6daf553203ed635756c4074e33991169913bc7"
+      "sha256": "117dfef28160fbf9f93fa4964e51bf127a65ec8ccb52bdc07c4edceb02321eba"
     },
     {
       "path": "cyber_lion/tests/test_lpcl_panel_exact_source.py",
@@ -293,6 +301,18 @@
     {
       "path": "cyber_lion/tests/test_lpcl_source_currentness_in_isolated_canary.py",
       "sha256": "25dc2d3c255a47f1bb40249363974f0b2392fa6d7bd768b9d128aa82b8e4764b"
+    },
+    {
+      "path": "cyber_lion/tests/test_material_fleet_lifecycle.py",
+      "sha256": "4a066821744c23cd21a3205aab587728cdfc17bc0a9067eb63b7df140346c2ca"
+    },
+    {
+      "path": "cyber_lion/tests/test_mission_control_v3_restart_package.py",
+      "sha256": "22c8c7c4130e1944ff56a3372fe2794b756a4ae06316e6b6b6490780210e58e7"
+    },
+    {
+      "path": "cyber_lion/tests/test_mission_control_v3_stage_dispatch.py",
+      "sha256": "5b477a5064630a6f7718d1f473f808e7ea86c9eea3e9a67b815a2e7f32d5d4a1"
     },
     {
       "path": "cyber_lion/tests/test_p0_current_candidate_inventory_delta.py",
@@ -335,6 +355,10 @@
       "sha256": "807930d27dafaa479f7f25aaa2b44a1976053fceb9320a35e63fec17737ed50d"
     },
     {
+      "path": "cyber_lion/tests/test_r9_phase_scoped_fleet_view.py",
+      "sha256": "0d2ba99c52716a1dc9299f15a7cefed1f74b144289c1ebb76f411864c964ed20"
+    },
+    {
       "path": "deploy/mission-control/v3/app.css",
       "sha256": "9073f785fd0d49a44161be34df6acea22484e0d9c995a917d9afacd07e1f4078"
     },
@@ -344,7 +368,7 @@
     },
     {
       "path": "deploy/mission-control/v3/control-v3.js",
-      "sha256": "cfde879d86d1949310464ca925bff392fb565f7e06128530ad61105e974be5ff"
+      "sha256": "10e91158828ba77383730efb791062227dd3cd4d37be9764961e366f336838db"
     },
     {
       "path": "deploy/mission-control/v3/index.html",
@@ -380,7 +404,7 @@
     },
     {
       "path": "tools/lion_effect_admission_broker.py",
-      "sha256": "04703f65527d0e53c0b722e94c14d79a2c82df72843087d45c1c953c783bbb99"
+      "sha256": "ab4b444653bf4a3bd27677e21d60f579f29c371190c1b7b6392a6e12a0c06f1c"
     },
     {
       "path": "tools/lion_firefox_broker_relay.py",
@@ -391,12 +415,16 @@
       "sha256": "5b3a497b76c989a6a067e89462bedbfd8803af165292d28f0170cbaf44267568"
     },
     {
+      "path": "tools/lion_material_fleet_lifecycle_probe.py",
+      "sha256": "2da11fea29386a9aa77b05f655c8f4e15a175cc136d86dda5bea8b57f6dbae45"
+    },
+    {
       "path": "tools/lion_mission_control_compat.py",
       "sha256": "f584066806fd190ff4f1752ab464e0d245172a56789f7852f0ed0df0e2fe93d0"
     },
     {
       "path": "tools/lion_mission_control_v3.py",
-      "sha256": "34b817f1ebfab8186702470e3deb57e454ae7d2cdd65b34fb4d7baa34cb50a5c"
+      "sha256": "5a49e1f8ca800b5a74bc831b8ecd9c3dced070677710431192e776e81a437588"
     },
     {
       "path": "tools/lion_mission_lifecycle_db.py",
@@ -435,7 +463,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "69c05773673b100f664628f67f4dce2e0261b79fa1a18e28adc3ea10cb86adc5",
-  "purpose": "R8 typed source-bound R7 Docker capability need -> existing canonical one-shot DockerFleetBootstrapExecutor after independent RuntimeAdmission; no new admission issuer, provider activation or live Docker effect.",
+  "package_digest": "c9eee7a0826df4f93eeb952b351a17e583303413cfc3c127c22aba1ebdace4b6",
+  "purpose": "R9 source-bound, read-only material fleet phase demand 0/1/32 from exact PhaseExecutionContract into one Mission Control Active Ecosystem/Cluster read model; 92-file deployed package candidate. No new execution or runtime admission.",
   "schema": "lion.source-package-manifest/v1"
 }
