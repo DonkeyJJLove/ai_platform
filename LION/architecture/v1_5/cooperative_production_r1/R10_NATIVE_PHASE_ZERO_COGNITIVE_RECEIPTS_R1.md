@@ -132,3 +132,29 @@ zarejestrowany SaaS `RESPONDED` + digest odpowiedzi i receipt;
 
 R10 nie instaluje jeszcze one-worker preactivation i nie deklaruje,
 że pełny materialny LPCL BUILD/VERIFY zakończył się sukcesem.
+
+## PR #444 — bieżący inwentarz P0 po R10
+
+Niezależny `Cyber-Lion Core` na pierwotnym kandydacie PR #444
+wykonał 4304 testy i znalazł trzy błędne oczekiwania w teście
+`test_p0_current_candidate_inventory_delta.py`. Historyczne P0
+zachowuje **567** powierzchni; aktualny kod R10 posiada **578**
+rozpoznanych powierzchni, **0** nierozstrzygniętych referencji
+po taxonomy reconciliation i **0** nierozwiązanych klas.
+Dokładna różnica identyfikatorów to 544 wspólne, 23 usunięte z
+powodu przemieszczenia punktów wywołania i 34 nowe; tylko
+**11 z 34** reprezentuje nowe efekty, pozostałe 23 to przesunięcia.
+
+Osiem historycznych `conn.execute` w
+`control_plane_reconnaissance.py` uzgodniono niezależnie przez
+identyczne SHA-256 AST ich kompletnych wywołań, zamiast dopasowania
+samych numerów linii. Piętnaście zapisów w
+`conversation_chat.py` nadal ma tylko historyczne przesunięcie
+`+1`. Nowe, jawnie rozliczone efekty to sześć zapisów providera
+przygotowania runtime, jeden nowy zapis trajektorii natywnej w
+rekonesansie, trzy trwałe zapisy w nowym native ledger oraz jeden
+`external.network.post` do zamkniętego endpointu LOCAL.
+Nie oznaczono żadnej z tych powierzchni jako automatycznie
+zaautoryzowanej, zaobserwowanej w produkcji lub odziedziczonej
+z historycznego P0. Test historii P0 i osobny freeze fingerprint
+`conversation_chat.py` pozostają bez zmiany.
