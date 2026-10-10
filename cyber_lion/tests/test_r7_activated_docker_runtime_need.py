@@ -100,6 +100,53 @@ class DockerNeedTests(unittest.TestCase):
             self.assertEqual(need["runtime_effect"],"NONE")
         finally:c.close()
 
+    def test_wait_does_not_erase_previous_diagnostic(self):
+        self.launch_fixture()
+        c=self.mc.connect()
+        try:
+            c.execute("UPDATE missions SET last_error=? WHERE mission_id=?",
+                      ("PREEXISTING_SECURITY_DRIFT",self.mid))
+            c.commit()
+        finally:c.close()
+        with patch.object(self.mc.operator_control,"autonomy_allowed",return_value=True):
+            result=self.mc.park_activated_docker_lpcl_runtime_need(
+                self.mid,gate="DOCKER_FLEET_CURRENTNESS_REQUIRED"
+            )
+        self.assertEqual(result["state"],"WAITING")
+        c=self.mc.connect()
+        try:
+            self.assertEqual(c.execute("SELECT last_error FROM missions WHERE mission_id=?",
+                                       (self.mid,)).fetchone()[0],"PREEXISTING_SECURITY_DRIFT")
+        finally:c.close()
+
+    def test_tampered_canonical_need_blocks_idempotent_success(self):
+        self.launch_fixture()
+        with patch.object(self.mc.operator_control,"autonomy_allowed",return_value=True):
+            first=self.mc.park_activated_docker_lpcl_runtime_need(
+                self.mid,gate="DOCKER_FLEET_CURRENTNESS_REQUIRED"
+            )
+            self.assertEqual(first["state"],"WAITING")
+            c=self.mc.connect()
+            try:
+                row=c.execute("SELECT id,payload_json FROM protocol_messages "
+                              "WHERE mission_id=? AND payload_json LIKE '%DOCKER_FLEET_BOOTSTRAP_CAPABILITY_NEED%'",
+                              (self.mid,)).fetchone()
+                obj=json.loads(row["payload_json"])
+                obj["need"]["source_tree"]="f"*40
+                c.execute("UPDATE protocol_messages SET payload_json=? WHERE id=?",
+                          (json.dumps(obj,sort_keys=True),row["id"]))
+                c.commit()
+            finally:c.close()
+            with self.assertRaisesRegex(RuntimeError,"canonical Docker runtime need journal"):
+                self.mc.park_activated_docker_lpcl_runtime_need(
+                    self.mid,gate="DOCKER_FLEET_CURRENTNESS_REQUIRED"
+                )
+        c=self.mc.connect()
+        try:
+            self.assertEqual(c.execute("SELECT COUNT(*) FROM material_workers WHERE mission_id=?",(self.mid,)).fetchone()[0],0)
+            self.assertEqual(c.execute("SELECT state FROM mission_execution_drivers WHERE mission_id=?",(self.mid,)).fetchone()[0],"WAITING")
+        finally:c.close()
+
     def test_stale_observation_rebinds_gate_but_not_worker_or_authority(self):
         self.launch_fixture()
         obs=dict(self.ready_observation(),source_tree="f"*40)

@@ -37,8 +37,7 @@ bez rozpoczęcia fazy, bez material worker rows) → gdy prawdziwa
 oryginalny `bind_lpcl_execution` wznawia **ten sam driver_id** i
 wiąże 32 container IDs oraz dokładne `LD/MD` topo. Nie utworzono
 drugiego schedulera, relay, materializera ani ścieżki omijającej admission.
-Repeated `WAIT` jest idempotentny, nie emituje kolejnych need events,
-nie ponawia nieznanego efektu.
+Repeated `WAIT` jest idempotentny wyłącznie po niezależnym odczycie oryginalnego canonical need-message oraz ponownym sprawdzeniu jego digestu i exact source; podmiana wiadomości powoduje fail-closed. Nie emituje kolejnych need events ani nie ponawia nieznanego efektu. Samo oczekiwanie nie usuwa historycznego `mission.last_error` — diagnostyka bezpieczeństwa pozostaje widoczna aż do prawdziwego, uzgodnionego wykonania.
 
 Źródłowo odmienna flota przechodzi do `DOCKER_FLEET_SOURCE_CURRENTNESS_DRIFT`
 bez worker assignment. Utrata operator fence lub brak jawnej aktywacji

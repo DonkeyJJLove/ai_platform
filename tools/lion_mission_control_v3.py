@@ -2892,6 +2892,24 @@ def park_activated_docker_lpcl_runtime_need(mid, *, gate):
                and int(mission["materialized"] or 0)==0
                and int(mission["ready"] or 0)==0)
       if already:
+        # A persisted gate alone is not proof of the exact immutable need.
+        # Require the original canonical message and its source-bound digest
+        # before reporting an idempotent WAIT after restart.
+        existing=c.execute(
+          "SELECT payload_json FROM protocol_messages "
+          "WHERE mission_id=? AND protocol='CONTROL' "
+          "AND payload_json LIKE '%DOCKER_FLEET_BOOTSTRAP_CAPABILITY_NEED%' "
+          "ORDER BY id DESC LIMIT 1",(mid,)
+        ).fetchone()
+        try:
+          evidence=json.loads(existing["payload_json"]) if existing else None
+        except (TypeError,ValueError,KeyError):
+          evidence=None
+        if (not isinstance(evidence,dict)
+            or evidence.get("event")!="DOCKER_FLEET_BOOTSTRAP_CAPABILITY_NEED"
+            or evidence.get("need")!=need
+            or evidence.get("need_digest")!=need_digest):
+          raise RuntimeError("canonical Docker runtime need journal missing or changed")
         return {"state":"WAITING","idempotent":True,"gate":gate,
                 "need_digest":need_digest,"authority_effect":"NONE","runtime_effect":"NONE"}
       if current and current["state"] not in {"WAITING","ACTIVE"}:
@@ -2907,7 +2925,7 @@ def park_activated_docker_lpcl_runtime_need(mid, *, gate):
         commit=False,
       )
       c.execute(
-        "UPDATE missions SET runtime_state=?,materialized=0,ready=0,last_error=NULL,updated_at=? "
+        "UPDATE missions SET runtime_state=?,materialized=0,ready=0,updated_at=? "
         "WHERE mission_id=? AND adapter IS ?",
         ("DOCKER_FLEET_WAITING_FOR_ADMISSION",now(),mid,mission["adapter"]),
       )

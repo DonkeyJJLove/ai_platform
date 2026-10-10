@@ -8,7 +8,7 @@
     },
     {
       "path": "LION/architecture/v1_5/application_factory_r1/DEPLOYMENT_PACKAGE_MANIFEST.json",
-      "sha256": "f48f3ab6164639e9bd66a94808588fa867adff72145472844bcb252ad4f941af"
+      "sha256": "7ec36a9b13ca4f3476b293f0f29dac60ad114be08360df96a918f147863f0ae4"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R4_CANARY_SAAS_STATUS_AND_LPCL_CURRENTNESS_R1.md",
@@ -36,7 +36,7 @@
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R7_DURABLE_ACTIVATED_DOCKER_RUNTIME_NEED.md",
-      "sha256": "37cccbb273682da42eadd59741fb34cc3d39400eb34a0ea0d13a12a9a66f41be"
+      "sha256": "d4deef768f0c03c887f08181fe5e322d83eb1542a0cf71e2d13e2d04a788d0ff"
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
@@ -320,7 +320,7 @@
     },
     {
       "path": "cyber_lion/tests/test_r7_activated_docker_runtime_need.py",
-      "sha256": "e70179d5023e9c58eb7e09e602525b06d3b47dde84c1c11201fd2c433e1e8d34"
+      "sha256": "bf03561aaa6c7e47ef4719d4b4247c39ca814ed37c948745937ed6cca62dd047"
     },
     {
       "path": "deploy/mission-control/v3/app.css",
@@ -368,7 +368,7 @@
     },
     {
       "path": "tools/lion_effect_admission_broker.py",
-      "sha256": "263ef2df763f61617f0e476a5ae57a4009ff9219f848336f2823e52dddd249bd"
+      "sha256": "04703f65527d0e53c0b722e94c14d79a2c82df72843087d45c1c953c783bbb99"
     },
     {
       "path": "tools/lion_firefox_broker_relay.py",
@@ -384,7 +384,7 @@
     },
     {
       "path": "tools/lion_mission_control_v3.py",
-      "sha256": "67d18c7dc576503f09cbc69540f7198ae69b3144e4f10a6537320e16880a6b54"
+      "sha256": "34b817f1ebfab8186702470e3deb57e454ae7d2cdd65b34fb4d7baa34cb50a5c"
     },
     {
       "path": "tools/lion_mission_lifecycle_db.py",
@@ -423,7 +423,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "83747fed1cda2eb5e0cba664d78a2aff691d329f2c7f848db333eedb81760997",
+  "package_digest": "0089962adaa9736c2f6c24011f34fd85561e9a8cbfc64ef2d77e9765c555518b",
   "purpose": "R7 single activated LPCL durable source-bound Docker runtime need in existing global scheduler before actual 32-worker observation; no synthetic material or authority. Maintains R6.1 pinned cognitive bridge and all canonical carriers.",
   "schema": "lion.source-package-manifest/v1"
 }
