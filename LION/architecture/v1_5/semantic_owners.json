@@ -407,7 +407,9 @@
         "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER.schema.json",
         "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER.md",
         "tools/lion_service_continuation_ledger.py",
-        "cyber_lion/tests/test_service_continuation_ledger.py"
+        "cyber_lion/tests/test_service_continuation_ledger.py",
+        "LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261010.json",
+        "LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261010.md"
       ]
     }
   ],

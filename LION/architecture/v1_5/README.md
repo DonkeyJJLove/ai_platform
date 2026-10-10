@@ -143,3 +143,5 @@ See [LION Evolution Fitness Standard](../../standards/LION_EVOLUTION_FITNESS_STA
 The [Application Factory R1 package](application_factory_r1/README.md) is the finite successor candidate for the roadmap acceptance named above. It uses one mission artifact ledger to retain independent LOCAL trajectories and a responded SaaS advisory, binds the resulting `CONTROL_PLANE_INTELLIGENCE_BUNDLE` digest into cooperative material production, performs one-worker preactivation before the unchanged full-fleet readiness gate, and requires a distinct verifier.
 
 The package is source-only. Its `REGISTRATION_PREVIEW.json` is intentionally not a live registration payload; exact deployed HEAD/TREE must be reacquired and the payload regenerated immediately before any separate registration/activation action.
+
+The [R11 readiness report](SERVICE_READINESS_REPORT_R11_20261010.md) and [typed snapshot](SERVICE_READINESS_SNAPSHOT_R11_20261010.json) record observed LPCL gates and explicit unknowns without conferring permission or projecting a launch date.

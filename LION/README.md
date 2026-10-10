@@ -108,3 +108,5 @@ The Semantic Cloud research line is integrated only as a candidate semantic cont
 ## Edge Yoke R6 — source candidate
 
 [Repozytoryjna kwalifikacja produktu, osobny obserwator i weto R5](../docs/architecture/edge-yoke/README.md). Zachowany owner procesu/admission; kod kandydata nie jest automatyczną aktywacją misji lub wdrożeniem.
+
+[Raport gotowości R11 i Panelu LPCL](architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261010.md) oddziela działające usługi od zdolności uruchomienia konkretnej misji.

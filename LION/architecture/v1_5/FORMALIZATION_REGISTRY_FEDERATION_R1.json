@@ -1286,9 +1286,74 @@
       "validation_refs": [
         "cyber_lion/tests/test_service_continuation_ledger.py"
       ]
+    },
+    {
+      "artifact_id": "service-readiness-snapshot",
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261010.json",
+      "schema_or_type": "lion.r11-service-readiness-snapshot/v1",
+      "semantic_role": "Exact-time evidence-scoped readiness gate vector, never live runtime truth",
+      "semantic_owner_concept": "service_continuation",
+      "generator": null,
+      "source_dependencies": [
+        "service ledger revision 10",
+        "exact GitHub PR445/446/447",
+        "runtime observations on MOON and LION-AUTH-LAB and LAB-DEBIAN"
+      ],
+      "refresh_triggers": [
+        "RUNTIME_OBSERVATION",
+        "CURRENTNESS_CHANGE",
+        "SOURCE_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ],
+      "consumers": [
+        "operator service readiness report",
+        "LPCL launch preflight",
+        "architecture knowledge"
+      ],
+      "currentness_mode": "MIXED",
+      "artifact_class": "RESEARCH_ARTIFACT",
+      "dependency_refs": [
+        "service-continuation-ledger"
+      ]
+    },
+    {
+      "artifact_id": "service-readiness-report",
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261010.md",
+      "schema_or_type": "human-readable service readiness and LPCL operator launch gates",
+      "semantic_role": "Operator-facing, time-scoped gate diagnosis and explicit earliest readiness conditions",
+      "semantic_owner_concept": "service_continuation",
+      "generator": null,
+      "source_dependencies": [
+        "SERVICE_READINESS_SNAPSHOT_R11_20261010.json",
+        "Application Factory five phase source",
+        "operator evidence readback"
+      ],
+      "refresh_triggers": [
+        "RUNTIME_OBSERVATION",
+        "CURRENTNESS_CHANGE",
+        "SOURCE_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ],
+      "consumers": [
+        "human operator",
+        "Codex runbook",
+        "documentation entrypoints"
+      ],
+      "currentness_mode": "MIXED",
+      "artifact_class": "DOCUMENTATION",
+      "dependency_refs": [
+        "service-readiness-snapshot",
+        "service-continuation-guide"
+      ]
     }
   ],
   "authority_effect": "NONE",
   "schema_id": "lion.formalization-registry/v1",
-  "registry_digest": "517ac492820bb00a29600170c43505bcf6b67bb7449d95fcfeb1b3c96b0f8380"
+  "registry_digest": "2f13a433406eb577eb4398820522d44c0996ad0a2312e679945c670a73da712f"
 }

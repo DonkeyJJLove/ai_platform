@@ -225,8 +225,8 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         registry = FormalizationRegistry.from_dict(reg_data)
         self.assertEqual(registry.registry_digest, registry.compute_digest())
         owners = [x for x in reg_data["entries"] if x["semantic_owner_concept"] == "service_continuation"]
-        self.assertEqual(len(owners), 6)
-        self.assertEqual(len({x["artifact_id"] for x in owners}), 6)
+        self.assertEqual(len(owners), 8)
+        self.assertEqual(len({x["artifact_id"] for x in owners}), 8)
         self.assertTrue(all((ROOT / x["path"]).is_file() for x in owners))
         self.assertTrue(all("cyber_lion/tests/test_service_continuation_ledger.py" in x["validation_refs"] for x in owners))
 
@@ -260,6 +260,32 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
             propose_event(self.ledger, kind="REGISTER_TASK", task_id="SVC-0000",
                           actor="operator", observed_at=self.at,
                           evidence_refs=["SOURCE:old"], task=task)
+
+
+    def test_readiness_report_snapshot_and_architecture_owner(self):
+        from cyber_lion.contracts.formalization_registry import FormalizationRegistry
+        snapshot_path = ROOT / "LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261010.json"
+        report_path = ROOT / "LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261010.md"
+        snap = json.loads(snapshot_path.read_text("utf-8"))
+        report = report_path.read_text("utf-8")
+        self.assertEqual(snap["authority_effect"], "NONE")
+        self.assertEqual(snap["schema"], "lion.r11-service-readiness-snapshot/v1")
+        self.assertEqual(snap["master"]["head"], self.ledger["baseline"]["source_head"])
+        self.assertFalse(snap["lpcl"]["ready_for_productive_launch"])
+        self.assertFalse(snap["lpcl"]["full_32_fleet_required_before_first_launch"])
+        self.assertTrue(snap["lpcl"]["full_32_fleet_required_before_material_build"])
+        self.assertEqual(snap["pr445_provisioning"]["production_effect"], "NOT_EXECUTED")
+        self.assertTrue(any(x["id"] == "G10" and not x["required_before_first_productive_launch"] for x in snap["gates"]))
+        self.assertIn("NOT READY FOR PRODUCTIVE LPCL LAUNCH", report)
+        self.assertIn("PR447", report)
+        reg = json.loads((ROOT / "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json").read_text("utf-8"))
+        FormalizationRegistry.from_dict(reg)
+        self.assertEqual({x["artifact_id"] for x in reg["entries"] if x["semantic_owner_concept"] == "service_continuation"},
+                         {"service-continuation-contract", "service-continuation-schema",
+                          "service-continuation-ledger", "service-continuation-guide",
+                          "service-continuation-cli", "service-continuation-tests",
+                          "service-readiness-snapshot", "service-readiness-report"})
+
 
 
 if __name__ == "__main__":
