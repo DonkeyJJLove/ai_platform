@@ -1,0 +1,31 @@
+[Unit]
+Description=LION MOON WSL read-only bridge on 8783 to canonical Windows cognitive provider 8780
+Documentation=https://github.com/DonkeyJJLove/ai_platform/blob/master/docs/LION_OPERATOR_CONTROL_RUNBOOK_R1.md
+Wants=network-online.target
+After=network-online.target
+Conflicts=lion-lpcl-panel-8780-recovery.service
+ConditionPathExists=/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
+ConditionPathExists=/srv/lion-e4-candidate-r1/runtime/provider-8780/bridge.py
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=sentinelx
+Group=sentinelx
+WorkingDirectory=/srv/lion-e4-candidate-r1/runtime/provider-8780
+ExecStartPre=/usr/bin/sha256sum -c /srv/lion-e4-candidate-r1/runtime/provider-8780/bridge.sha256
+ExecStart=/usr/bin/python3 -B /srv/lion-e4-candidate-r1/runtime/provider-8780/bridge.py --serve --port 8783
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Restart=on-failure
+RestartSec=4
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

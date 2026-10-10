@@ -27,6 +27,10 @@
       "sha256": "a0478647977cfca3f7cc6b461f8d0ab4b4b418f16d2279a479efc914aacd7877"
     },
     {
+      "path": "LION/architecture/v1_5/cooperative_production_r1/R6_WINDOWS_WSL_8783_BRIDGE_DELTA.md",
+      "sha256": "fa3a102647a6c65eeefb339634f6c5d7ab862f25093fcc3e96d57feeb2ba64a8"
+    },
+    {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
       "sha256": "15d03280dcd5661facb66970bee7f7ed50561cbb7210a9b83135ad487fdb5c03"
     },
@@ -299,6 +303,10 @@
       "sha256": "bde3b05146a35d4b02d25eba63d06ee8041c8d0a4ac81349bc796ad04920f88a"
     },
     {
+      "path": "cyber_lion/tests/test_r6_windows_cognitive_bridge_port.py",
+      "sha256": "af5ff71d4693f82ab86a43a543bd87bdbb924e5a1e48eeb9fceda88ba8428089"
+    },
+    {
       "path": "deploy/mission-control/v3/app.css",
       "sha256": "9073f785fd0d49a44161be34df6acea22484e0d9c995a917d9afacd07e1f4078"
     },
@@ -313,6 +321,10 @@
     {
       "path": "deploy/mission-control/v3/index.html",
       "sha256": "d750fc8e07426319e895560a0969b23f8adf5d7256f92e656b3b2339fa993471"
+    },
+    {
+      "path": "deploy/mission-control/v3/lion-windows-8780-readonly-bridge.service",
+      "sha256": "1732b6df7848851757e0ceedf260e89d30ae801511c0a35a3984e910bd2aa1a4"
     },
     {
       "path": "deploy/mission-control/v3/passive.js",
@@ -332,7 +344,7 @@
     },
     {
       "path": "tools/lion_effect_admission_broker.py",
-      "sha256": "308dfb01c8caa9e6d07e6a01f091b04ed36c03efa25ea8bb9241252e89de7ea9"
+      "sha256": "f5f7c0feac7e46f7b96dfca8bd4280ecd1e8fc88b145982636a90ebcd567ac43"
     },
     {
       "path": "tools/lion_firefox_broker_relay.py",
@@ -387,7 +399,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "a26132b2776fcaf6531e66d5b0d0c8d27ceaf091fe81c2816cc955478bc75725",
-  "purpose": "Current source-only R5 LPCL scheduler rebind and read-only Mission Control Active Ecosystem/Cluster view; source-bound package with no runtime deployment or mission activation authority.",
+  "package_digest": "3aed422136d02f7726b1c57b35c69ca0c7390b4d78ecde636a6e8596c0d5955a",
+  "purpose": "Source-only R6 scoped WSL-to-Windows cognitive bridge port isolation, using native Windows 8780 and WSL 8783 with existing Mission Control Env+readback; no runtime effect authority or LPCL activation.",
   "schema": "lion.source-package-manifest/v1"
 }
