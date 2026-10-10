@@ -146,9 +146,13 @@ powodu przemieszczenia punktów wywołania i 34 nowe; tylko
 **11 z 34** reprezentuje nowe efekty, pozostałe 23 to przesunięcia.
 
 Osiem historycznych `conn.execute` w
-`control_plane_reconnaissance.py` uzgodniono niezależnie przez
-identyczne SHA-256 AST ich kompletnych wywołań, zamiast dopasowania
-samych numerów linii. Piętnaście zapisów w
+`control_plane_reconnaissance.py` uzgodniono z oryginalnym drzewem
+P0 `b6cc132095deb268b2754d2afc0634aeac5a7ac4`. Obie wersje
+źródła są parsowane jednym, aktualnie używanym interpreterem, a
+kompletne AST poszczególnych wywołań porównywane bezpośrednio.
+Niezależny test na Pythonie 3.13 ujawnił, że zapis `ast.dump` bywa
+odmienny od Pythona 3.12, mimo niezmienionej semantyki SQL; dlatego
+stałe SHA z innej wersji interpretera zostały wycofane. Piętnaście zapisów w
 `conversation_chat.py` nadal ma tylko historyczne przesunięcie
 `+1`. Nowe, jawnie rozliczone efekty to sześć zapisów providera
 przygotowania runtime, jeden nowy zapis trajektorii natywnej w

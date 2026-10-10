@@ -29,22 +29,21 @@ ADDED_PROVIDER_PATHS = frozenset({
     "cyber_lion.app_coordination.conversation_chat.py",
     "cyber_lion.mission_control.native_cognitive_phase_zero.py",
 })
-# Historical callsite IDs are location-derived, not authority. Pinned P0
-# (b6cc132) remains frozen; R10 independently changes recon body and
-# adds a first-class native model POST + three local journal writes.
-# These eight AST signatures are the original P0 mutating SQL call bodies,
-# verified against that exact Git object. R10 must preserve them verbatim.
-RECON_RELOCATED_AST = {
-    62: (63, "79a09adcb3a7676251f3a6672b71fa563f26367cf85ed2ed54ce63f3be97fe34"),
-    218: (219, "b347d1bbefc6d277a986ee97b31dbdda9159ad5f42de539581f8ff7d4616eaaa"),
-    225: (226, "31bd0cfb6251751dc7a19037633286880f1fc25332b5a8e53c2bbbf16c638a36"),
-    933: (983, "563ed525dc29a619d475bb6d91c7f06fa99825e646229262d923f89ce6bb8c12"),
-    938: (988, "8a1822d4c1fbcd3f015a4c577b90848a0873d5eb75c1642bb6f8bd507a071af2"),
-    957: (1121, "e28f853044152c92c86a9546b3f120fee8604615707032a41125d0fddcaf8a72"),
-    962: (1126, "dc6b9c223763469a69e433945275ccf0d6d31fcf0a437763d48e8db304a4db10"),
-    1276: (1482, "f1539b969b3cfcf2596c978beb2da1efffd09c9690457731b7f9aab4a24cc3c4"),
+# Historical source P0 is reconstructed from its Git object and checked
+# against the frozen tree/scan digest by pinned_p0_inventory. Compare old
+# and new AST in the *same* current Python interpreter: ast.dump bytes vary
+# between Python 3.12 and 3.13, although the SQL call is unchanged.
+RECON_RELOCATED_LINES = {
+    62: 63,
+    218: 219,
+    225: 226,
+    933: 983,
+    938: 988,
+    957: 1121,
+    962: 1126,
+    1276: 1482,
 }
-R10_NEW_RECON_CALLSITE = (1078, "082a8074a7bb0d3262e400a6bf8f4a2dfcbe7c8584051e2c2d2c79f212a0c8c7")
+R10_NEW_RECON_CALLSITE = 1078
 RELOCATED_CALLSITE_OFFSETS = {
     "cyber_lion.app_coordination.conversation_chat.py": (15, 1),
 }
@@ -228,15 +227,21 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
 
         old_by_line = {one_line(surface): surface for surface in recon_old}
         new_by_line = {one_line(surface): surface for surface in recon_new}
-        self.assertEqual(set(old_by_line), set(RECON_RELOCATED_AST))
+        self.assertEqual(set(old_by_line), set(RECON_RELOCATED_LINES))
         self.assertEqual(
             set(new_by_line),
-            {location for location, _ in RECON_RELOCATED_AST.values()}
-            | {R10_NEW_RECON_CALLSITE[0]},
+            set(RECON_RELOCATED_LINES.values()) | {R10_NEW_RECON_CALLSITE},
         )
-        path = self.root / "cyber_lion/mission_control/control_plane_reconnaissance.py"
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        def call_digest_at(location):
+        path = "cyber_lion/mission_control/control_plane_reconnaissance.py"
+        historical_bytes = subprocess.run(
+            ["git", "show", f"{HISTORICAL_HEAD}:{path}"],
+            cwd=self.root, check=True, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, timeout=30,
+        ).stdout
+        historical_tree = ast.parse(historical_bytes.decode("utf-8", "strict"))
+        current_tree = ast.parse((self.root / path).read_text(encoding="utf-8"))
+
+        def exact_sql_call_at(tree, location):
             nodes = [
                 node for node in ast.walk(tree)
                 if isinstance(node, ast.Call)
@@ -254,23 +259,24 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
                 )
             ]
             self.assertEqual(len(nodes), 1)
-            return sha256(ast.dump(
-                nodes[0], include_attributes=False
-            ).encode("utf-8")).hexdigest(), nodes[0]
+            return ast.dump(nodes[0], include_attributes=False), nodes[0]
 
-        for previous_line, (present_line, historical_call_sha) in RECON_RELOCATED_AST.items():
+        for previous_line, present_line in RECON_RELOCATED_LINES.items():
             with self.subTest(historical_line=previous_line, current_line=present_line):
                 self.assertEqual(
                     normalized(old_by_line[previous_line]),
                     normalized(new_by_line[present_line]),
                 )
-                observed_sha, _ = call_digest_at(present_line)
-                self.assertEqual(observed_sha, historical_call_sha,
-                                 "Relocated recon SQL differs from pinned historical AST")
+                old_ast, _ = exact_sql_call_at(historical_tree, previous_line)
+                present_ast, _ = exact_sql_call_at(current_tree, present_line)
+                self.assertEqual(
+                    old_ast, present_ast,
+                    "Relocated SQL must match the pinned P0 Git object, "
+                    "parsed under this same interpreter",
+                )
 
-        new_line, expected_sha = R10_NEW_RECON_CALLSITE
-        new_sql_sha, new_node = call_digest_at(new_line)
-        self.assertEqual(new_sql_sha, expected_sha)
+        new_line = R10_NEW_RECON_CALLSITE
+        _, new_node = exact_sql_call_at(current_tree, new_line)
         self.assertEqual(
             (new_by_line[new_line].effect_class,
              new_by_line[new_line].authority_class,
