@@ -22,12 +22,145 @@
     "source_head": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
     "source_tree": "68dd5043e6ede09eb5c2c2f348c40205cf2f44b6"
   },
-  "event_chain_head": "0000000000000000000000000000000000000000000000000000000000000000",
-  "events": [],
+  "event_chain_head": "e3d681263e6619640b2012cafc58227a5f95064fa4e35d934c7eb2c43f266de1",
+  "events": [
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "6b324703b3d9b5d8efd6994f7698242216eececc305f7065008d7e1224ca0190",
+      "evidence_refs": [
+        "CHECKPOINT:MOON:LION_R11_PR445_SIGNED_PROVISIONING_REVIEW_PACKAGE_20261010.json@sha256:2544f26b7e47dacd0b2252e372ec12b1015c0953cdc904507f4cdbf52b560f92"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "sequence": 1,
+      "task_id": "SVC-0001",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "242fece467a3765b644add083fc186b5ed2ed99c660ab32e453c3ff2b96c1d78",
+      "evidence_refs": [
+        "CHECKPOINT:MOON:LION_R11_PR445_SIGNED_PROVISIONING_REVIEW_PACKAGE_20261010.json@sha256:2544f26b7e47dacd0b2252e372ec12b1015c0953cdc904507f4cdbf52b560f92",
+        "SIGNED:MOON:PR445_TRANSACTION:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "6b324703b3d9b5d8efd6994f7698242216eececc305f7065008d7e1224ca0190",
+      "sequence": 2,
+      "task_id": "SVC-0001",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "dc3d79a8bdf7ebc748158b7f1f5a2313f92e8ec17110f876102b69a4d85ec0f9",
+      "evidence_refs": [
+        "CHECKPOINT:MOON:LION_R11_PR445_SIGNED_PROVISIONING_REVIEW_PACKAGE_20261010.json@sha256:2544f26b7e47dacd0b2252e372ec12b1015c0953cdc904507f4cdbf52b560f92",
+        "TEST:MOON:PR445_SIGNED_REVIEW_PACKAGE_READBACK_5_SIGNATURES"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "242fece467a3765b644add083fc186b5ed2ed99c660ab32e453c3ff2b96c1d78",
+      "sequence": 3,
+      "task_id": "SVC-0001",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "a68c2edc33ef976c373e2adf42457577e96c06dab37abd688c2aeeb62f7fb2e9",
+      "evidence_refs": [
+        "CHECKPOINT:MOON:LION_R11_PR445_SIGNED_PROVISIONING_REVIEW_PACKAGE_20261010.json@sha256:2544f26b7e47dacd0b2252e372ec12b1015c0953cdc904507f4cdbf52b560f92"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "dc3d79a8bdf7ebc748158b7f1f5a2313f92e8ec17110f876102b69a4d85ec0f9",
+      "sequence": 4,
+      "task_id": "SVC-0002",
+      "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "2c23201bbe65d56fba1ccc15c6a5954993cdbef1c90fa51a57a0033b5182bb5b",
+      "evidence_refs": [
+        "CHECKPOINT:MOON:LION_R11_PR445_SIGNED_PROVISIONING_REVIEW_PACKAGE_20261010.json@sha256:2544f26b7e47dacd0b2252e372ec12b1015c0953cdc904507f4cdbf52b560f92"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "a68c2edc33ef976c373e2adf42457577e96c06dab37abd688c2aeeb62f7fb2e9",
+      "sequence": 5,
+      "task_id": "SVC-0002",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "466fd2de89b44bc91290f3e4d2bd7c83881081a456df5518e0a7ad70da39c49e",
+      "evidence_refs": [
+        "TEST:MOON:PR445_ISOLATED_SQLITE_PROVISIONING_ONE_BOOTSTRAP_ONE_LINEAGE_TWO_RECEIPTS_AND_REPLAY_DENIED",
+        "TEST:MOON:PR445_SIGNED_STORE_ORIGINAL_CONTRACT"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "2c23201bbe65d56fba1ccc15c6a5954993cdbef1c90fa51a57a0033b5182bb5b",
+      "sequence": 6,
+      "task_id": "SVC-0002",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "7d9867f18402fba34769ba02e3ab9c36e0ae17f5471c0af879966e3fcee11ce0",
+      "evidence_refs": [
+        "TEST:MOON:PR445_ISOLATED_SQLITE_PROVISIONING_ONE_BOOTSTRAP_ONE_LINEAGE_TWO_RECEIPTS_AND_REPLAY_DENIED",
+        "TEST:MOON:PR445_ISOLATED_REPLAY_DENIAL"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "466fd2de89b44bc91290f3e4d2bd7c83881081a456df5518e0a7ad70da39c49e",
+      "sequence": 7,
+      "task_id": "SVC-0002",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "14df4399524fc2b4f65b10554b6018acaa205ad32223ca436ff9d079b5b17114",
+      "evidence_refs": [
+        "TEST:MOON:PR445_ISOLATED_SQLITE_PROVISIONING_ONE_BOOTSTRAP_ONE_LINEAGE_TWO_RECEIPTS_AND_REPLAY_DENIED",
+        "OPERATOR:SEPARATE_PROVISIONING_APPROVAL_STILL_REQUIRED_NOT_GIVEN"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "7d9867f18402fba34769ba02e3ab9c36e0ae17f5471c0af879966e3fcee11ce0",
+      "sequence": 8,
+      "task_id": "SVC-0003",
+      "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-source-proposal-non-authorizing",
+      "digest": "e3d681263e6619640b2012cafc58227a5f95064fa4e35d934c7eb2c43f266de1",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR447:head:b573ff54cd90c79a4989858f2a5ce60a20280534",
+        "TEST:MOON:17_SERVICE_CONTRACT_22_FORMALIZATION_6_FEDERATED_PASS"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T21:46:30Z",
+      "previous_digest": "14df4399524fc2b4f65b10554b6018acaa205ad32223ca436ff9d079b5b17114",
+      "sequence": 9,
+      "task_id": "SVC-0016",
+      "to_state": "IN_PROGRESS"
+    }
+  ],
   "ledger_id": "LION-R11-SERVICE-CONTINUATION-20261010",
   "owner_repository": "DonkeyJJLove/ai_platform",
   "recorded_at": "2026-10-10T21:31:34Z",
-  "revision": 1,
+  "revision": 10,
   "runtime_effect": "NONE",
   "schema": "lion.service-continuation-ledger/v1",
   "tasks": [

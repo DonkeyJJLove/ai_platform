@@ -71,3 +71,10 @@ A future change may add a READ-ONLY Mission Control projection consuming a valid
 The seed contains 16 bounded tasks: 3 READY and 13 BLOCKED. Initial ready work comprises exact signed PR445 package assembly and isolated rehearsal, read-only expiry/restart observation, and source/CI formalization of this ledger. Dependent work includes distinct authority provisioning, fresh CI observation and merge for PR445, rebinding and separately authorizing PR446, deployment, and later exact Application Factory LPCL launch by the operator.
 
 First next action SVC-0001: assemble and validate the five previously signed R11 documents, preserving their transaction digest, and execute only bounded original-contract tests against a disposable SQLite store. This is NOT permission to provision the production store. After significant source/runtime/authority changes, add new evidence-bound events and revise the published ledger through the governed source path. Do not erase history or infer a new authorization.
+
+
+## R1 revision 10 — actual source-candidate delta
+
+After the seed was published to draft PR #447, the operator's five already signed PR445 contracts were assembled into a non-authorizing signed review package. The immutable review artifact was independently read back on MOON at SHA-256 2544f26b7e47dacd0b2252e372ec12b1015c0953cdc904507f4cdbf52b560f92. The original SQLiteAuthorityProvisioningStore, exercised on an ephemeral database, produced one exact bootstrap, one lineage, two receipts and rejected a replay. The disposable database was destroyed; production provisioning remained NONE.
+
+Nine sequential digest-chained events preserve these evidence pointers and mark SVC-0001 and SVC-0002 COMPLETE. SVC-0003 is now READY for **separate human authority-provisioning approval** (not approved), and SVC-0016 IN_PROGRESS pending this draft's CI and separately admitted merge. The dependency and evidence history is retained, not overwritten. No status creates authority or authorizes production writes.

@@ -22,7 +22,11 @@ CLI = ROOT / "tools/lion_service_continuation_ledger.py"
 class ServiceContinuationLedgerTests(unittest.TestCase):
     def setUp(self):
         self.source = LEDGER.read_bytes()
-        self.ledger = json.loads(self.source)
+        self.published = json.loads(self.source)
+        self.ledger = deepcopy(self.published)
+        self.ledger["events"] = []
+        self.ledger["revision"] = 1
+        self.ledger["event_chain_head"] = GENESIS
         self.at = "2026-10-11T09:00:00Z"
 
     def test_seed_has_real_pending_tasks_without_effect(self):
@@ -36,6 +40,17 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertEqual((self.ledger["authority_effect"], self.ledger["runtime_effect"]), ("NONE", "NONE"))
         self.assertEqual(self.ledger["baseline"]["source_head"],
                          "222d52e57ebf17b950322e2a097f9ed94271cf9c")
+
+    def test_published_revision_replays_nine_source_bound_events(self):
+        states = validate_ledger(self.published)
+        self.assertEqual(self.published["revision"], 10)
+        self.assertEqual(len(self.published["events"]), 9)
+        self.assertEqual(states["SVC-0001"], "COMPLETE")
+        self.assertEqual(states["SVC-0002"], "COMPLETE")
+        self.assertEqual(states["SVC-0003"], "READY")
+        self.assertEqual(states["SVC-0016"], "IN_PROGRESS")
+        self.assertNotEqual(self.published["event_chain_head"], GENESIS)
+        self.assertEqual(sum(x == "COMPLETE" for x in states.values()), 2)
 
     def test_next_ready_is_dependency_reduced_no_scheduler(self):
         ready = next_ready_tasks(self.ledger)
@@ -182,7 +197,7 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
 
     def test_cli_validate_next_and_propose_are_read_only(self):
         for cmd in (["validate"], ["next"],
-                    ["propose-transition", "--task", "SVC-0001", "--to", "IN_PROGRESS",
+                    ["propose-transition", "--task", "SVC-0015", "--to", "IN_PROGRESS",
                      "--actor", "operator", "--at", self.at,
                      "--evidence-ref", "SOURCE:manual-readback"]):
             p = subprocess.run([sys.executable, str(CLI), *cmd],
