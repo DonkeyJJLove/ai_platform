@@ -41,16 +41,20 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertEqual(self.ledger["baseline"]["source_head"],
                          "222d52e57ebf17b950322e2a097f9ed94271cf9c")
 
-    def test_published_revision_replays_nine_source_bound_events(self):
+    def test_published_revision_replays_twenty_one_source_bound_events(self):
         states = validate_ledger(self.published)
-        self.assertEqual(self.published["revision"], 10)
-        self.assertEqual(len(self.published["events"]), 9)
+        self.assertEqual(self.published["revision"], 22)
+        self.assertEqual(len(self.published["events"]), 21)
         self.assertEqual(states["SVC-0001"], "COMPLETE")
         self.assertEqual(states["SVC-0002"], "COMPLETE")
-        self.assertEqual(states["SVC-0003"], "READY")
         self.assertEqual(states["SVC-0016"], "IN_PROGRESS")
+        self.assertEqual(states["SVC-0003"], "COMPLETE")
+        self.assertEqual(states["SVC-0004"], "COMPLETE")
+        self.assertEqual(states["SVC-0005"], "COMPLETE")
+        self.assertEqual(states["SVC-0006"], "READY")
+        self.assertEqual(states["SVC-0007"], "BLOCKED")
         self.assertNotEqual(self.published["event_chain_head"], GENESIS)
-        self.assertEqual(sum(x == "COMPLETE" for x in states.values()), 2)
+        self.assertEqual(sum(x == "COMPLETE" for x in states.values()), 5)
 
     def test_next_ready_is_dependency_reduced_no_scheduler(self):
         ready = next_ready_tasks(self.ledger)
@@ -225,8 +229,8 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         registry = FormalizationRegistry.from_dict(reg_data)
         self.assertEqual(registry.registry_digest, registry.compute_digest())
         owners = [x for x in reg_data["entries"] if x["semantic_owner_concept"] == "service_continuation"]
-        self.assertEqual(len(owners), 8)
-        self.assertEqual(len({x["artifact_id"] for x in owners}), 8)
+        self.assertEqual(len(owners), 10)
+        self.assertEqual(len({x["artifact_id"] for x in owners}), 10)
         self.assertTrue(all((ROOT / x["path"]).is_file() for x in owners))
         self.assertTrue(all("cyber_lion/tests/test_service_continuation_ledger.py" in x["validation_refs"] for x in owners))
 
@@ -262,6 +266,23 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
                           evidence_refs=["SOURCE:old"], task=task)
 
 
+    def test_readiness_successor_is_versioned_and_non_authorizing(self):
+        r = ROOT / "LION/architecture/v1_5"
+        earlier = json.loads((r / "SERVICE_READINESS_SNAPSHOT_R11_20261010.json").read_text("utf-8"))
+        current = json.loads((r / "SERVICE_READINESS_SNAPSHOT_R11_20261011.json").read_text("utf-8"))
+        report = (r / "SERVICE_READINESS_REPORT_R11_20261011.md").read_text("utf-8")
+        self.assertEqual(earlier["pr445_provisioning"]["production_effect"], "NOT_EXECUTED")
+        self.assertEqual(current["schema"], "lion.r11-service-readiness-snapshot/v2")
+        self.assertEqual(current["pr445_signed_production"]["independent_ci"]["authority_current"], "YES")
+        self.assertEqual(current["pr445_signed_production"]["independent_ci"]["merge_authorization_inferred"], "NO")
+        self.assertNotEqual(current["pr445_signed_production"]["merge_grant"]["source_lineage_digest"],
+                            current["pr445_signed_production"]["merge_grant"]["admitted_lineage_digest"])
+        self.assertFalse(current["operator_application_factory"]["ready_to_launch"])
+        self.assertEqual(current["consuming_merge_execution_preparation"]["github_merge"], "NOT_EXECUTED")
+        self.assertEqual(current["authority_effect"], "NONE")
+        self.assertIn("12 października 2026", report)
+        self.assertEqual(current["service_ledger"]["revision"], 22)
+
     def test_readiness_report_snapshot_and_architecture_owner(self):
         from cyber_lion.contracts.formalization_registry import FormalizationRegistry
         snapshot_path = ROOT / "LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261010.json"
@@ -284,7 +305,9 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
                          {"service-continuation-contract", "service-continuation-schema",
                           "service-continuation-ledger", "service-continuation-guide",
                           "service-continuation-cli", "service-continuation-tests",
-                          "service-readiness-snapshot", "service-readiness-report"})
+                          "service-readiness-snapshot", "service-readiness-report",
+                          "service-readiness-snapshot-r11-20261011",
+                          "service-readiness-report-r11-20261011"})
 
 
 

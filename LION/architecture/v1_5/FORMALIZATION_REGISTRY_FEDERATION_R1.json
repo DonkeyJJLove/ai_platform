@@ -1351,9 +1351,76 @@
         "service-readiness-snapshot",
         "service-continuation-guide"
       ]
+    },
+    {
+      "artifact_id": "service-readiness-snapshot-r11-20261011",
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261011.json",
+      "schema_or_type": "lion.r11-service-readiness-snapshot/v2",
+      "semantic_role": "Versioned superseding post-provisioning PR445 and merge admission observation",
+      "semantic_owner_concept": "service_continuation",
+      "generator": null,
+      "source_dependencies": [
+        "PR445 live CI observation GHA:38066162833:3",
+        "signed PR445 production provisioning",
+        "service ledger revision 22",
+        "2026-10-10 GitHub review/currentness"
+      ],
+      "refresh_triggers": [
+        "CURRENTNESS_CHANGE",
+        "RUNTIME_OBSERVATION",
+        "SOURCE_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ],
+      "consumers": [
+        "operator readiness report",
+        "LPCL operator preflight",
+        "federated architecture knowledge"
+      ],
+      "currentness_mode": "MIXED",
+      "artifact_class": "RESEARCH_ARTIFACT",
+      "dependency_refs": [
+        "service-readiness-snapshot",
+        "service-continuation-ledger"
+      ]
+    },
+    {
+      "artifact_id": "service-readiness-report-r11-20261011",
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261011.md",
+      "schema_or_type": "R11 human-readable source-bound readiness successor",
+      "semantic_role": "Time-scoped readiness report after PR445 authority_current YES and before consuming merge",
+      "semantic_owner_concept": "service_continuation",
+      "generator": null,
+      "source_dependencies": [
+        "SERVICE_READINESS_SNAPSHOT_R11_20261011.json",
+        "source-bound GitHub PR445 readiness",
+        "Application Factory LPCL source"
+      ],
+      "refresh_triggers": [
+        "CURRENTNESS_CHANGE",
+        "RUNTIME_OBSERVATION",
+        "SOURCE_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ],
+      "consumers": [
+        "human operator",
+        "Codex continuation",
+        "documentation entrypoints"
+      ],
+      "currentness_mode": "MIXED",
+      "artifact_class": "DOCUMENTATION",
+      "dependency_refs": [
+        "service-readiness-snapshot-r11-20261011",
+        "service-readiness-report"
+      ]
     }
   ],
   "authority_effect": "NONE",
   "schema_id": "lion.formalization-registry/v1",
-  "registry_digest": "2f13a433406eb577eb4398820522d44c0996ad0a2312e679945c670a73da712f"
+  "registry_digest": "9f7eba47ec881318fcade3d6422d4e602d4cbb38f8c80a3b4ccd030e1828eb86"
 }

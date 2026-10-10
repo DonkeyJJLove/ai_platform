@@ -80,3 +80,10 @@ After the seed was published to draft PR #447, the operator's five already signe
 Nine sequential digest-chained events preserve these evidence pointers and mark SVC-0001 and SVC-0002 COMPLETE. SVC-0003 is now READY for **separate human authority-provisioning approval** (not approved), and SVC-0016 IN_PROGRESS pending this draft's CI and separately admitted merge. The dependency and evidence history is retained, not overwritten. No status creates authority or authorizes production writes.
 
 See the [R11 operator readiness report](SERVICE_READINESS_REPORT_R11_20261010.md) and [typed snapshot](SERVICE_READINESS_SNAPSHOT_R11_20261010.json) for the observation-bound answer to whether the Panel can launch Application Factory. Fresh runtime and Git readback always supersede this snapshot.
+
+## R1 revision 22 — real signed production authority and CI close
+
+Twelve new append-only events preserve operator approval and execution evidence for PR445 production provisioning plus independent GitHub Actions readback run 38066162833 attempt 3 job 114325801039, observation digest 2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488. Tasks SVC-0003, SVC-0004 and SVC-0005 are COMPLETE; SVC-0006 is READY pending consuming merge admission. The grant is CURRENT and unconsumed as of the CI readback, not merged.
+
+Two domain-separated lineage digests must be preserved: the source/consumption key 105ddde7101bf3cdb31dddcdeed85263c6d5439704f10d0fef3ba9757cef61e5 versus the in-process admitted digest 9e579be6d140203521c644d06aae5b70a3a9677d864d71fc92046dedd90b7e8e. Reusing the second digest in the external consumption key would not fence the observer. A versioned [readiness successor](SERVICE_READINESS_REPORT_R11_20261011.md) describes the safe one-shot, non-atomic consuming admission and subsequent GitHub merge boundary. Failed or unknown state MUST be reconciled without blind retries.
+

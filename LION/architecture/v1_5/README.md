@@ -145,3 +145,5 @@ The [Application Factory R1 package](application_factory_r1/README.md) is the fi
 The package is source-only. Its `REGISTRATION_PREVIEW.json` is intentionally not a live registration payload; exact deployed HEAD/TREE must be reacquired and the payload regenerated immediately before any separate registration/activation action.
 
 The [R11 readiness report](SERVICE_READINESS_REPORT_R11_20261010.md) and [typed snapshot](SERVICE_READINESS_SNAPSHOT_R11_20261010.json) record observed LPCL gates and explicit unknowns without conferring permission or projecting a launch date.
+
+The source-bound [R11 readiness successor](SERVICE_READINESS_REPORT_R11_20261011.md) / [typed snapshot v2](SERVICE_READINESS_SNAPSHOT_R11_20261011.json) records PR445 authority_current=YES without inferring permission to merge or launch LPCL.

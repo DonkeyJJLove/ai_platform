@@ -22,7 +22,7 @@
     "source_head": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
     "source_tree": "68dd5043e6ede09eb5c2c2f348c40205cf2f44b6"
   },
-  "event_chain_head": "e3d681263e6619640b2012cafc58227a5f95064fa4e35d934c7eb2c43f266de1",
+  "event_chain_head": "33eb639c63f44e25984ba677b6f0f3bf4abc4e52fb6ac87ce689a346c4733b7c",
   "events": [
     {
       "actor": "chatgpt-source-proposal-non-authorizing",
@@ -155,12 +155,196 @@
       "sequence": 9,
       "task_id": "SVC-0016",
       "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "95153fc9e22826964c5908710343c079746f0757733a4e35b0440bdfe7429536",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:R11_PR445_EXACT_PROVISION_APPROVED_AND_EXECUTED",
+        "SIGNED:MOON:PR445_TRANSACTION_DIGEST:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "e3d681263e6619640b2012cafc58227a5f95064fa4e35d934c7eb2c43f266de1",
+      "sequence": 10,
+      "task_id": "SVC-0003",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "c766c6daf740c76507ea90a114a6eb167e63bc0f41d369ad1c4b740124417bdf",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:R11_PR445_EXACT_PROVISION_APPROVED_AND_EXECUTED",
+        "OPERATOR:LAB-DEBIAN:20261010T221004Z:PR445_PROVISIONING_RECEIPT_SHA256:f42bb6ee9cf3b4e1544e4e78777a24b7c075ecbdf5cd903843f3fd54a0b81c32",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "95153fc9e22826964c5908710343c079746f0757733a4e35b0440bdfe7429536",
+      "sequence": 11,
+      "task_id": "SVC-0003",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "e80c2db6b27cdf11581a4402dff46cf5ea0ef333e58eec537269f8c6bae61071",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:R11_PR445_EXACT_PROVISION_APPROVED_AND_EXECUTED",
+        "RUNTIME:LAB-DEBIAN:20261010T221004Z:PR445_BOOTSTRAP_1_LINEAGE_1_LIVE_HTTP_PASS",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "c766c6daf740c76507ea90a114a6eb167e63bc0f41d369ad1c4b740124417bdf",
+      "sequence": 12,
+      "task_id": "SVC-0003",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "93771632f724d6f2b5817d839f9b027abe3a40ed8426685b8d8037d4ad7639b8",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:R11_PR445_EXACT_PROVISION_APPROVED_AND_EXECUTED",
+        "OPERATOR:LAB-DEBIAN:20261010T221004Z:PR445_PROVISIONING_RECEIPT_SHA256:f42bb6ee9cf3b4e1544e4e78777a24b7c075ecbdf5cd903843f3fd54a0b81c32"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "e80c2db6b27cdf11581a4402dff46cf5ea0ef333e58eec537269f8c6bae61071",
+      "sequence": 13,
+      "task_id": "SVC-0004",
+      "to_state": "READY"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "6aae3240886023140184434af39e568f58a8f4bc0579b623a286ad1874c06f0e",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:20261010T221004Z:PR445_PROVISIONING_RECEIPT_SHA256:f42bb6ee9cf3b4e1544e4e78777a24b7c075ecbdf5cd903843f3fd54a0b81c32",
+        "SIGNED:MOON:PR445_TRANSACTION_DIGEST:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "93771632f724d6f2b5817d839f9b027abe3a40ed8426685b8d8037d4ad7639b8",
+      "sequence": 14,
+      "task_id": "SVC-0004",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "f59fb8f7bf70fb6a923f1f0c00b5628261092dbc1f4bc712cfe9633811bd989a",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:20261010T221004Z:PR445_PROVISIONING_RECEIPT_SHA256:f42bb6ee9cf3b4e1544e4e78777a24b7c075ecbdf5cd903843f3fd54a0b81c32",
+        "RUNTIME:LAB-DEBIAN:20261010T221004Z:PR445_BOOTSTRAP_1_LINEAGE_1_LIVE_HTTP_PASS",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "6aae3240886023140184434af39e568f58a8f4bc0579b623a286ad1874c06f0e",
+      "sequence": 15,
+      "task_id": "SVC-0004",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "31d6f7f066d103cc4ccd659fb0d4449e21d7f1b0e972734de504b1046bbaf3c8",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:R11_PR445_EXACT_PROVISION_APPROVED_AND_EXECUTED",
+        "RUNTIME:LAB-DEBIAN:20261010T221004Z:PR445_BOOTSTRAP_1_LINEAGE_1_LIVE_HTTP_PASS",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "f59fb8f7bf70fb6a923f1f0c00b5628261092dbc1f4bc712cfe9633811bd989a",
+      "sequence": 16,
+      "task_id": "SVC-0004",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "bc3f300f2333b699404068e71ae40010d955cc3c027cbf1175000a5ac238a84d",
+      "evidence_refs": [
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:HEAD_7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:BASE_222d52e57ebf17b950322e2a097f9ed94271cf9c:READY_FOR_REVIEW"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "31d6f7f066d103cc4ccd659fb0d4449e21d7f1b0e972734de504b1046bbaf3c8",
+      "sequence": 17,
+      "task_id": "SVC-0005",
+      "to_state": "READY"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "979e0945d6dce12a3d711323b4eb81eea7a890298937290c5c0024d372960238",
+      "evidence_refs": [
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:HEAD_7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:BASE_222d52e57ebf17b950322e2a097f9ed94271cf9c:READY_FOR_REVIEW"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "bc3f300f2333b699404068e71ae40010d955cc3c027cbf1175000a5ac238a84d",
+      "sequence": 18,
+      "task_id": "SVC-0005",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "163ab6b909996b689870312db99829c25bbd2fca05d52bb54c9fbbb39886e757",
+      "evidence_refs": [
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:HEAD_7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:BASE_222d52e57ebf17b950322e2a097f9ed94271cf9c:READY_FOR_REVIEW"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "979e0945d6dce12a3d711323b4eb81eea7a890298937290c5c0024d372960238",
+      "sequence": 19,
+      "task_id": "SVC-0005",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "67afd9e5b2aae458d60cdfdbf6a9a065e900c29cc7bb905289e3fdd1a754146c",
+      "evidence_refs": [
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:HEAD_7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:BASE_222d52e57ebf17b950322e2a097f9ed94271cf9c:READY_FOR_REVIEW"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "163ab6b909996b689870312db99829c25bbd2fca05d52bb54c9fbbb39886e757",
+      "sequence": 20,
+      "task_id": "SVC-0005",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "source-review-with-human-and-gha-receipts",
+      "digest": "33eb639c63f44e25984ba677b6f0f3bf4abc4e52fb6ac87ce689a346c4733b7c",
+      "evidence_refs": [
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488:AUTHORITY_CURRENT_YES",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:HEAD_7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:BASE_222d52e57ebf17b950322e2a097f9ed94271cf9c:READY_FOR_REVIEW"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:22:15Z",
+      "previous_digest": "67afd9e5b2aae458d60cdfdbf6a9a065e900c29cc7bb905289e3fdd1a754146c",
+      "sequence": 21,
+      "task_id": "SVC-0006",
+      "to_state": "READY"
     }
   ],
   "ledger_id": "LION-R11-SERVICE-CONTINUATION-20261010",
   "owner_repository": "DonkeyJJLove/ai_platform",
   "recorded_at": "2026-10-10T21:31:34Z",
-  "revision": 10,
+  "revision": 22,
   "runtime_effect": "NONE",
   "schema": "lion.service-continuation-ledger/v1",
   "tasks": [

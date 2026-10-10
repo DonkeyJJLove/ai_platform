@@ -248,3 +248,5 @@ LION now has a candidate semantic-organization contract chain from MissionIntent
 [Repository-native cooperative pilot and deny-only observer](docs/architecture/edge-yoke/README.md). Code lives in cyber_lion/tools, runtime keys and observations outside Git. This increment is a tested source candidate, not a deployed successor, new authority source or automatic mission launcher.
 
 Dalszy stan integracji i termin rzeczywistej gotowości LPCL opisuje [raport R11](LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261010.md) i jego [snapshot](LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261010.json).
+
+**Post-provisioning update:** [R11 readiness, 11 October](LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261011.md) supersedes the preceding 10 October snapshot; PR445 has independent authority_current=YES but Git merge and LPCL activation remain incomplete.
