@@ -39,6 +39,10 @@
       "sha256": "d4deef768f0c03c887f08181fe5e322d83eb1542a0cf71e2d13e2d04a788d0ff"
     },
     {
+      "path": "LION/architecture/v1_5/cooperative_production_r1/R8_ADMITTED_DOCKER_BOOTSTRAP_NEED_CONSUMER.md",
+      "sha256": "7015205cc6e4d455f10430b3c1b7dab4d8f47101e7ee68100b7b24254b2ef696"
+    },
+    {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
       "sha256": "15d03280dcd5661facb66970bee7f7ed50561cbb7210a9b83135ad487fdb5c03"
     },
@@ -211,6 +215,10 @@
       "sha256": "0df864ba28771c073d3c887ad82862806d83c454f26f14100eafca89f8ba12d7"
     },
     {
+      "path": "cyber_lion/mission_control/docker_bootstrap_need_consumer.py",
+      "sha256": "2332690b7510f8dc4b598538ec3659c717ad2e6503b35735705c727530bbaab3"
+    },
+    {
       "path": "cyber_lion/mission_control/docker_fleet_bootstrap_executor.py",
       "sha256": "814bdd334482f4f3b4456fc70154179ce477679d8b6bd5e1bbfafcdcb4fb426d"
     },
@@ -276,7 +284,7 @@
     },
     {
       "path": "cyber_lion/tests/test_host_authority_separation.py",
-      "sha256": "50353cc4db2beee4959a41051d1bf5acea1f3a16901c50445a1e19fac556f775"
+      "sha256": "9575cba065935aa9b779b1d39c6daf553203ed635756c4074e33991169913bc7"
     },
     {
       "path": "cyber_lion/tests/test_lpcl_panel_exact_source.py",
@@ -321,6 +329,10 @@
     {
       "path": "cyber_lion/tests/test_r7_activated_docker_runtime_need.py",
       "sha256": "bf03561aaa6c7e47ef4719d4b4247c39ca814ed37c948745937ed6cca62dd047"
+    },
+    {
+      "path": "cyber_lion/tests/test_r8_docker_bootstrap_need_consumer.py",
+      "sha256": "807930d27dafaa479f7f25aaa2b44a1976053fceb9320a35e63fec17737ed50d"
     },
     {
       "path": "deploy/mission-control/v3/app.css",
@@ -423,7 +435,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "0089962adaa9736c2f6c24011f34fd85561e9a8cbfc64ef2d77e9765c555518b",
-  "purpose": "R7 single activated LPCL durable source-bound Docker runtime need in existing global scheduler before actual 32-worker observation; no synthetic material or authority. Maintains R6.1 pinned cognitive bridge and all canonical carriers.",
+  "package_digest": "69c05773673b100f664628f67f4dce2e0261b79fa1a18e28adc3ea10cb86adc5",
+  "purpose": "R8 typed source-bound R7 Docker capability need -> existing canonical one-shot DockerFleetBootstrapExecutor after independent RuntimeAdmission; no new admission issuer, provider activation or live Docker effect.",
   "schema": "lion.source-package-manifest/v1"
 }
