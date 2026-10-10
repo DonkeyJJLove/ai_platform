@@ -9,6 +9,8 @@ PROCESS_CONTRACT_PLANE: dla pracy obejmującej LPCL, Mission Control, fazy, sche
 
 V1_5_ARCHITECTURE_KNOWLEDGE: when a mission concerns architecture epoch 1.5, federation structure, semantic ownership, documentation currentness, formalization or the next frontier, read `LION/architecture/v1_5/README.md` after live reacquisition, then route through `semantic_owners.json` and `FORMALIZATION_REGISTRY_FEDERATION_R1.json`. Machine-generated census/graph/reconciliation are projections, not authority. v1.4 `current_state.json`, `semantic_owners.json` and `AI_NATIVE_ROADMAP.md` remain historical/compatibility inputs where explicitly referenced; they are not promoted to live v1.5 currentness.
 
+SERVICE_CONTINUATION: for unfinished cross-turn service work, check the versioned [SERVICE_CONTINUATION_LEDGER_R1.json](LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json) and [formal evolution contract](LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER.md). The register is a non-authorizing handoff proposal; replay its append-only events, independently reacquire the current target, and do not launch a successor mission or infer authority from a READY task. Use the original Mission Control/state/CI/authority owners for live facts.
+
 ## Routing
 
 - Relacje i hipotezy: [TIGER_GEOMETRY](LION/codex/TIGER_GEOMETRY.md).

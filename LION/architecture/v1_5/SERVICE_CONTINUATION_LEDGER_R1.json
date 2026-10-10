@@ -1,0 +1,392 @@
+{
+  "authority_effect": "NONE",
+  "baseline": {
+    "evidence_refs": [
+      "GITHUB:DonkeyJJLove/ai_platform:master:222d52e57ebf17b950322e2a097f9ed94271cf9c",
+      "GITHUB:DonkeyJJLove/ai_platform:PR445:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "GITHUB:DonkeyJJLove/ai_platform:PR446:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "OPERATOR:LAB-DEBIAN:2026-10-10T21:19:56Z:PASS_VERIFIER_ONLY_REBIND",
+      "RUNTIME:LAB-DEBIAN:2026-10-10T21:20:38Z:PID27457:HTTP401",
+      "TEST:LAB-DEBIAN:ADD_VERIFIER_11_FACTORY_5_ENDPOINT_PASS",
+      "SIGNED:MOON:PR445:5_SIGNED_DOCUMENTS:TRANSACTION_SHA256:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+    ],
+    "limitations": [
+      "The PR445 signed package was not assembled into a single production installer artifact.",
+      "PR445 authoritative pr_bootstrap and authority_lineage cardinalities were zero at the recorded observation.",
+      "Production source file and protected runtime.env were not independently readable through the unprivileged SentinelX account.",
+      "PR445 and PR446 remained draft/open/unmerged; no CI authority_current YES evidence exists.",
+      "Verifier-only operator approval never authorizes authority database provisioning, merge, deployment or LPCL activation.",
+      "PR445 signature validity expires 2026-10-12T20:23:44Z; revalidate on any later run.",
+      "The ledger is versioned source evidence, not a live watcher, scheduler, signed receipt or authority."
+    ],
+    "source_head": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
+    "source_tree": "68dd5043e6ede09eb5c2c2f348c40205cf2f44b6"
+  },
+  "event_chain_head": "0000000000000000000000000000000000000000000000000000000000000000",
+  "events": [],
+  "ledger_id": "LION-R11-SERVICE-CONTINUATION-20261010",
+  "owner_repository": "DonkeyJJLove/ai_platform",
+  "recorded_at": "2026-10-10T21:31:34Z",
+  "revision": 1,
+  "runtime_effect": "NONE",
+  "schema": "lion.service-continuation-ledger/v1",
+  "tasks": [
+    {
+      "acceptance": [
+        "All five signatures verified",
+        "Transaction digest equals 558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf",
+        "No credentials or private PEM in package"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [],
+      "effect_class": "NONE",
+      "first_action": "Reconstruct PRAuthorityProvisioningTransaction from signed epoch, root, policy, grant and decision; verify five signatures and exact SHA.",
+      "initial_state": "READY",
+      "intent": "Assemble five already signed canonical documents into one immutable, non-authorizing transaction package.",
+      "owner": "ai_platform / authority provisioning",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "SIGNED:MOON:/mnt/c/Users/d2j3/lion-r11-pr445-public/pr445-ceremony/round3/decision.sig",
+        "CHECKPOINT:MOON:LION_R11_PR445_FIVE_SIGNED_READBACK_AND_TRUST_BINDING_PENDING_20261010.json"
+      ],
+      "task_id": "SVC-0001",
+      "title": "Signed PR445 package"
+    },
+    {
+      "acceptance": [
+        "Exact trial bootstraps and lineage 1/1",
+        "Replay rejected",
+        "Production database not opened for writing"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0001"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Run bootstrap_authority_context followed by provision_pr_authority on an isolated SQLite database; independently verify both records.",
+      "initial_state": "BLOCKED",
+      "intent": "Exercise the original SQLiteAuthorityProvisioningStore against a disposable database with the exact signed package, including replay rejection and digest-bound readback.",
+      "owner": "ai_platform / authority provisioning",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "SOURCE:cyber_lion/enterprise/authority_provisioning.py",
+        "SIGNED:MOON:PR445_TRANSACTION_DIGEST:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+      ],
+      "task_id": "SVC-0002",
+      "title": "Isolated provisioning rehearsal"
+    },
+    {
+      "acceptance": [
+        "Explicit approval binds PR445 exact head/base, database, scope, roles and write class",
+        "No inference from existing verifier approval"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0002"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Present verified transaction digest and exact database target for independent, role-separated approval; preserve the decision reference.",
+      "initial_state": "BLOCKED",
+      "intent": "Request and record independent explicit authorization for creating a production root context and PR445 signed grant in the original trusted store.",
+      "owner": "operator / authorized provisioning owner",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "SOURCE:LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE_CONTRACT.json",
+        "CHECKPOINT:LAB-DEBIAN:LION_R11_PR445_VERIFIER_REBIND_POSTREADBACK_20261010.json"
+      ],
+      "task_id": "SVC-0003",
+      "title": "Separate authority provision approval"
+    },
+    {
+      "acceptance": [
+        "Production bootstrap cardinality 1 and lineage cardinality 1",
+        "Store receipts independently read back",
+        "No direct SQL grant insertion"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0003"
+      ],
+      "effect_class": "AUTHORITY_WRITE",
+      "first_action": "Reacquire PR state and runtime, read approved grant, snapshot DB, call original store bootstrap/provision and reconcile receipts.",
+      "initial_state": "BLOCKED",
+      "intent": "After separate approval, provision signed root context and exact PR445 grant exclusively through original SQLiteAuthorityProvisioningStore.",
+      "owner": "authorized provisioning executor / LAB-DEBIAN",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "SOURCE:cyber_lion/enterprise/authority_provisioning.py",
+        "SIGNED:MOON:PR445_TRANSACTION_DIGEST:558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+      ],
+      "task_id": "SVC-0004",
+      "title": "Production PR445 provisioning"
+    },
+    {
+      "acceptance": [
+        "Provider available and response valid",
+        "Signer and scope valid, epoch current, not expired, not consumed",
+        "Observer authority_current=YES without merge authorization inferred"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0004"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Read back production store 1/1 and perform a bounded GitHub Merge Authority Observation job for exact PR445.",
+      "initial_state": "BLOCKED",
+      "intent": "Observe the exact signed PR445 authority through the live CI observer after provisioning without inferring merge authorization.",
+      "owner": "ai_platform / CI observer",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "SOURCE:cyber_lion/enterprise/merge_authority_observation.py",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445"
+      ],
+      "task_id": "SVC-0005",
+      "title": "Independent PR445 authority observation"
+    },
+    {
+      "acceptance": [
+        "Approval identity specific to PR445, repository, method and current SHA",
+        "No scope inheritance from verifier or provisioning approvals"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0005"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Present exact PR445 head/base and green CI with current authority observation for explicit merge decision.",
+      "initial_state": "BLOCKED",
+      "intent": "Obtain a separate exact authorization to perform PR445 merge after current evidence and required CI.",
+      "owner": "operator / merge authority owner",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR445",
+        "SOURCE:LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE_CONTRACT.json"
+      ],
+      "task_id": "SVC-0006",
+      "title": "Explicit PR445 merge approval"
+    },
+    {
+      "acceptance": [
+        "Merge receipt consumed once",
+        "GitHub merged state, parents and master tree independently read back",
+        "No deployment inferred from merge"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0006"
+      ],
+      "effect_class": "MERGE",
+      "first_action": "Reacquire exact GitHub state; use consuming merge-authority path and reconcile merged head/tree; stop on drift.",
+      "initial_state": "BLOCKED",
+      "intent": "Under current merge admission execute at most one exact GitHub merge for PR445 and reconcile parents/master/readback.",
+      "owner": "authorized GitHub merge executor",
+      "scope": "DonkeyJJLove/ai_platform:PR445:base:222d52e57ebf17b950322e2a097f9ed94271cf9c:head:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR445",
+        "SOURCE:cyber_lion/enterprise/merge_admission.py"
+      ],
+      "task_id": "SVC-0007",
+      "title": "Merge PR445 and reconcile"
+    },
+    {
+      "acceptance": [
+        "Source candidate matches fresh master without losing peer changes",
+        "Tests and CI bind the new head and tree",
+        "Old PR445 or PR446 grants not reused"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0007"
+      ],
+      "effect_class": "REPOSITORY_WRITE",
+      "first_action": "Read fresh master and PR446 head/base; construct non-conflicting source candidate, run targeted tests and obtain separate publishing approval.",
+      "initial_state": "BLOCKED",
+      "intent": "After PR445 integration rebase or restack PR446 onto newly observed master; regenerate its exact candidate hash and dependent evidence.",
+      "owner": "ai_platform / source integration",
+      "scope": "DonkeyJJLove/ai_platform:PR446:base:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:head:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446",
+        "SOURCE:LION/architecture/v1_5/cooperative_production_r1/R11_SOURCE_BOUND_ONE_WORKER_PREACTIVATION_R1.md"
+      ],
+      "task_id": "SVC-0008",
+      "title": "Rebind stacked PR446"
+    },
+    {
+      "acceptance": [
+        "New PR446 context/epoch and exact signed grants",
+        "No PR445 grant reused",
+        "Independent provider readback confirms signature/lineage"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0008"
+      ],
+      "effect_class": "AUTHORITY_WRITE",
+      "first_action": "Rebuild exact PR446 authority request from fresh refs; obtain new signed root/decision and separate admission for DB write.",
+      "initial_state": "BLOCKED",
+      "intent": "Perform a new authorized role-separated signature and provisioning ceremony for PR446 after its HEAD/BASE is rebound.",
+      "owner": "authorized provisioning owner",
+      "scope": "DonkeyJJLove/ai_platform:PR446:base:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:head:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446",
+        "SOURCE:cyber_lion/enterprise/authority_provisioning.py"
+      ],
+      "task_id": "SVC-0009",
+      "title": "Issue exact PR446 authority"
+    },
+    {
+      "acceptance": [
+        "Required CI PASS at exact head",
+        "authority_current=YES; no merge_authorization inferred"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0009"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Check PR446 CI and signed authority provider with fresh master, read-only.",
+      "initial_state": "BLOCKED",
+      "intent": "Run exact CI observation for the newly bound PR446 head/base before any merge.",
+      "owner": "ai_platform / CI observer",
+      "scope": "DonkeyJJLove/ai_platform:PR446:base:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:head:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446",
+        "SOURCE:cyber_lion/enterprise/merge_authority_observation.py"
+      ],
+      "task_id": "SVC-0010",
+      "title": "Observe PR446 current authority"
+    },
+    {
+      "acceptance": [
+        "Distinct PR446 merge approval",
+        "No automatic carry-over from PR445"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [
+        "SVC-0010"
+      ],
+      "effect_class": "NONE",
+      "first_action": "Review current SHA, signed grant and merge admission scope; record explicit operator approval.",
+      "initial_state": "BLOCKED",
+      "intent": "Acquire a separate exact merge approval for PR446 after fresh CI.",
+      "owner": "operator / merge authority owner",
+      "scope": "DonkeyJJLove/ai_platform:PR446:base:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:head:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446",
+        "SOURCE:LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE_CONTRACT.json"
+      ],
+      "task_id": "SVC-0011",
+      "title": "Authorize PR446 merge"
+    },
+    {
+      "acceptance": [
+        "Merge observed in GitHub",
+        "Successor master commit and tree independently verified"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0011"
+      ],
+      "effect_class": "MERGE",
+      "first_action": "Perform only current consumed GitHub merge for PR446; observe parent chain and master head after completion.",
+      "initial_state": "BLOCKED",
+      "intent": "Execute one authorized, exact PR446 merge then read back resulting tree and CI.",
+      "owner": "authorized GitHub merge executor",
+      "scope": "DonkeyJJLove/ai_platform:PR446:base:7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1:head:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "source_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446",
+        "SOURCE:cyber_lion/enterprise/merge_admission.py"
+      ],
+      "task_id": "SVC-0012",
+      "title": "Merge and reconcile PR446"
+    },
+    {
+      "acceptance": [
+        "Exact deployed module matches integrated master",
+        "Mission Control health/read-model pass",
+        "No LPCL activation from deployment"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [
+        "SVC-0012"
+      ],
+      "effect_class": "DEPLOY",
+      "first_action": "Reacquire source/deployment digests; run regression, install with approved effect path, and verify service/DB readback.",
+      "initial_state": "BLOCKED",
+      "intent": "Qualify and separately admit deployment of merged R11 source to Mission Control, preserving DB and LPCL inactive.",
+      "owner": "Mission Control owner",
+      "scope": "LION-R11-MISSION-CONTROL",
+      "source_refs": [
+        "SOURCE:cyber_lion/mission_control/cooperative_preactivation_bootstrap.py",
+        "SOURCE:LION/architecture/v1_5/application_factory_r1/README.md"
+      ],
+      "task_id": "SVC-0013",
+      "title": "Mission Control deployment readiness"
+    },
+    {
+      "acceptance": [
+        "Exact LPCL identity, admitted effects and source digests current",
+        "Explicit operator launch action",
+        "Material execution observed, no self-activation"
+      ],
+      "authorization_gate": "EXPLICIT_EXACT_LPCL_OPERATOR_LAUNCH",
+      "dependencies": [
+        "SVC-0013"
+      ],
+      "effect_class": "LPCL_ACTIVATE",
+      "first_action": "Compile exact program and capability preflight; present bounded launch for explicit human start. Do not self-launch.",
+      "initial_state": "BLOCKED",
+      "intent": "After separate capability/readiness checks, operator explicitly launches the exact Application Factory LPCL 1.2.",
+      "owner": "operator / LPCL Mission Control",
+      "scope": "LION-APPLICATION-FACTORY-R1",
+      "source_refs": [
+        "SOURCE:LION/architecture/v1_5/application_factory_r1/PANEL_LPCL_1_2.txt",
+        "SOURCE:LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE_CONTRACT.json"
+      ],
+      "task_id": "SVC-0014",
+      "title": "Application Factory LPCL launch"
+    },
+    {
+      "acceptance": [
+        "No expired grants interpreted as current",
+        "Runtime verification reobserved after restart",
+        "No background automation implied"
+      ],
+      "authorization_gate": "NONE_READ_ONLY",
+      "dependencies": [],
+      "effect_class": "NONE",
+      "first_action": "Read current trusted clock and service health; if after 2026-10-12T20:23:44Z, mark authority signing inputs stale and prepare new ceremony.",
+      "initial_state": "READY",
+      "intent": "Independently monitor time-bound PR445 signature validity and post-restart verifier readiness before relying on either.",
+      "owner": "ai_platform / service operator",
+      "scope": "LAB-DEBIAN/R11",
+      "source_refs": [
+        "CHECKPOINT:LAB-DEBIAN:LION_R11_PR445_VERIFIER_REBIND_POSTREADBACK_20261010.json",
+        "SIGNED:MOON:PR445_POLICY_EXPIRY:2026-10-12T20:23:44Z"
+      ],
+      "task_id": "SVC-0015",
+      "title": "Grant expiry and restart observation"
+    },
+    {
+      "acceptance": [
+        "Contract and replay tests pass",
+        "Formalization registry and semantic owner map route exact paths",
+        "PR review and required CI present; merge separately admitted"
+      ],
+      "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+      "dependencies": [],
+      "effect_class": "REPOSITORY_WRITE",
+      "first_action": "Implement and test source candidate in isolated checkout; publish only to separate review branch, then independently check CI and governance gate before integration.",
+      "initial_state": "READY",
+      "intent": "Introduce versioned ledger contract, schema, first journal, CLI, negative tests and documentation discovery via separate source PR.",
+      "owner": "ai_platform / architecture knowledge",
+      "scope": "LION-V1_5-SERVICE-CONTINUATION-R1",
+      "source_refs": [
+        "SOURCE:LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+        "SOURCE:cyber_lion/contracts/formalization_registry.py"
+      ],
+      "task_id": "SVC-0016",
+      "title": "Integrate service ledger architecture"
+    }
+  ]
+}

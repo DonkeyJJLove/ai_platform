@@ -64,6 +64,12 @@ Pełna nawigacja: [`LION/architecture/v1_5/README.md`](LION/architecture/v1_5/RE
 
 ---
 
+## Service Continuation Ledger — dziennik serwisowy LION
+
+Bieżący, **wersjonowany rejestr nierozwiązanych zobowiązań i pierwszych działań** znajduje się w [LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json](LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json). Kontrakt, reguły ewolucji przez append-only events, walidator i właściwy owner opisane są w [Service Continuation Ledger](LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER.md).
+
+Dziennik łączy zadania z zależnościami, evidence refs, granicami admission i readbackiem, ale nie jest schedulerem, nie tworzy authority i nie zastępuje Mission Control. Status zapisany w repo wymaga świeżej obserwacji Git/CI/runtime przed efektem. Wstępny rejestr R11 obejmuje provisioning PR #445, PR #446, integrację, deployment i późniejszy jawny operator launch LPCL.
+
 ## Homeostaza dokumentacji
 
 Dokumentacja LION jest elementem architektury i ma własny cykl currentness:

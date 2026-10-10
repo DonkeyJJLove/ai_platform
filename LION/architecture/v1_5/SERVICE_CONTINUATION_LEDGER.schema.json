@@ -1,0 +1,319 @@
+{
+  "$defs": {
+    "event": {
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "from_state"
+                ]
+              },
+              {
+                "required": [
+                  "to_state"
+                ]
+              }
+            ]
+          },
+          "properties": {
+            "kind": {
+              "const": "REGISTER_TASK"
+            }
+          },
+          "required": [
+            "task"
+          ]
+        },
+        {
+          "not": {
+            "required": [
+              "task"
+            ]
+          },
+          "properties": {
+            "kind": {
+              "const": "TRANSITION"
+            }
+          },
+          "required": [
+            "from_state",
+            "to_state"
+          ]
+        }
+      ],
+      "properties": {
+        "actor": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "pattern": "^(SOURCE|GITHUB|CI|TEST|RUNTIME|OPERATOR|SIGNED|CHECKPOINT|UNKNOWN):.+",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "from_state": {
+          "enum": [
+            "WAITING",
+            "READY",
+            "BLOCKED",
+            "IN_PROGRESS",
+            "VERIFIED",
+            "COMPLETE",
+            "SUPERSEDED"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "REGISTER_TASK",
+            "TRANSITION"
+          ]
+        },
+        "observed_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "previous_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "task": {
+          "$ref": "#/$defs/task"
+        },
+        "task_id": {
+          "pattern": "^SVC-[0-9]{4}$",
+          "type": "string"
+        },
+        "to_state": {
+          "enum": [
+            "WAITING",
+            "READY",
+            "BLOCKED",
+            "IN_PROGRESS",
+            "VERIFIED",
+            "COMPLETE",
+            "SUPERSEDED"
+          ]
+        }
+      },
+      "required": [
+        "sequence",
+        "previous_digest",
+        "digest",
+        "kind",
+        "task_id",
+        "actor",
+        "observed_at",
+        "evidence_refs"
+      ],
+      "type": "object"
+    },
+    "task": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "authorization_gate": {
+          "enum": [
+            "NONE_READ_ONLY",
+            "SEPARATE_EXACT_OPERATOR_APPROVAL",
+            "EXPLICIT_EXACT_LPCL_OPERATOR_LAUNCH"
+          ]
+        },
+        "dependencies": {
+          "items": {
+            "pattern": "^SVC-[0-9]{4}$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "effect_class": {
+          "enum": [
+            "NONE",
+            "REPOSITORY_WRITE",
+            "AUTHORITY_WRITE",
+            "MERGE",
+            "DEPLOY",
+            "LPCL_ACTIVATE",
+            "TRUST_CHANGE"
+          ]
+        },
+        "first_action": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "initial_state": {
+          "enum": [
+            "WAITING",
+            "READY",
+            "BLOCKED"
+          ]
+        },
+        "intent": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "owner": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "scope": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "pattern": "^(SOURCE|GITHUB|CI|TEST|RUNTIME|OPERATOR|SIGNED|CHECKPOINT|UNKNOWN):.+",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "task_id": {
+          "pattern": "^SVC-[0-9]{4}$",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "title",
+        "intent",
+        "owner",
+        "scope",
+        "initial_state",
+        "dependencies",
+        "effect_class",
+        "authorization_gate",
+        "source_refs",
+        "acceptance",
+        "first_action"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://lion.invalid/schemas/service-continuation-ledger-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Versioned, non-authorizing service tasks plus append-only evidence transitions. DAG/currentness and digest chain validated by cyber_lion/contracts/service_continuation_ledger.py.",
+  "properties": {
+    "authority_effect": {
+      "const": "NONE"
+    },
+    "baseline": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_refs": {
+          "items": {
+            "pattern": "^(SOURCE|GITHUB|CI|TEST|RUNTIME|OPERATOR|SIGNED|CHECKPOINT|UNKNOWN):.+",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "limitations": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "source_head": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "source_tree": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_head",
+        "source_tree",
+        "evidence_refs",
+        "limitations"
+      ],
+      "type": "object"
+    },
+    "event_chain_head": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/event"
+      },
+      "type": "array"
+    },
+    "ledger_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "owner_repository": {
+      "const": "DonkeyJJLove/ai_platform"
+    },
+    "recorded_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "revision": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "runtime_effect": {
+      "const": "NONE"
+    },
+    "schema": {
+      "const": "lion.service-continuation-ledger/v1"
+    },
+    "tasks": {
+      "items": {
+        "$ref": "#/$defs/task"
+      },
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "ledger_id",
+    "owner_repository",
+    "revision",
+    "recorded_at",
+    "authority_effect",
+    "runtime_effect",
+    "baseline",
+    "tasks",
+    "events",
+    "event_chain_head"
+  ],
+  "title": "LION Service Continuation Ledger",
+  "type": "object"
+}

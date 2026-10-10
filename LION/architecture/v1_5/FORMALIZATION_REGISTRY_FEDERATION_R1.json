@@ -1117,9 +1117,178 @@
       ],
       "currentness_mode": "EXACT_HEAD",
       "artifact_class": "DERIVED_PROJECTION"
+    },
+    {
+      "artifact_class": "CONTRACT",
+      "artifact_id": "service-continuation-contract",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "dependency_refs": [],
+      "generator": null,
+      "path": "cyber_lion/contracts/service_continuation_ledger.py",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "schema_or_type": "ServiceContinuationLedger",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Python non-authorizing ledger validation/event replay and append-only proposal contract",
+      "source_dependencies": [
+        "versioned operator evidence and GitHub state"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "CONTRACT",
+      "artifact_id": "service-continuation-schema",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "dependency_refs": [
+        "service-continuation-contract"
+      ],
+      "generator": null,
+      "path": "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER.schema.json",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "schema_or_type": "lion.service-continuation-ledger/v1",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Strict structural schema for baseline/tasks/typed events",
+      "source_dependencies": [
+        "versioned operator evidence and GitHub state"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "SOURCE",
+      "artifact_id": "service-continuation-ledger",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "MIXED",
+      "dependency_refs": [
+        "service-continuation-contract",
+        "service-continuation-schema"
+      ],
+      "generator": null,
+      "path": "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "schema_or_type": "lion.service-continuation-ledger/v1",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Human-reviewed versioned service work register with evidence-bound forward tasks",
+      "source_dependencies": [
+        "versioned operator evidence and GitHub state"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "DOCUMENTATION",
+      "artifact_id": "service-continuation-guide",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "dependency_refs": [
+        "service-continuation-ledger"
+      ],
+      "generator": null,
+      "path": "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER.md",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "schema_or_type": "non-authorizing service continuation guide",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Operational semantics and explicit cross-system handoff/runbook",
+      "source_dependencies": [
+        "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "SOURCE",
+      "artifact_id": "service-continuation-cli",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "dependency_refs": [
+        "service-continuation-contract",
+        "service-continuation-ledger"
+      ],
+      "generator": null,
+      "path": "tools/lion_service_continuation_ledger.py",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "schema_or_type": "service ledger CLI",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Read-only validation, DAG projection and stdout-only proposed ledger evolution",
+      "source_dependencies": [
+        "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "EVAL",
+      "artifact_id": "service-continuation-tests",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "dependency_refs": [
+        "service-continuation-cli",
+        "service-continuation-schema"
+      ],
+      "generator": null,
+      "path": "cyber_lion/tests/test_service_continuation_ledger.py",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "schema_or_type": "unittest TestCase",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Falsification of authority inference, mutation, DAG and event-chain bugs",
+      "source_dependencies": [
+        "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
     }
   ],
   "authority_effect": "NONE",
   "schema_id": "lion.formalization-registry/v1",
-  "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f"
+  "registry_digest": "517ac492820bb00a29600170c43505bcf6b67bb7449d95fcfeb1b3c96b0f8380"
 }

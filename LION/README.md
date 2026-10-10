@@ -19,6 +19,10 @@ V1.5 wprowadza federacyjne architecture knowledge i traktuje dokumentację jako 
 
 Root `README.md`, ten dokument oraz `architecture/v1_5/README.md` są deklarowanymi entrypointami architecture knowledge. Zmiana epoki lub źródeł unieważnia ich claim do bieżącego stanu, dopóki nie zostaną ponownie zrekonsyliowane.
 
+## Trwała kontynuacja serwisowa
+
+Zobowiązania, blokady, dowody i dokładny następny krok przechowuje [SERVICE_CONTINUATION_LEDGER_R1.json](architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json). Formalny opis ownera, stanów, append-only lineage i integracji z architekturą znajduje się w [SERVICE_CONTINUATION_LEDGER.md](architecture/v1_5/SERVICE_CONTINUATION_LEDGER.md); schemat w [SERVICE_CONTINUATION_LEDGER.schema.json](architecture/v1_5/SERVICE_CONTINUATION_LEDGER.schema.json). To jest warstwa handoff/source, nie live mission controller ani źródło zgody na efekt.
+
 ## Zasada dowodowa
 
 ```text

@@ -21,6 +21,12 @@ The foundation is integrated; individual successor increments remain candidates 
 
 Public/project entrypoints are `README.md`, `LION/README.md` and this file. They are architecture knowledge and must route to the same current epoch.
 
+## Service Continuation Ledger R1 — source candidate
+
+[Service Continuation Ledger](SERVICE_CONTINUATION_LEDGER.md) formalizes a versioned service handoff and task-dependency contract. The canonical source instance [SERVICE_CONTINUATION_LEDGER_R1.json](SERVICE_CONTINUATION_LEDGER_R1.json) records incomplete R11 work, evidence references, explicit separate authorization gates and first concrete next actions. Its [JSON Schema](SERVICE_CONTINUATION_LEDGER.schema.json), Python contract, validation CLI and negative tests are owned by the service_continuation entry in semantic_owners.json and registered in FORMALIZATION_REGISTRY_FEDERATION_R1.json.
+
+This is a **non-authorizing SOURCE CANDIDATE** until its own Git/CI/admission/merge closure; it is not a deployed Mission Control feed. Read live Git, CI, authority state and host runtime independently. It must never initiate a new LPCL merely because a dependency becomes READY.
+
 ## Core invariant
 
 ```text
