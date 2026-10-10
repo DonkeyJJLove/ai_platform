@@ -112,3 +112,5 @@ The Semantic Cloud research line is integrated only as a candidate semantic cont
 [Raport gotowości R11 i Panelu LPCL](architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261010.md) oddziela działające usługi od zdolności uruchomienia konkretnej misji.
 
 Aktualny wpis serwisowy: [raport R11 po produkcyjnym provisioningu PR445](architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261011.md) i [snapshot v2](architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261011.json).
+
+Nowy raport usług: [po merge PR #445](architecture/v1_5/SERVICE_READINESS_REPORT_R11_POST_PR445_MERGE_20261011.md) i [snapshot v3](architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_POST_PR445_MERGE_20261011.json).

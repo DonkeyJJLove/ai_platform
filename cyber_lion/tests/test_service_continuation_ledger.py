@@ -41,20 +41,21 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertEqual(self.ledger["baseline"]["source_head"],
                          "222d52e57ebf17b950322e2a097f9ed94271cf9c")
 
-    def test_published_revision_replays_twenty_one_source_bound_events(self):
+    def test_published_revision_replays_thirty_source_bound_events(self):
         states = validate_ledger(self.published)
-        self.assertEqual(self.published["revision"], 22)
-        self.assertEqual(len(self.published["events"]), 21)
+        self.assertEqual(self.published["revision"], 31)
+        self.assertEqual(len(self.published["events"]), 30)
         self.assertEqual(states["SVC-0001"], "COMPLETE")
         self.assertEqual(states["SVC-0002"], "COMPLETE")
         self.assertEqual(states["SVC-0016"], "IN_PROGRESS")
         self.assertEqual(states["SVC-0003"], "COMPLETE")
         self.assertEqual(states["SVC-0004"], "COMPLETE")
         self.assertEqual(states["SVC-0005"], "COMPLETE")
-        self.assertEqual(states["SVC-0006"], "READY")
-        self.assertEqual(states["SVC-0007"], "BLOCKED")
+        self.assertEqual(states["SVC-0006"], "COMPLETE")
+        self.assertEqual(states["SVC-0007"], "COMPLETE")
+        self.assertEqual(states["SVC-0008"], "IN_PROGRESS")
         self.assertNotEqual(self.published["event_chain_head"], GENESIS)
-        self.assertEqual(sum(x == "COMPLETE" for x in states.values()), 5)
+        self.assertEqual(sum(x == "COMPLETE" for x in states.values()), 7)
 
     def test_next_ready_is_dependency_reduced_no_scheduler(self):
         ready = next_ready_tasks(self.ledger)
@@ -229,8 +230,8 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         registry = FormalizationRegistry.from_dict(reg_data)
         self.assertEqual(registry.registry_digest, registry.compute_digest())
         owners = [x for x in reg_data["entries"] if x["semantic_owner_concept"] == "service_continuation"]
-        self.assertEqual(len(owners), 10)
-        self.assertEqual(len({x["artifact_id"] for x in owners}), 10)
+        self.assertEqual(len(owners), 12)
+        self.assertEqual(len({x["artifact_id"] for x in owners}), 12)
         self.assertTrue(all((ROOT / x["path"]).is_file() for x in owners))
         self.assertTrue(all("cyber_lion/tests/test_service_continuation_ledger.py" in x["validation_refs"] for x in owners))
 
@@ -265,6 +266,21 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
                           actor="operator", observed_at=self.at,
                           evidence_refs=["SOURCE:old"], task=task)
 
+
+    def test_post_pr445_merge_readiness_v3_is_source_bound(self):
+        root = ROOT / "LION/architecture/v1_5"
+        report = (root / "SERVICE_READINESS_REPORT_R11_POST_PR445_MERGE_20261011.md").read_text("utf-8")
+        state = json.loads((root / "SERVICE_READINESS_SNAPSHOT_R11_POST_PR445_MERGE_20261011.json").read_text("utf-8"))
+        self.assertEqual(state["schema"], "lion.r11-service-readiness-snapshot/v3")
+        self.assertEqual(state["pr445"]["merge_commit"], "d367e47cf4f72e450cc212908b2cdfed14ceb805")
+        self.assertEqual(state["pr445"]["merge_parents"], [
+            "222d52e57ebf17b950322e2a097f9ed94271cf9c",
+            "7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1"])
+        self.assertEqual(state["pr446"]["head_sha"], "d8141ce421952bb0b352d873b706e183684f20f9")
+        self.assertEqual(state["pr446"]["signing_status"], "FIRST_ROUND_PAYLOADS_UNSIGNED_NOT_AUTHORITY")
+        self.assertFalse(state["application_factory"]["ready_for_operator_launch"])
+        self.assertEqual(state["authority_effect"], "NONE")
+        self.assertIn("PR #445", report)
 
     def test_readiness_successor_is_versioned_and_non_authorizing(self):
         r = ROOT / "LION/architecture/v1_5"
@@ -307,7 +323,9 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
                           "service-continuation-cli", "service-continuation-tests",
                           "service-readiness-snapshot", "service-readiness-report",
                           "service-readiness-snapshot-r11-20261011",
-                          "service-readiness-report-r11-20261011"})
+                          "service-readiness-report-r11-20261011",
+                          "service-readiness-snapshot-post-pr445-merge",
+                          "service-readiness-report-post-pr445-merge"})
 
 
 

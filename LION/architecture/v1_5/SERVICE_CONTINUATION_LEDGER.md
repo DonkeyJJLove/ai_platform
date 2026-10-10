@@ -87,3 +87,7 @@ Twelve new append-only events preserve operator approval and execution evidence 
 
 Two domain-separated lineage digests must be preserved: the source/consumption key 105ddde7101bf3cdb31dddcdeed85263c6d5439704f10d0fef3ba9757cef61e5 versus the in-process admitted digest 9e579be6d140203521c644d06aae5b70a3a9677d864d71fc92046dedd90b7e8e. Reusing the second digest in the external consumption key would not fence the observer. A versioned [readiness successor](SERVICE_READINESS_REPORT_R11_20261011.md) describes the safe one-shot, non-atomic consuming admission and subsequent GitHub merge boundary. Failed or unknown state MUST be reconciled without blind retries.
 
+
+## R1 revision 31 — PR445 merged, PR446 rebased
+
+Nine new append-only transitions record successful one-shot PR445 consumption and GitHub merge receipt. GitHub readback confirms merge commit d367e47cf4f72e450cc212908b2cdfed14ceb805, tree b92133d258b6fbf2c7f1d16d992e08d2a3609a0c and both exact parents. PR446 was rebound to master with a new source-only commit and a separate carrier-only commit; final head d8141ce421952bb0b352d873b706e183684f20f9 has local tests passing, with Core CI pending at the report timestamp. SVC-0006 and SVC-0007 are COMPLETE; SVC-0008 remains IN_PROGRESS. PR446 unsigned signature payloads are source proposals, not authority. See [SERVICE_READINESS_REPORT_R11_POST_PR445_MERGE_20261011.md](SERVICE_READINESS_REPORT_R11_POST_PR445_MERGE_20261011.md) for the gate vector. Do not auto-start LPCL.

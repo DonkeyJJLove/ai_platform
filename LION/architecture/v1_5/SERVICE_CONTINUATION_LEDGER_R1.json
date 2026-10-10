@@ -22,7 +22,7 @@
     "source_head": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
     "source_tree": "68dd5043e6ede09eb5c2c2f348c40205cf2f44b6"
   },
-  "event_chain_head": "33eb639c63f44e25984ba677b6f0f3bf4abc4e52fb6ac87ce689a346c4733b7c",
+  "event_chain_head": "039347a76d6f826d2a535fc0ad1d4100c524d2031b26b689f84bce94b1601ec2",
   "events": [
     {
       "actor": "chatgpt-source-proposal-non-authorizing",
@@ -339,12 +339,154 @@
       "sequence": 21,
       "task_id": "SVC-0006",
       "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "55e5d7498f56d4b97f7fc54bd62f1562a2a2150abeee0522119ecef98595273c",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:20261010:APPROVES_EXACT_PR445_MERGE_AFTER_CONSUMPTION",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "33eb639c63f44e25984ba677b6f0f3bf4abc4e52fb6ac87ce689a346c4733b7c",
+      "sequence": 22,
+      "task_id": "SVC-0006",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "ab2185b8523d00f04aab66d08e5bd03dab015896e25d064c7bccfb7d969df406",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:20261010:APPROVES_EXACT_PR445_MERGE_AFTER_CONSUMPTION",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488",
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "55e5d7498f56d4b97f7fc54bd62f1562a2a2150abeee0522119ecef98595273c",
+      "sequence": 23,
+      "task_id": "SVC-0006",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "01c8ae1a4fe9479a66262c69b59b50a26f559d195ef22a6149e47eb70652e91a",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:20261010:APPROVES_EXACT_PR445_MERGE_AFTER_CONSUMPTION",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488",
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "ab2185b8523d00f04aab66d08e5bd03dab015896e25d064c7bccfb7d969df406",
+      "sequence": 24,
+      "task_id": "SVC-0006",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "898163febd2f26b46cd5c7cc6ab07a481d48b21b2a7f55547ba02b477af83f9b",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86",
+        "CI:GITHUB:PR445:RUN_38066162833_ATTEMPT_3_JOB_114325801039:OBS_DIGEST_2ff9592fd057eeb24cf3de37cf9efc7d671c6167bbb59160fb302f043ac92488"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "01c8ae1a4fe9479a66262c69b59b50a26f559d195ef22a6149e47eb70652e91a",
+      "sequence": 25,
+      "task_id": "SVC-0007",
+      "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "b99443a3364c4ae669945c7e36541b1009b093fb6b4fa4d85935aaa0cc5e117e",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86",
+        "OPERATOR:CURRENT_THREAD:20261010:APPROVES_EXACT_PR445_MERGE_AFTER_CONSUMPTION"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "898163febd2f26b46cd5c7cc6ab07a481d48b21b2a7f55547ba02b477af83f9b",
+      "sequence": 26,
+      "task_id": "SVC-0007",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "92b4b93317f52ae2887575d8a675ae4fc8f4929cae3e65eef9404129106cd661",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGED_COMMIT:d367e47cf4f72e450cc212908b2cdfed14ceb805",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGE_PARENTS:222d52e57ebf17b950322e2a097f9ed94271cf9c+7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+        "GITHUB:DonkeyJJLove/ai_platform:MASTER_TREE:b92133d258b6fbf2c7f1d16d992e08d2a3609a0c",
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "b99443a3364c4ae669945c7e36541b1009b093fb6b4fa4d85935aaa0cc5e117e",
+      "sequence": 27,
+      "task_id": "SVC-0007",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "2e6ffa3ce78d5bae22a3184142af4d777a813d5aaa35de57412639347a58725a",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:20261010:APPROVES_EXACT_PR445_MERGE_AFTER_CONSUMPTION",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGED_COMMIT:d367e47cf4f72e450cc212908b2cdfed14ceb805",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGE_PARENTS:222d52e57ebf17b950322e2a097f9ed94271cf9c+7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+        "GITHUB:DonkeyJJLove/ai_platform:MASTER_TREE:b92133d258b6fbf2c7f1d16d992e08d2a3609a0c",
+        "OPERATOR:LAB-DEBIAN:20261010T222928Z:PR445_ONE_SHOT_CONSUMPTION_READBACK_PASS_RECEIPT_SHA256:c012493b3e84cd122f3b2fc5616453898cddb63ed991db0c2d1fb6a1b6ceaf86"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "92b4b93317f52ae2887575d8a675ae4fc8f4929cae3e65eef9404129106cd661",
+      "sequence": 28,
+      "task_id": "SVC-0007",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "6297ae37d277281ba15079b3c3efedd35e9fd55e4ad4f7bfa31c61813837394b",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGED_COMMIT:d367e47cf4f72e450cc212908b2cdfed14ceb805",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGE_PARENTS:222d52e57ebf17b950322e2a097f9ed94271cf9c+7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "2e6ffa3ce78d5bae22a3184142af4d777a813d5aaa35de57412639347a58725a",
+      "sequence": 29,
+      "task_id": "SVC-0008",
+      "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-saas-evidence-proposal",
+      "digest": "039347a76d6f826d2a535fc0ad1d4100c524d2031b26b689f84bce94b1601ec2",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:BASE:d367e47cf4f72e450cc212908b2cdfed14ceb805:HEAD:1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+        "GITHUB:DonkeyJJLove/ai_platform:PR445:MERGED_COMMIT:d367e47cf4f72e450cc212908b2cdfed14ceb805"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:34:23Z",
+      "previous_digest": "6297ae37d277281ba15079b3c3efedd35e9fd55e4ad4f7bfa31c61813837394b",
+      "sequence": 30,
+      "task_id": "SVC-0008",
+      "to_state": "IN_PROGRESS"
     }
   ],
   "ledger_id": "LION-R11-SERVICE-CONTINUATION-20261010",
   "owner_repository": "DonkeyJJLove/ai_platform",
   "recorded_at": "2026-10-10T21:31:34Z",
-  "revision": 22,
+  "revision": 31,
   "runtime_effect": "NONE",
   "schema": "lion.service-continuation-ledger/v1",
   "tasks": [

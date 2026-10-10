@@ -147,3 +147,5 @@ The package is source-only. Its `REGISTRATION_PREVIEW.json` is intentionally not
 The [R11 readiness report](SERVICE_READINESS_REPORT_R11_20261010.md) and [typed snapshot](SERVICE_READINESS_SNAPSHOT_R11_20261010.json) record observed LPCL gates and explicit unknowns without conferring permission or projecting a launch date.
 
 The source-bound [R11 readiness successor](SERVICE_READINESS_REPORT_R11_20261011.md) / [typed snapshot v2](SERVICE_READINESS_SNAPSHOT_R11_20261011.json) records PR445 authority_current=YES without inferring permission to merge or launch LPCL.
+
+The [post-PR445 merge report](SERVICE_READINESS_REPORT_R11_POST_PR445_MERGE_20261011.md) and [source-bound readiness v3](SERVICE_READINESS_SNAPSHOT_R11_POST_PR445_MERGE_20261011.json) supersede earlier observations but do not confer authority.

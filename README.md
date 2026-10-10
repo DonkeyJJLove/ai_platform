@@ -250,3 +250,5 @@ LION now has a candidate semantic-organization contract chain from MissionIntent
 Dalszy stan integracji i termin rzeczywistej gotowości LPCL opisuje [raport R11](LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261010.md) i jego [snapshot](LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261010.json).
 
 **Post-provisioning update:** [R11 readiness, 11 October](LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261011.md) supersedes the preceding 10 October snapshot; PR445 has independent authority_current=YES but Git merge and LPCL activation remain incomplete.
+
+Updated service status: [LION readiness after PR #445 merge](LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_POST_PR445_MERGE_20261011.md). Source PR #446 has a new exact currentness-bound HEAD; LPCL remains unregistered.

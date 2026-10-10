@@ -1418,9 +1418,73 @@
         "service-readiness-snapshot-r11-20261011",
         "service-readiness-report"
       ]
+    },
+    {
+      "artifact_id": "service-readiness-snapshot-post-pr445-merge",
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_POST_PR445_MERGE_20261011.json",
+      "schema_or_type": "lion.r11-service-readiness-snapshot/v3",
+      "semantic_role": "Exact Git tree/CI/source continuation snapshot after first merge",
+      "semantic_owner_concept": "service_continuation",
+      "generator": null,
+      "source_dependencies": [
+        "PR445 merge commit and parent readback",
+        "PR446 exact source rebind",
+        "service ledger revision 31"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "RUNTIME_OBSERVATION",
+        "MANUAL_REVIEW"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ],
+      "consumers": [
+        "operator",
+        "architecture knowledge",
+        "LPCL preflight"
+      ],
+      "currentness_mode": "MIXED",
+      "artifact_class": "RESEARCH_ARTIFACT",
+      "dependency_refs": [
+        "service-readiness-snapshot-r11-20261011",
+        "service-continuation-ledger"
+      ]
+    },
+    {
+      "artifact_id": "service-readiness-report-post-pr445-merge",
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_POST_PR445_MERGE_20261011.md",
+      "schema_or_type": "operator report after PR445 merge and PR446 source rebind",
+      "semantic_role": "Explicit post-merge execution readiness and next signing requirements",
+      "semantic_owner_concept": "service_continuation",
+      "generator": null,
+      "source_dependencies": [
+        "SERVICE_READINESS_SNAPSHOT_R11_POST_PR445_MERGE_20261011.json",
+        "PR446 source HEAD and exact CI readback"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "RUNTIME_OBSERVATION",
+        "MANUAL_REVIEW"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ],
+      "consumers": [
+        "operator",
+        "documentation entrypoints"
+      ],
+      "currentness_mode": "MIXED",
+      "artifact_class": "DOCUMENTATION",
+      "dependency_refs": [
+        "service-readiness-snapshot-post-pr445-merge",
+        "service-continuation-guide"
+      ]
     }
   ],
   "authority_effect": "NONE",
   "schema_id": "lion.formalization-registry/v1",
-  "registry_digest": "9f7eba47ec881318fcade3d6422d4e602d4cbb38f8c80a3b4ccd030e1828eb86"
+  "registry_digest": "d7ef6b03d6fc312a75add7c91dff2c48bfe7e07e235abbabfb2d9ef3c0cb2795"
 }
