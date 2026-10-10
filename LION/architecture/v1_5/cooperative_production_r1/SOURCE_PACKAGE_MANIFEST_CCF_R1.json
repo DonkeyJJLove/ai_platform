@@ -23,6 +23,10 @@
       "sha256": "02417669c6a57ef6f36c440449db5ae8794e1d076454bd29c8b01a443c84781b"
     },
     {
+      "path": "LION/architecture/v1_5/cooperative_production_r1/R5_LPCL_UNIFIED_MISSION_EXECUTION_DELTA.md",
+      "sha256": "a0478647977cfca3f7cc6b461f8d0ab4b4b418f16d2279a479efc914aacd7877"
+    },
+    {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
       "sha256": "15d03280dcd5661facb66970bee7f7ed50561cbb7210a9b83135ad487fdb5c03"
     },
@@ -287,6 +291,10 @@
       "sha256": "e65df2b1b63034ca2cd9651e074ea0283fc24e35b90aea341abd25959968819c"
     },
     {
+      "path": "cyber_lion/tests/test_r5_lpcl_auto_rebind.py",
+      "sha256": "bde3b05146a35d4b02d25eba63d06ee8041c8d0a4ac81349bc796ad04920f88a"
+    },
+    {
       "path": "deploy/mission-control/v3/app.css",
       "sha256": "0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c"
     },
@@ -336,7 +344,7 @@
     },
     {
       "path": "tools/lion_mission_control_v3.py",
-      "sha256": "4dab86001b26f6be1474cd5113a8d59ed2c53ee29d2b522babcbb66c6b067b63"
+      "sha256": "128bc594e0ac0222700d79ac2a7dc402aa61b6eb5dc904fbe583bdd4ef824d59"
     },
     {
       "path": "tools/lion_mission_lifecycle_db.py",
@@ -375,7 +383,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "dfffecc2efc55e770cf57e717663b3e36f67de4de593b99969a5767c7a062830",
-  "purpose": "Exact source-only R4 SaaS broker status automatic_hop projection and LPCL canary source-currentness fail-closed syntax validation; no LPCL registration, effect, docker bootstrap, or deployed approval.",
+  "package_digest": "ccea5b79af0e50c28364bed57905a9fb025172cbd75f843e2806039445398530",
+  "purpose": "Current source-only R4 SaaS status/LPCL MAT04 validation plus R5 source-bound automatic rebind of already activated LPCL in the original Mission Control scheduler. No material effects, mission launch or deployment authority.",
   "schema": "lion.source-package-manifest/v1"
 }
