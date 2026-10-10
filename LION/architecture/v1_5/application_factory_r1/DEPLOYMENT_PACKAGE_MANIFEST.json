@@ -2,7 +2,7 @@
   "authority_effect": "NONE",
   "candidate_source_parent": "34cdc8a17fcd235807bee6340762839bc8a71fb0",
   "execution_effect": "NONE",
-  "file_count": 91,
+  "file_count": 92,
   "files": [
     {
       "sha256": "ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8",
@@ -320,6 +320,11 @@
       "target": "cyber_lion/mission_control/lpcl_runtime_selection.py"
     },
     {
+      "sha256": "8bdd472ccae3efe8da971c1815be61527f27aae483099b150241cf96bbda8466",
+      "source": "cyber_lion/mission_control/material_fleet_lifecycle.py",
+      "target": "cyber_lion/mission_control/material_fleet_lifecycle.py"
+    },
+    {
       "sha256": "69066f4ef61bd3f7283c8077d20059f102ddc1291fc824edbd418993580e31ea",
       "source": "cyber_lion/mission_control/mission_reconciliation.py",
       "target": "cyber_lion/mission_control/mission_reconciliation.py"
@@ -405,7 +410,7 @@
       "target": "mission_control_compat.py"
     },
     {
-      "sha256": "34b817f1ebfab8186702470e3deb57e454ae7d2cdd65b34fb4d7baa34cb50a5c",
+      "sha256": "5a49e1f8ca800b5a74bc831b8ecd9c3dced070677710431192e776e81a437588",
       "source": "tools/lion_mission_control_v3.py",
       "target": "mission_control_v3.py"
     },
@@ -420,7 +425,7 @@
       "target": "static/app.js"
     },
     {
-      "sha256": "cfde879d86d1949310464ca925bff392fb565f7e06128530ad61105e974be5ff",
+      "sha256": "10e91158828ba77383730efb791062227dd3cd4d37be9764961e366f336838db",
       "source": "deploy/mission-control/v3/control-v3.js",
       "target": "static/control-v3.js"
     },

@@ -385,7 +385,18 @@ class HostAuthoritySeparationTests(unittest.TestCase):
                     for alias in node.names)
             for node in ast.walk(r8_ast)
         ))
-        self.assertEqual(len(sources), 424 + len(r4_added) + len(r8_added))
+        r9_added = {
+            "cyber_lion/mission_control/material_fleet_lifecycle.py",
+        }
+        self.assertTrue(r9_added.issubset(sources))
+        r9_tree = ast.parse(sources[next(iter(r9_added))])
+        self.assertFalse(any(
+            isinstance(node,(ast.Import,ast.ImportFrom))
+            and any(alias.name in {"subprocess","os","socket"}
+                    for alias in node.names)
+            for node in ast.walk(r9_tree)
+        ))
+        self.assertEqual(len(sources), 424 + len(r4_added) + len(r8_added) + len(r9_added))
         self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (573, 6))
 
     def test_p1_fake_world_harness_not_skipped(self):

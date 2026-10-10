@@ -225,6 +225,15 @@ function mcRender(s,registry,sources){
 function projectActiveEcosystem(m,broker){
  const p=m?.process||{},d=m?.execution_driver||{},sch=m?.scheduler||{};
  const workers=Array.isArray(m?.workers)?m.workers:[], saas=m?.recon_saas_advisories||[],local=m?.recon_trajectories||[];
+ // The phase demand is the *validated, read-only* canonical contract
+ // projection. It is never an effect, a live heartbeat or an admission.
+ const material=m?.material_fleet_lifecycle;
+ const phaseBound=material?.schema==='lion.mission-scoped-material-fleet-lifecycle/v1'
+   && material?.authority_effect==='NONE'
+   && material?.execution_effect==='NONE'
+   && material?.effect_admitted===false
+   && [0,1,32].includes(material?.desired_workers);
+ const materialBlockers=phaseBound&&Array.isArray(material?.blockers)?material.blockers:[];
  const activated=p.authority_state==='EXPLICIT_USER_ACTIVATION';
  const active=activated&&['AUTHORIZED','RUNNING','WAITING','BLOCKED'].includes(m?.state);
  const replied=saas.filter(x=>x.state==='RESPONDED'&&x.receipt_digest&&x.response_digest).length;
@@ -243,6 +252,14 @@ function projectActiveEcosystem(m,broker){
    workers:workers,logical:m?.logical_count??null,material:m?.material_target??null,
    bindings:m?.phase_capability_bindings||[],artifacts:m?.mission_artifacts||[],
    adapter:m?.adapter||'UNBOUND',completion:m?.state==='COMPLETE'?'RECORDED_COMPLETE_VERIFIER_REQUIRED':'NOT_OBSERVED',
+   phase_demand:phaseBound?material.desired_workers:null,
+   phase_demand_state:phaseBound?material.state:'UNKNOWN',
+   phase_demand_id:phaseBound?material.phase_id:null,
+   phase_contract_digest:phaseBound?material.phase_contract_digest:null,
+   phase_source_currentness:phaseBound?'UNVERIFIED':'UNKNOWN',
+   phase_observation:phaseBound?(material.observed_fleet?.state||'UNAVAILABLE'):'UNAVAILABLE',
+   phase_blockers:materialBlockers,
+   phase_effect_admitted:false,
    source_currentness:'UNVERIFIED'
  };
 }
@@ -257,6 +274,8 @@ function renderActiveEcosystem(m,broker){
   ['SAAS',p.saas,'session '+p.session],
   ['LOCAL',p.local,'durable trajectory readback'],
   ['FLEET',p.fleet,'declared '+(p.logical??'?')+' logical / '+(p.material??'?')+' material'],
+  ['PHASE MATERIAL NEED',p.phase_demand===null?'UNKNOWN':p.phase_demand+' / 32',
+   (p.phase_demand_id||'NO PHASE')+' · '+p.phase_demand_state+' · no admission'],
   ['ARTIFACT',p.completion,p.artifacts.length+' recorded metadata']
  ];
  patchHtml(map,'<div class="ecosystem-grid">'+rows.map(x=>'<div class="ecosystem-node ecosystem-unverified"><small>'+
@@ -270,6 +289,10 @@ function renderActiveEcosystem(m,broker){
   ['Scheduler / driver',p.scheduler+' / '+p.driver],
   ['SAAS / LOCAL',p.saas+' / '+p.local+' · session '+p.session],
   ['Fleet',p.fleet+' · declared '+(p.logical??'?')+'/'+(p.material??'?')],
+  ['Phase need (0/1/32)',p.phase_demand===null?'UNKNOWN':String(p.phase_demand)],
+  ['Phase contract / status',(p.phase_contract_digest||'NO CONTRACT')+' / '+p.phase_demand_state],
+  ['Phase runtime observation',p.phase_observation+' · effect admitted FALSE'],
+  ['Phase blockers',p.phase_blockers.join(' · ')||'UNKNOWN / NOT PROVEN'],
   ['Capability bindings',p.bindings.map(x=>(x.phase_id||'?')+':'+(x.capability_class||x.capability_id||'?')+'='+x.state).join(' · ')||'NONE'],
   ['Artifact metadata',p.artifacts.length+' records; actual bytes require independent verifier'],
   ['Current gate',p.gate]

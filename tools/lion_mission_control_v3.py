@@ -55,6 +55,7 @@ except ImportError:
  import global_scheduler as global_sched
 from cyber_lion.mission_control import operator_control
 from cyber_lion.mission_control import model_calls as model_call_ledger
+from cyber_lion.mission_control import material_fleet_lifecycle as scoped_fleet
 
 DB=Path('/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db')
 LEGACY_DB=Path('/var/lib/sentinelx/uploads/lion-mission-control/mission-control.db')
@@ -1343,6 +1344,23 @@ def _project_mission_liveness(c,mid,mission,process,driver,scheduler):
     }
 
 
+def mission_material_fleet_lifecycle_snapshot(c, mid):
+    """Read only the source-bound phase demand; never mint Docker authority.
+
+    Fleet heartbeats and current package source are deliberately UNKNOWN
+    until a separately trusted *live* observer supplies both.
+    """
+    result=scoped_fleet.project_lifecycle(
+        c,mid,fleet_carrier=None,current_source=None,
+        at=datetime.now(timezone.utc),
+    )
+    if (result["authority_effect"]!="NONE"
+        or result["execution_effect"]!="NONE"
+        or result["effect_admitted"] is not False):
+      raise ValueError("material fleet projection must not carry authority")
+    return result
+
+
 def process_snapshot(mid, *, read_only=False, _connection=None):
     if _connection is not None and not read_only:raise ValueError('shared snapshot must be read only')
     c=_connection if _connection is not None else connect()
@@ -1414,6 +1432,13 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     out=normalize_snapshot(d);liveness['source_revision']=out.get('projection_revision');out['liveness']=liveness;out['driver_controls']=controls;out['operator_control']=operator_projection
     if (operator_projection.get('control') or {}).get('control_owner')==operator_control.PRIMARY_OPERATOR:
       out['control_authority']='OPERATOR_PRIMARY_CONTROL'
+    # App/LPCL target 32 uses the exact compiled phase contract. This is
+    # a read model, not a scheduler, fleet admission or Docker activation.
+    out['material_fleet_lifecycle']=(
+      mission_material_fleet_lifecycle_snapshot(c,mid)
+      if type(d.get('material_target')) is int and d['material_target']==32
+      else None
+    )
     if _connection is None:c.close()
     return out
 
