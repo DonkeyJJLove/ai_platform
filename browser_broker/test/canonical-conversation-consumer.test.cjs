@@ -2,7 +2,7 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const {createHash}=require('node:crypto');
-const {CanonicalConversationSaaSConsumer}=require('../src/canonical-conversation-consumer.cjs');
+const {CanonicalConversationSaaSConsumer,evaluateOperatorResume}=require('../src/canonical-conversation-consumer.cjs');
 
 class FakeStore{
  constructor(){this.values=new Map()}
@@ -74,7 +74,7 @@ function fixture({bridges=[]}={}){
  const mc=async path=>{
   assert.equal(path,'/api/v3/saas-broker/requests/'+candidate.request_id);
   const question=brokerQuestion(candidate);
-  return {request_id:candidate.request_id,status:'WAITING_SUPERVISOR',scope_type:'CONTROL_PLANE',thread_id:null,mission_id:null,authority_effect:'NONE',transport:'CHATGPT_SENTINELX_MCP',question,question_digest:createHash('sha256').update(question).digest('hex')};
+  return {request_id:candidate.request_id,status:'WAITING_SUPERVISOR',scope_type:'CONTROL_PLANE',thread_id:null,mission_id:null,claim_generation:0,authority_effect:'NONE',transport:'CHATGPT_SENTINELX_MCP',question,question_digest:createHash('sha256').update(question).digest('hex')};
  };
  const ingress=async path=>{
   if(path==='/v1/events?after=0')return {events:[{seq:1,type:'turn.pending',data:{turn_id:turn.turn_id,command_id:turn.command_id}}]};
@@ -401,4 +401,76 @@ test('existing exact-bridge send timeout is SEND_UNKNOWN and requires operator b
  assert.equal(attempts,1);
  await f.consumer.tick();
  assert.equal(attempts,1);
+});
+
+const cleanResume={
+ authority_effect:'NONE',consumer_state:'STOPPED',unresolved_count:0,
+ upstream_state:'PENDING_HANDOFF',upstream_pending:0,
+ upstream_channel_state:'SENTINELX_MCP_READY',upstream_automatic_hop:'AVAILABLE',
+ upstream_transport:'CHATGPT_SENTINELX_MCP',upstream_mediator_ready:true,
+ upstream_session_attestation_state:'EXPIRED',pending_requests:[],
+};
+test('operator resume does not require a globally empty queue when pending has never been claimed',()=>{
+ const row={request_id:'saas-new',status:'WAITING_SUPERVISOR',claim_generation:0,
+  transport:'CHATGPT_SENTINELX_MCP',authority_effect:'NONE'};
+ const clean={...cleanResume,upstream_pending:1,pending_requests:[row]};
+ assert.deepEqual(evaluateOperatorResume(clean),{allowed:true,blockers:[],authority_effect:'NONE'});
+ assert.deepEqual(evaluateOperatorResume({...cleanResume,upstream_state:'UNBOUND'}),
+  {allowed:true,blockers:[],authority_effect:'NONE'});
+});
+test('cancelled historical SEND_COMMITTED and two claimed overdue requests stay HOLD',()=>{
+ const overdue=[{request_id:'saas-fixture-overdue-first',status:'WAITING_OPERATOR_OVERDUE',
+   claim_generation:1,transport:'CHATGPT_SENTINELX_MCP',authority_effect:'NONE'},
+  {request_id:'saas-fixture-overdue-second',status:'WAITING_OPERATOR_OVERDUE',
+   claim_generation:1,transport:'CHATGPT_SENTINELX_MCP',authority_effect:'NONE'}];
+ const incident={...cleanResume,unresolved_count:1,upstream_pending:2,
+   pending_requests:overdue,
+   unresolved_details:[{request_id:'saas-fixture-cancelled-sent',
+     local_state:'SEND_COMMITTED',broker_status:'CANCELLED',
+     remote_receipt_digest_present:false}]};
+ const result=evaluateOperatorResume(incident);
+ assert.equal(result.allowed,false);
+ assert.ok(result.blockers.includes('UNRESOLVED_SEND_REQUIRES_EXACT_ADJUDICATION'));
+ assert.ok(result.blockers.includes('PRIOR_CLAIM_OR_OVERDUE_REQUIRES_ADJUDICATION'));
+ assert.equal(incident.unresolved_details[0].local_state,'SEND_COMMITTED');
+});
+test('resume admission is fail closed on missing broker coverage, mediator and authority',()=>{
+ for(const delta of [
+  {upstream_pending:2,pending_requests:[{request_id:'saas-one',status:'WAITING_SUPERVISOR',claim_generation:0,transport:'CHATGPT_SENTINELX_MCP',authority_effect:'NONE'}]},
+  {upstream_pending:null},
+  {upstream_state:'UNAVAILABLE'},
+  {upstream_mediator_ready:false},
+  {upstream_channel_state:'WAITING_MEDIATOR'},
+  {upstream_session_attestation_state:'UNKNOWN'},
+  {upstream_transport:'CHATGPT_SECURE_MCP_TUNNEL'},
+  {consumer_state:'RUNNING'},
+  {authority_effect:'ALLOW'},
+ ]){
+  const result=evaluateOperatorResume({...cleanResume,...delta});
+  assert.equal(result.allowed,false,JSON.stringify(delta));
+  assert.ok(result.blockers.length>0);
+ }
+});
+
+test('per-request fresh readback refuses a prior claim even after its lease resets status',async()=>{
+ const f=fixture(),base=f.consumer.mc;
+ f.consumer.mc=async path=>({...await base(path),status:'WAITING_SUPERVISOR',claim_generation:1});
+ f.consumer.resume('explicit-test');
+ await f.consumer.tick();
+ assert.equal(f.calls.browser.length,0);
+ assert.equal(f.consumer.status().state,'OPERATOR_REQUIRED');
+ assert.equal(f.consumer.lastDecision.stage,'PRIOR_CLAIM_OR_NONFRESH_BROKER_REQUEST');
+ assert.equal(f.consumer.lastDecision.claim_generation,1);
+ assert.deepEqual(JSON.parse(f.store.setting('canonical_dispatch_map')),{});
+ assert.equal(f.store.setting('canonical_consumer_enabled'),'false');
+ await f.consumer.tick();
+ assert.equal(f.calls.browser.length,0);
+});
+test('reconciled request never produces a second external browser send',async()=>{
+ const f=fixture();
+ f.consumer.dispatchMap[candidate.request_id]={state:'RECONCILED',observed_at:10};
+ f.consumer.resume('explicit-test');
+ await f.consumer.tick();
+ assert.equal(f.calls.browser.length,0);
+ assert.equal(f.consumer.dispatchMap[candidate.request_id].state,'RECONCILED');
 });

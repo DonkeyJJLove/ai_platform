@@ -14,6 +14,37 @@ const receiptConfirmed=(broker,rid)=>
  broker?.request_id===rid&&broker.status==='RESPONDED'&&broker.authority_effect==='NONE'
  &&/^[a-f0-9]{64}$/.test(broker.response_digest||'')
  &&/^[a-f0-9]{64}$/.test(broker.receipt_digest||'');
+// Operator resume must not confuse a queued message with a confirmed external send.
+// Pending is admissible only when every row is fresh and never claimed.
+// A cancelled broker request with a prior SEND_COMMITTED still blocks until separately
+// adjudicated; CANCELLED is not a model response and cannot mint a receipt.
+function evaluateOperatorResume(snapshot){
+ const blockers=[];
+ if(!snapshot||snapshot.authority_effect!=='NONE')blockers.push('AUTHORITY_CLASS_UNKNOWN');
+ if(snapshot?.consumer_state!=='STOPPED')blockers.push('CONSUMER_NOT_STOPPED');
+ if(!Number.isSafeInteger(snapshot?.unresolved_count)||snapshot.unresolved_count!==0)
+  blockers.push('UNRESOLVED_SEND_REQUIRES_EXACT_ADJUDICATION');
+ if(!Number.isSafeInteger(snapshot?.upstream_pending)||snapshot.upstream_pending<0)
+  blockers.push('PENDING_COUNT_UNKNOWN');
+ if(snapshot?.upstream_state==='UNAVAILABLE'||!snapshot?.upstream_state)
+  blockers.push('UPSTREAM_UNAVAILABLE');
+ if(snapshot?.upstream_transport!==TRANSPORT||snapshot?.upstream_channel_state!=='SENTINELX_MCP_READY'
+  ||snapshot?.upstream_automatic_hop!=='AVAILABLE'||snapshot?.upstream_mediator_ready!==true)
+  blockers.push('EXACT_MEDIATOR_NOT_READY');
+ if(!['BOUND','EXPIRED','NOT_ATTESTED'].includes(snapshot?.upstream_session_attestation_state))
+  blockers.push('SESSION_ATTESTATION_UNKNOWN');
+ if(Number.isSafeInteger(snapshot?.upstream_pending)&&snapshot.upstream_pending>0){
+  const rows=snapshot.pending_requests;
+  if(!Array.isArray(rows)||rows.length!==snapshot.upstream_pending)
+   blockers.push('PENDING_REQUEST_COVERAGE_UNKNOWN');
+  else if(rows.some(r=>!r||!/^saas-[a-zA-Z0-9-]+$/.test(r.request_id||'')
+   ||r.status!=='WAITING_SUPERVISOR'||r.claim_generation!==0
+   ||r.transport!==TRANSPORT||r.authority_effect!=='NONE'))
+   blockers.push('PRIOR_CLAIM_OR_OVERDUE_REQUIRES_ADJUDICATION');
+ }
+ return {allowed:blockers.length===0,blockers,authority_effect:'NONE'};
+}
+
 // Contract markers: AUTO_CREATE · CANONICAL_BRIDGE_WINS · EXPLICIT_BRIDGE_ONLY.
 // Durable bridge owner is conversation_external_bridges. Historical bridges are
 // SUPERSEDED by provenance, never rewritten. BIND/DETACH enforce
@@ -328,6 +359,23 @@ class CanonicalConversationSaaSConsumer{
    const turn=await this._turnFor(rid);if(!turn){this.state='WAITING_TURN';return}
    const exact=this._validate(candidate,turn,broker);
    const prior=this.dispatchMap[rid];
+   if(prior?.state==='RECONCILED')return;
+   // Resume admission is only a snapshot. Recheck this EXACT request immediately
+   // before touching the browser: an expired claim can leave status WAITING_SUPERVISOR
+   // while claim_generation proves an earlier, uncertain external attempt.
+   if(!prior&&(broker.status!=='WAITING_SUPERVISOR'||broker.claim_generation!==0||
+    broker.transport!==TRANSPORT||broker.authority_effect!=='NONE')){
+    // This request may already have been handed to another transport worker.
+    // Permanently pause this consumer; merely flagging state would let the
+    // fair-scan cursor attempt a different request in the next tick.
+    this.enabled=false;
+    this.store.setSetting('canonical_consumer_enabled','false');
+    this.state='OPERATOR_REQUIRED';
+    this.lastDecision={stage:'PRIOR_CLAIM_OR_NONFRESH_BROKER_REQUEST',
+     request_id:rid,broker_status:broker.status,
+     claim_generation:broker.claim_generation,authority_effect:'NONE'};
+    return;
+   }
    if(prior&&['PROVISIONING','DISPATCHING'].includes(prior.state)){
     // After an interrupted send, the actual SaaS UI outcome is unknown.
     // Never auto-replay a request that may already have been submitted.
@@ -474,6 +522,7 @@ class CanonicalConversationSaaSConsumer{
 
 module.exports={
  CanonicalConversationSaaSConsumer,
+ evaluateOperatorResume,
  canonicalPrompt,
  parseCanonicalIdentity,
  EXTERNAL_SYSTEM,

@@ -77,7 +77,7 @@
     },
     {
       "path": "browser_broker/src/canonical-conversation-consumer.cjs",
-      "sha256": "8e54b08c36546414897e470c11c09c7e3d2468ca67ed98057f850a35be850fe1"
+      "sha256": "0280a84b3764c3bd269ed7cb5363d2681370a3cdb082f225f85e9305b0ea5310"
     },
     {
       "path": "browser_broker/src/desktop-read-model.cjs",
@@ -97,7 +97,7 @@
     },
     {
       "path": "browser_broker/src/main.cjs",
-      "sha256": "bbfe06a6829d202b60584f7ec9f4a4f8d531593f14a0f244830e356c829cac8e"
+      "sha256": "ead275ae14c11aa849c650c51dce28b4688f984c2abe3620a6b4460a4ead9181"
     },
     {
       "path": "browser_broker/src/observer-preload.cjs",
@@ -105,7 +105,7 @@
     },
     {
       "path": "browser_broker/test/observability-tabs.test.cjs",
-      "sha256": "009db5e6ef3b27d034eaddeea4f98a58aeb27e429b147a4efdfd8b9ef9f6c339"
+      "sha256": "b96a3f39e3faf1a78d9003eec36ff69f2ade5c14cfe3e886798c02fddc6fd1fe"
     },
     {
       "path": "browser_broker/test/r4-fleet-carrier-read-model.test.cjs",
@@ -432,7 +432,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "b65d3e0bc6cb870f333d54ca52d1d428a1ce81bdb86263cc941a6d6b0dc000cb",
+  "package_digest": "c7bf2c14dc68f67172c9ad2ee4a3ceefd879494078f78fc51c9fce57385ce0f3",
   "authority_effect": "NONE",
   "supersedes": "SOURCE_PACKAGE_MANIFEST_CCF_R3.json"
 }

@@ -2,7 +2,7 @@
 const {app,BaseWindow,WebContentsView,Menu,dialog,ipcMain,shell}=require('electron');
 const fs=require('node:fs');const path=require('node:path');const {randomBytes}=require('node:crypto');const {pathToFileURL}=require('node:url');
 const {Store}=require('./store.cjs');
-const {CanonicalConversationSaaSConsumer}=require('./canonical-conversation-consumer.cjs');
+const {CanonicalConversationSaaSConsumer,evaluateOperatorResume}=require('./canonical-conversation-consumer.cjs');
 const {projectInfo}=require('./conversation.cjs');
 const {EmbeddedBrowser}=require('./browser.cjs');const {createHttp}=require('./http.cjs');const {webPreferences}=require('./contract.cjs');
 const {createReadModel}=require('./desktop-read-model.cjs');
@@ -192,14 +192,45 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
    type:'info',message:title,detail:String(detail).slice(0,5000),buttons:['OK']
   });
   const inspectSaaS=async()=>{
-   const rows=Object.values(canonicalConsumer?.dispatchMap||{});
-   const unresolved=rows.filter(v=>v&&['PROVISIONING','DISPATCHING','SEND_COMMITTED','BOUND_SENT','SEND_UNKNOWN','RESULT_OBSERVED'].includes(v.state));
+   const entries=Object.entries(canonicalConsumer?.dispatchMap||{});
+   const unresolved=entries.filter(([,v])=>v&&['PROVISIONING','DISPATCHING','SEND_COMMITTED','BOUND_SENT','SEND_UNKNOWN','RESULT_OBSERVED'].includes(v.state));
    let upstream={};
    try{upstream=await mc('/api/v3/saas-broker/status')}
-   catch(error){upstream={state:'UNAVAILABLE',error:String(error.name||'ERROR')}}
+   catch(error){upstream={state:'UNAVAILABLE',error:String(error?.name||'ERROR')}}
+   // The complete pending set is required before any resumed external send.
+   // Never display the broker question, token, prompt or browser credentials.
+   let pending_requests=null;
+   if(upstream.pending_count===0)pending_requests=[];
+   else if(Number.isSafeInteger(upstream.pending_count)&&upstream.pending_count>0&&upstream.pending_count<=100){
+    try{
+     const response=await mc('/api/v3/saas-broker/pending');
+     if(Array.isArray(response.requests))pending_requests=response.requests.map(v=>({
+      request_id:v.request_id,status:v.status,claim_generation:v.claim_generation,
+      progress_state:v.progress_state,transport:v.transport,authority_effect:v.authority_effect,
+      has_receipt:!!v.receipt_digest,
+     }));
+    }catch{}
+   }
+   const unresolved_details=await Promise.all(unresolved.slice(0,4).map(async ([id,v])=>{
+    try{
+     const remote=await mc('/api/v3/saas-broker/requests/'+encodeURIComponent(id));
+     return {request_id:id,local_state:v.state,broker_status:remote.status,
+      progress_state:remote.progress_state,claim_generation:remote.claim_generation,
+      broker_request_id_match:remote.request_id===id,
+      remote_response_digest_present:!!remote.response_digest,
+      remote_receipt_digest_present:!!remote.receipt_digest,
+      authority_effect:remote.authority_effect};
+    }catch(error){return {request_id:id,local_state:v.state,broker_status:'UNKNOWN',error_class:String(error?.name||'ERROR')}}
+   }));
    return {consumer_state:canonicalConsumer?.status()?.state,
-    unresolved_count:unresolved.length,upstream_state:upstream.state,
-    upstream_pending:upstream.pending_count,authority_effect:'NONE'};
+    unresolved_count:unresolved.length,unresolved_details,
+    upstream_state:upstream.state,upstream_pending:upstream.pending_count,
+    upstream_channel_state:upstream.channel_state,
+    upstream_automatic_hop:upstream.automatic_hop,
+    upstream_transport:upstream.transport,
+    upstream_session_attestation_state:upstream.session_attestation_state,
+    upstream_mediator_ready:upstream.mediator?.state==='READY'&&upstream.mediator?.fresh===true,
+    pending_requests,authority_effect:'NONE'};
   };
   // Existing exact Mission Control receipts can be acknowledged locally
   // WITHOUT restarting the automatic sender or issuing new SaaS messages.
@@ -219,13 +250,18 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   };
   const safeResume=async()=>{
    const snapshot=await inspectSaaS();
-   if(snapshot.unresolved_count||snapshot.upstream_pending!==0||snapshot.upstream_state==='UNAVAILABLE'){
-    await showInfo('Relay SaaS: wymagana rekonsyliacja',
-     'Interaktywny ChatGPT SaaS pozostaje dostępny. Automatycznego relay nie uruchomiono. Oczekujące wiadomości wymagają dokładnych response/receipt digest.\n'+JSON.stringify(snapshot,null,2));
+   const decision=evaluateOperatorResume(snapshot);
+   if(!decision.allowed){
+    await showInfo('Relay SaaS: bez wysyłania — HOLD',
+     'Nie rozpoczęto przekazania SaaS. Odróżnij historyczne SEND_COMMITTED/CANCELLED od nowych żądań z wcześniejszym claim.\n'+
+     JSON.stringify({decision,snapshot},null,2));
     return;
    }
+   // A pristine, never-claimed pending request is work to process, not itself a
+   // reason to prohibit manual resume. The consumer still dispatches at most one
+   // candidate per tick and verifies exact identity, hashes and binding.
    canonicalConsumer?.resume('LOCAL_OPERATOR_MENU_EXACT_BOUNDED');
-   await showInfo('Relay SaaS','Operator wydał polecenie wznowienia. Uprawnienia misji i transport są odrębne.');
+   await showInfo('Relay SaaS','Operator uruchomił konsument tylko dla świeżych, nigdy nieprzejętych żądań. Wymagana odrębna atestacja SaaS; brak authority misji.');
   };
   const knownRepos=['ai_platform','swarm','HA2D','mosaic_lab_pro.py','glitchlab','hipotezy_nadawcze_LLM','chunk-chunk','sbom','SymulacjaKaskadySieciowej','writeups'];
   const openRepo=async name=>{
