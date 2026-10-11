@@ -2,6 +2,7 @@
 const {app,BaseWindow,WebContentsView,Menu,dialog}=require('electron');
 const fs=require('node:fs');const path=require('node:path');const {randomBytes}=require('node:crypto');
 const {Store}=require('./store.cjs');
+const {restoreDesktopPanel}=require('./desktop-entry.cjs');
 const {CanonicalConversationSaaSConsumer}=require('./canonical-conversation-consumer.cjs');
 const {projectInfo}=require('./conversation.cjs');
 const {EmbeddedBrowser}=require('./browser.cjs');const {createHttp}=require('./http.cjs');const {webPreferences}=require('./contract.cjs');
@@ -19,7 +20,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
  let win,views=[],store,canonicalConsumer,server,timer;let closing=false;let activeRightTab='panel';let selectRightTab=()=>{};
  const shutdown=()=>{if(closing)return;closing=true;clearInterval(timer);try{store?.shutdown()}catch{};server?.close();for(const view of views)if(!view.webContents.isDestroyed())view.webContents.close();try{store?.close()}catch{}};
  app.on('before-quit',shutdown);
- app.on('second-instance',()=>{if(win&&!win.isDestroyed()){win.show();win.focus()}});
+ app.on('second-instance',()=>{restoreDesktopPanel(win,selectRightTab)});
  app.whenReady().then(async()=>{
   const dir=app.getPath('userData');fs.mkdirSync(dir,{recursive:true});
   const keyFile=path.join(dir,'control.key');
@@ -112,7 +113,8 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
    {label:'Canonical SaaS consumer — Wznów',click:()=>canonicalConsumer?.resume('LOCAL_OPERATOR_MENU')},
    {label:'Legacy queue — RETIRED',click:async()=>{store.stop();await dialog.showMessageBox(win,{type:'info',message:'Legacy queue pozostaje wyłączona.',detail:'Canonical delivery używa CanonicalConversationSaaSConsumer. ThreadConsumer i AutoProjectConsumer nie zostaną wznowione.'})}},
    {label:'STOP SaaS consumer',click:()=>canonicalConsumer?.stop('LOCAL_OPERATOR_MENU')},
-   {label:'Otwórz projekt SaaS',click:()=>saas.webContents.loadURL(PROJECT).catch(()=>{})},
+   {label:'Przejdź do LPCL Panel (desktop)',click:()=>selectRightTab('panel')},
+   {label:'Otwórz projekt SaaS',click:()=>{selectRightTab('saas');saas.webContents.loadURL(PROJECT).catch(()=>{})}},
    {label:'Zakończ',click:()=>app.quit()}
   ]}]));
   let ticking=false;
