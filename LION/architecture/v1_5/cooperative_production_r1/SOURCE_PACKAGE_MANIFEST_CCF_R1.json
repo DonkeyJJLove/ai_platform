@@ -88,7 +88,7 @@
     },
     {
       "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
-      "sha256": "ed547fdc56de552032c6539ebc8beb225b18741e6e79cdde5932aad67a176a66"
+      "sha256": "1838e4217db725367d7c9a09400fc1326e6d7fdd1324bb1348ed59f8206bd4a2"
     },
     {
       "path": "cyber_lion/app_coordination/mission_cooperative_scaffold.py",
@@ -475,7 +475,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "cd44e3f27e5b84af382710c2e086be5efde3cf1a6af02712919cefb230793a00",
+  "package_digest": "64133c293705fccfb23a76a750f0600be4723743089651b70e5ff7b18e7cd55f",
   "purpose": "R10 exact Application Factory phase-zero native LOCAL model proposal with durable SEND_UNKNOWN, real request/response byte digest and shared-model ancestor; original single MC scheduler and 93-file deployment, no Docker or LPCL autoactivation. Requires separate source/authority review for new HTTP POST effect surface.",
   "schema": "lion.source-package-manifest/v1"
 }
