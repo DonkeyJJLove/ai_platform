@@ -1,0 +1,153 @@
+{
+  "authority_effect": "NONE",
+  "calendar_launch_date": "UNKNOWN_DO_NOT_INVENT",
+  "control": {
+    "docker": "Docker engine healthy, 15 running Dify stack containers, 32 LION workers unverified",
+    "lab_debian": "systemd ACTIVE, authenticated R11 grant verify PASS, unauthenticated 18765 HTTP401",
+    "lion_auth_lab": "mission control 8766 HTTP200, 32 total mission rows, 29 process specs, zero Application Factory process specs and drivers",
+    "native_cognitive_trajectories": 0,
+    "saas": "274 session bindings: EXPIRED=50, SUPERSEDED=224, current=0",
+    "windows_panel": "Windows-native 8780 and 8782 HTTP200, Electron window not independently proven"
+  },
+  "earliest_launch": "After exact PR445/446 integration, bounded broker/MC deployment, current LOCAL and SaaS bindings and deployed-head LPCL registration, then separate user launch.",
+  "evidence_class": "SOURCE_BOUND_TIME_SCOPED_NOT_LIVE_WATCH_OR_AUTHORITY",
+  "evidence_refs": [
+    "GITHUB:DonkeyJJLove/ai_platform:PR445:PR446:PR447",
+    "RUNTIME:LAB-DEBIAN:2026-10-10:CP_ACTIVE",
+    "RUNTIME:LION-AUTH-LAB:2026-10-10:MISSION_CONTROL_SQLITE_READONLY",
+    "RUNTIME:MOON_WINDOWS:2026-10-10:8780_8782_HEALTH",
+    "RUNTIME:MOON_WSL:2026-10-10:DOCKER_DIFY_15_CONTAINERS",
+    "TEST:LAB-DEBIAN:PR445_PRODUCTION_CODE_ISOLATED_SQLITE_PASS",
+    "SOURCE:LION/architecture/v1_5/application_factory_r1/PANEL_LPCL_1_2.txt"
+  ],
+  "gates": [
+    {
+      "id": "G01",
+      "name": "Panel 8780 and 8782 health",
+      "required_before_first_productive_launch": true,
+      "state": "PASS"
+    },
+    {
+      "id": "G02",
+      "name": "LAB-DEBIAN trusted control plane and R11 verifier",
+      "required_before_first_productive_launch": true,
+      "state": "PASS_SCOPE_BOUND"
+    },
+    {
+      "id": "G03",
+      "name": "PR445 exact signed authority production provision",
+      "required_before_first_productive_launch": true,
+      "state": "BLOCKED_PRODUCTION_ROOT"
+    },
+    {
+      "id": "G04",
+      "name": "PR445 current authority CI and admitted merge",
+      "required_before_first_productive_launch": true,
+      "state": "BLOCKED"
+    },
+    {
+      "id": "G05",
+      "name": "PR446 rebase, CI, new grant and admitted merge",
+      "required_before_first_productive_launch": true,
+      "state": "BLOCKED"
+    },
+    {
+      "id": "G06",
+      "name": "Current master broker update and MC deploy/readback",
+      "required_before_first_productive_launch": true,
+      "state": "BLOCKED"
+    },
+    {
+      "id": "G07",
+      "name": "Native LOCAL plus responded SaaS capability and binding",
+      "required_before_first_productive_launch": true,
+      "state": "BLOCKED"
+    },
+    {
+      "id": "G08",
+      "name": "Exact deployed-head Application Factory LPCL registration",
+      "required_before_first_productive_launch": true,
+      "state": "BLOCKED"
+    },
+    {
+      "id": "G09",
+      "name": "Operator exact LPCL launch",
+      "required_before_first_productive_launch": true,
+      "state": "WAITING_FOR_OPERATOR"
+    },
+    {
+      "id": "G10",
+      "name": "Material 32-worker readiness for subsequent BUILD/VERIFY",
+      "required_before_first_productive_launch": false,
+      "state": "UNKNOWN"
+    }
+  ],
+  "limitations": [
+    "Snapshot is not live currentness",
+    "Production DB requires root readback",
+    "PR447 observed CI binds earlier head, new commit requires new CI",
+    "Windows UI HTTP 200 does not establish Electron window",
+    "No 32-worker proof; historical DB counts do not prove live containers"
+  ],
+  "lpcl": {
+    "activated": false,
+    "deployed": false,
+    "full_32_fleet_required_before_first_launch": false,
+    "full_32_fleet_required_before_material_build": true,
+    "mission_id": "LION-APPLICATION-FACTORY-CROSS-MODEL-R1",
+    "ready_for_productive_launch": false,
+    "ready_for_source_preview": true,
+    "registered": false,
+    "source_compiler_5_phase_equivalence": "PASS_SOURCE_ONLY",
+    "source_pr446_tree": "4050af9f981bac00c8ba75610727435a98da5035"
+  },
+  "master": {
+    "head": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
+    "tree": "68dd5043e6ede09eb5c2c2f348c40205cf2f44b6"
+  },
+  "observed_at_utc": "2026-10-10T22:04:38Z",
+  "pr445_provisioning": {
+    "exact_staged_installer": "/var/lib/sentinelx/uploads/lion-r11-pr445-authority-production-provision-v1.py",
+    "exact_staged_installer_sha256": "911d35b6aff3253306ca83f79d0efbee0f0f72371a666a2782c5cd30c39509cd",
+    "original_installed_store_isolated_rehearsal": "PASS_1_BOOTSTRAP_1_LINEAGE_2_RECEIPTS_REPLAY_DENIED",
+    "production_effect": "NOT_EXECUTED",
+    "production_record_readback": "LAST_OPERATOR_0_0_CURRENT_UNKNOWN_UNTIL_ROOT_PREFLIGHT",
+    "root_preflight": "PENDING",
+    "signed_contract_count": 5,
+    "signed_policy_expiry_utc": "2026-10-12T20:23:44Z",
+    "transaction_digest": "558d8052eaeb15accbb6129e5ac3e779f86f5da98c40aa51c2006fa17bd8f8bf"
+  },
+  "prs": [
+    {
+      "base": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
+      "head": "7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "number": 445,
+      "observed_ci": "5 workflows SUCCESS; earlier merge-authority observation NO",
+      "state": "DRAFT_OPEN_UNMERGED"
+    },
+    {
+      "base": "7f5e1cb76f8ea6f9d23831e77a8f3f89bcefa8f1",
+      "head": "1cbe9a901186c3886ceb9a182c4a14d900f8b73f",
+      "number": 446,
+      "observed_ci": "3 workflows SUCCESS; earlier merge-authority observation NO",
+      "state": "DRAFT_OPEN_UNMERGED"
+    },
+    {
+      "base": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
+      "head_before_report_commit": "9a656d3bcc57d11aaff923fd09816fd927c74205",
+      "number": 447,
+      "observed_ci": "4 workflows SUCCESS; core currentness IN_PROGRESS",
+      "state": "DRAFT_OPEN_UNMERGED"
+    }
+  ],
+  "repository": "DonkeyJJLove/ai_platform",
+  "runtime_effect": "NONE",
+  "schema": "lion.r11-service-readiness-snapshot/v1",
+  "strict_invariants": [
+    "PR447_MERGE_BEFORE_PR445_CAN_STALE_SIGNED_PR445_BASE",
+    "GENERATION_NE_AUTHORITY",
+    "VERIFIER_APPROVAL_NE_PROVISIONING_APPROVAL",
+    "PR_MERGE_NE_DEPLOYMENT",
+    "LPCL_REGISTRATION_NE_OPERATOR_LAUNCH"
+  ]
+}

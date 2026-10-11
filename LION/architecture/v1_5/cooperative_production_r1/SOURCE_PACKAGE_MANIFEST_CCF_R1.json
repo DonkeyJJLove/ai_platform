@@ -300,7 +300,7 @@
     },
     {
       "path": "cyber_lion/tests/test_host_authority_separation.py",
-      "sha256": "563e0f7640a393a6d9a535a0d4d64327a96d111c1e46b07f85b1039b29e7d3d0"
+      "sha256": "b6fb34cc1a7a801ee007740627696b882918a36488f823441bff2e6e8a78f596"
     },
     {
       "path": "cyber_lion/tests/test_lpcl_panel_exact_source.py",
@@ -475,7 +475,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "cd44e3f27e5b84af382710c2e086be5efde3cf1a6af02712919cefb230793a00",
+  "package_digest": "b7a27d8f295063addc6f22a7b7a7922a059063c19af76ac0be0ff97c1ae2d92a",
   "purpose": "R10 exact Application Factory phase-zero native LOCAL model proposal with durable SEND_UNKNOWN, real request/response byte digest and shared-model ancestor; original single MC scheduler and 93-file deployment, no Docker or LPCL autoactivation. Requires separate source/authority review for new HTTP POST effect surface.",
   "schema": "lion.source-package-manifest/v1"
 }

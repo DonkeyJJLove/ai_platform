@@ -32,6 +32,10 @@ LOCAL REPOSITORY
 
 The global architecture is never copied into peers. Local repositories remain independently understandable while federation-wide claims route to `ai_platform`.
 
+## Service continuation and knowledge evolution
+
+The versioned [Service Continuation Ledger](SERVICE_CONTINUATION_LEDGER.md) is a formal input to architecture knowledge and operator handoff. The canonical owner is the pure service_continuation_ledger contract; the versioned instance is SERVICE_CONTINUATION_LEDGER_R1.json. Successors append typed events, reconcile task dependencies, reacquire currentness and enter standard formalization/Git gates. The ledger is no new scheduler, runtime authority or automatic mission activator. A future Mission Control read-only projection requires its own implementation and admission.
+
 ## Evolution invariant
 
 ```text

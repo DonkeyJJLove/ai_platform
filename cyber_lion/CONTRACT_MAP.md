@@ -340,3 +340,7 @@ CURRENT local contract
 ## Semantic Cloud boundary
 
 MissionIntent, QueryPlan, RagContextEnvelope, SemanticScaffoldIR and SemanticRelevance are non-effectful representation contracts. Semantic relevance cannot mint authority. RelevanceProjection may request existing capabilities only through explicit Gap/CapabilityNeed binding; material effects continue through the existing Action/PDP/runtime path.
+
+## Service Continuation Ledger — cross-turn work provenance
+
+The canonical owner is [service_continuation_ledger.py](contracts/service_continuation_ledger.py). The versioned service instance, strict JSON Schema and architecture rationale reside in LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json, SERVICE_CONTINUATION_LEDGER.schema.json and SERVICE_CONTINUATION_LEDGER.md. The pure interface provides read-only task projection and typed, hash-chained append proposals; it does not replace mission_control events, authority provisioning, the Actions control ledger or the startup journal. A model cannot turn a service task into admission; source presence does not prove runtime delivery. CI, authority, deployment and LPCL remain separate.

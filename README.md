@@ -64,6 +64,12 @@ Pełna nawigacja: [`LION/architecture/v1_5/README.md`](LION/architecture/v1_5/RE
 
 ---
 
+## Service Continuation Ledger — dziennik serwisowy LION
+
+Bieżący, **wersjonowany rejestr nierozwiązanych zobowiązań i pierwszych działań** znajduje się w [LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json](LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json). Kontrakt, reguły ewolucji przez append-only events, walidator i właściwy owner opisane są w [Service Continuation Ledger](LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER.md).
+
+Dziennik łączy zadania z zależnościami, evidence refs, granicami admission i readbackiem, ale nie jest schedulerem, nie tworzy authority i nie zastępuje Mission Control. Status zapisany w repo wymaga świeżej obserwacji Git/CI/runtime przed efektem. Wstępny rejestr R11 obejmuje provisioning PR #445, PR #446, integrację, deployment i późniejszy jawny operator launch LPCL.
+
 ## Homeostaza dokumentacji
 
 Dokumentacja LION jest elementem architektury i ma własny cykl currentness:
@@ -240,3 +246,9 @@ LION now has a candidate semantic-organization contract chain from MissionIntent
 ## Edge Yoke R6 — source candidate
 
 [Repository-native cooperative pilot and deny-only observer](docs/architecture/edge-yoke/README.md). Code lives in cyber_lion/tools, runtime keys and observations outside Git. This increment is a tested source candidate, not a deployed successor, new authority source or automatic mission launcher.
+
+Dalszy stan integracji i termin rzeczywistej gotowości LPCL opisuje [raport R11](LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261010.md) i jego [snapshot](LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261010.json).
+
+**Post-provisioning update:** [R11 readiness, 11 October](LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261011.md) supersedes the preceding 10 October snapshot; PR445 has independent authority_current=YES but Git merge and LPCL activation remain incomplete.
+
+Updated service status: [LION readiness after PR #445 merge](LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_POST_PR445_MERGE_20261011.md). Source PR #446 has a new exact currentness-bound HEAD; LPCL remains unregistered.
