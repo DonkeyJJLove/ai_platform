@@ -84,6 +84,29 @@ class CognitiveContinuityTests(unittest.TestCase):
         self.assertEqual(provider_requirements(self.contracts("LOCAL_MODEL_INFERENCE", "SAAS_DELEGATION")), ("LOCAL", "SAAS"))
         self.assertEqual(provider_requirements(self.contracts("UNRELATED_CAPABILITY")), ())
 
+    def test_cognitive_reconnaissance_requires_both_real_provider_paths(self):
+        cognitive = [{
+            "mission_id": "ANOTHER-MISSION",
+            "phase_id": "R",
+            "execution_class": "COGNITIVE",
+            "capability_classes": ["CONTROL_PLANE_RECONNAISSANCE"],
+            "evidence_requirements": ["INTELLIGENCE_BUNDLE"],
+        }]
+        self.assertEqual(provider_requirements(cognitive), ("LOCAL", "SAAS"))
+        self.assertEqual(
+            provider_requirements([
+                {**cognitive[0], "execution_class": "OBSERVE"}
+            ]),
+            (),
+        )
+        self.assertEqual(
+            provider_requirements([
+                {"execution_class": "COGNITIVE",
+                 "capability_classes": ["UNRELATED_CAPABILITY"]}
+            ]),
+            (),
+        )
+
     def test_successor_checkpoint_is_bounded_and_does_not_inherit_bridge_or_session(self):
         messages = [
             {

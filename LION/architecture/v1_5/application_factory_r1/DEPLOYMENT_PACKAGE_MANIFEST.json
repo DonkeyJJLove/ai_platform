@@ -60,7 +60,7 @@
       "target": "cyber_lion/contracts/operator_intervention.py"
     },
     {
-      "sha256": "2fdb1d0443bca3cd2f216338aa5d8f09febe9d6c9f35e562c24b3799cd36ecb6",
+      "sha256": "defc4d21e3e4cf1b598900284d32d5c6ee895f192883de2cd98cc8cb8812f3a8",
       "source": "cyber_lion/contracts/phase_execution_contract.py",
       "target": "cyber_lion/contracts/phase_execution_contract.py"
     },
