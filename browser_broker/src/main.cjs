@@ -201,14 +201,19 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
    // Never display the broker question, token, prompt or browser credentials.
    let pending_requests=null;
    if(upstream.pending_count===0)pending_requests=[];
-   else if(Number.isSafeInteger(upstream.pending_count)&&upstream.pending_count>0&&upstream.pending_count<=100){
+   else if(Number.isSafeInteger(upstream.pending_count)&&upstream.pending_count>0&&upstream.pending_count<=16){
     try{
      const response=await mc('/api/v3/saas-broker/pending');
-     if(Array.isArray(response.requests))pending_requests=response.requests.map(v=>({
-      request_id:v.request_id,status:v.status,claim_generation:v.claim_generation,
-      progress_state:v.progress_state,transport:v.transport,authority_effect:v.authority_effect,
-      has_receipt:!!v.receipt_digest,
-     }));
+     if(Array.isArray(response.requests)&&response.requests.length<=16)
+      pending_requests=await Promise.all(response.requests.map(async v=>({
+       request_id:v.request_id,status:v.status,claim_generation:v.claim_generation,
+       progress_state:v.progress_state,transport:v.transport,authority_effect:v.authority_effect,
+       claim_expires_at:v.claim_expires_at||null,
+       // Never expose ingress input, browser prompt, question, or credentials.
+       transport_claim_prepared:v.status==='CLAIMED'&&v.claim_generation===1
+        &&(await canonicalConsumer?.provePreparedTransportClaim(v))===true,
+       has_receipt:!!v.receipt_digest,
+      })));
     }catch{}
    }
    const unresolved_details=await Promise.all(unresolved.slice(0,4).map(async ([id,v])=>{

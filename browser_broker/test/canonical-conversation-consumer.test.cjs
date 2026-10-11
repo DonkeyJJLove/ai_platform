@@ -2,7 +2,7 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const {createHash}=require('node:crypto');
-const {CanonicalConversationSaaSConsumer,evaluateOperatorResume}=require('../src/canonical-conversation-consumer.cjs');
+const {CanonicalConversationSaaSConsumer,evaluateOperatorResume,preparedTransportClaim}=require('../src/canonical-conversation-consumer.cjs');
 
 class FakeStore{
  constructor(){this.values=new Map()}
@@ -54,6 +54,9 @@ function fixture({bridges=[]}={}){
  const turn={
   turn_id:'turn_1',command_id:'MC-'+candidate.request_id,thread_id:null,session_id:'CHATGPT-SAAS',status:'PENDING',
   parent_event_id:'saas_request:'+candidate.request_id,input:turnInput(),request_hash:'e'.repeat(64),
+  metadata:{source:'LION_MISSION_CONTROL',transport:'CHATGPT_SENTINELX_MCP',
+   broker_request_id:candidate.request_id,claim_generation:1,
+   browser_automation:'DISABLED_BY_POLICY',authority_effect:'NONE'},
  };
  const panel=async(path,method='GET',body)=>{
   calls.panel.push([path,method,body]);
@@ -473,4 +476,109 @@ test('reconciled request never produces a second external browser send',async()=
  await f.consumer.tick();
  assert.equal(f.calls.browser.length,0);
  assert.equal(f.consumer.dispatchMap[candidate.request_id].state,'RECONCILED');
+});
+
+test('first SentinelX broker claim is ingress preparation, not an external browser send',async()=>{
+ const f=fixture(),original=f.consumer.mc;
+ const prepared=async path=>({
+  ...await original(path),
+  status:'CLAIMED',claim_generation:1,
+  claim_expires_at:new Date(120000).toISOString(),
+ });
+ f.consumer.mc=prepared;
+ const broker=await prepared('/api/v3/saas-broker/requests/'+candidate.request_id);
+ assert.equal(preparedTransportClaim(broker,f.turn,1000),true);
+ assert.equal(await f.consumer.provePreparedTransportClaim(broker),true);
+ const snapshot={...cleanResume,upstream_pending:1,pending_requests:[{
+  request_id:broker.request_id,status:'CLAIMED',claim_generation:1,
+  transport:'CHATGPT_SENTINELX_MCP',authority_effect:'NONE',
+  claim_expires_at:broker.claim_expires_at,transport_claim_prepared:true,
+ }]};
+ assert.deepEqual(evaluateOperatorResume(snapshot,1000),{allowed:true,blockers:[],authority_effect:'NONE'});
+ f.consumer.resume('operator-exact-broker-claim');
+ await f.consumer.tick();
+ assert.equal(f.calls.browser.filter(x=>x[0]==='create').length,1);
+ assert.equal(f.calls.bridgeBodies.length,1);
+ assert.equal(f.consumer.dispatchMap[candidate.request_id].state,'BOUND_SENT');
+ await f.consumer.tick();
+ assert.equal(f.calls.browser.filter(x=>x[0]==='create').length,1);
+});
+
+test('a claimed request without exact ingress proof remains HOLD',async()=>{
+ const f=fixture(),base=f.consumer.mc;
+ f.consumer.mc=async path=>({...await base(path),status:'CLAIMED',
+  claim_generation:1,claim_expires_at:new Date(120000).toISOString()});
+ f.turn.input=f.turn.input.replace('correlation_id=corr-1','correlation_id=corr-foreign');
+ const broker=await f.consumer.mc('/api/v3/saas-broker/requests/'+candidate.request_id);
+ assert.equal(await f.consumer.provePreparedTransportClaim(broker),false);
+ const snapshot={...cleanResume,upstream_pending:1,pending_requests:[{
+  request_id:broker.request_id,status:'CLAIMED',claim_generation:1,
+  transport:'CHATGPT_SENTINELX_MCP',authority_effect:'NONE',
+  claim_expires_at:broker.claim_expires_at,transport_claim_prepared:false,
+ }]};
+ assert.equal(evaluateOperatorResume(snapshot,1000).allowed,false);
+ f.consumer.resume('negative-test');
+ await f.consumer.tick();
+ assert.equal(f.calls.browser.length,0);
+ assert.equal(f.consumer.status().state,'DEGRADED');
+});
+
+test('expired claim, second claim and overdue request cannot trigger SaaS UI',async()=>{
+ const f=fixture(),base=f.consumer.mc;
+ const originals=await base('/api/v3/saas-broker/requests/'+candidate.request_id);
+ for(const bad of [
+  {status:'CLAIMED',claim_generation:1,claim_expires_at:new Date(14999).toISOString()},
+  {status:'CLAIMED',claim_generation:2,claim_expires_at:new Date(120000).toISOString()},
+  {status:'WAITING_OPERATOR_OVERDUE',claim_generation:1,claim_expires_at:null},
+ ]){
+  const broker={...originals,...bad};
+  assert.equal(preparedTransportClaim(broker,f.turn,1000),false);
+  assert.equal(evaluateOperatorResume({...cleanResume,upstream_pending:1,pending_requests:[{
+   request_id:broker.request_id,status:broker.status,claim_generation:broker.claim_generation,
+   transport:broker.transport,authority_effect:'NONE',claim_expires_at:broker.claim_expires_at,
+   transport_claim_prepared:true,
+  }]},1000).allowed,false);
+ }
+ f.consumer.mc=async path=>({...await base(path),status:'CLAIMED',claim_generation:2,claim_expires_at:new Date(120000).toISOString()});
+ f.consumer.resume('negative-test');
+ await f.consumer.tick();
+ assert.equal(f.calls.browser.length,0);
+ assert.equal(f.store.setting('canonical_consumer_enabled'),'false');
+ assert.equal(f.consumer.lastDecision.stage,'PRIOR_CLAIM_OR_NONFRESH_BROKER_REQUEST');
+});
+
+test('transport claim proof is revoked by an existing local SEND_COMMITTED record',async()=>{
+ const f=fixture(),original=f.consumer.mc;
+ f.consumer.mc=async path=>({...await original(path),status:'CLAIMED',
+  claim_generation:1,claim_expires_at:new Date(120000).toISOString()});
+ const broker=await f.consumer.mc('/api/v3/saas-broker/requests/'+candidate.request_id);
+ assert.equal(await f.consumer.provePreparedTransportClaim(broker),true);
+ f.consumer.dispatchMap[candidate.request_id]={state:'SEND_COMMITTED',sent_at:10};
+ assert.equal(await f.consumer.provePreparedTransportClaim(broker),false);
+ f.consumer.resume('reconciliation-only');
+ await f.consumer.tick();
+ assert.equal(f.calls.browser.length,0);
+ assert.equal(f.consumer.dispatchMap[candidate.request_id].state,'SEND_COMMITTED');
+ assert.equal(f.calls.browser.length,0);
+});
+
+test('transport claim ingress owner metadata must be exact and non-browser',async()=>{
+ const f=fixture(),orig=f.consumer.mc;
+ f.consumer.mc=async path=>({...await orig(path),status:'CLAIMED',
+  claim_generation:1,claim_expires_at:new Date(120000).toISOString()});
+ const broker=await f.consumer.mc('/api/v3/saas-broker/requests/'+candidate.request_id);
+ assert.equal(preparedTransportClaim(broker,f.turn,1000),true);
+ for(const bad of [
+  {claim_generation:2},
+  {source:'FOREIGN'},
+  {broker_request_id:'saas-foreign'},
+  {browser_automation:'BROWSER_SENT'},
+  {authority_effect:'ALLOW'},
+  {transport:'CHATGPT_OPENAI_SECURE_MCP_TUNNEL'},
+ ]){
+  const before=f.turn.metadata;f.turn.metadata={...before,...bad};
+  assert.equal(preparedTransportClaim(broker,f.turn,1000),false);
+  assert.equal(await f.consumer.provePreparedTransportClaim(broker),false);
+  f.turn.metadata=before;
+ }
 });

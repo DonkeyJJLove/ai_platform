@@ -1,7 +1,20 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { BrowserlessSecureMcpRelay, makeTurn, claimUsable } = require('../src/secure-mcp-relay');
+// This source slice has no deployed Windows secret/http modules. Isolate
+// the original relay functions with non-networking test doubles only.
+const Module = require('node:module');
+const originalLoad = Module._load;
+Module._load = function(request, parent, isMain) {
+  if(typeof parent?.filename==='string'&&/[\\/]secure-mcp-relay\.js$/.test(parent.filename)){
+    if(request==='./http-client')return {jsonRequest:()=>{throw Error('TEST_NETWORK_DENIED')}};
+    if(request==='./secrets')return {readProtectedSecret:()=>{throw Error('TEST_SECRET_DENIED')}};
+  }
+  return originalLoad.apply(this,arguments);
+};
+let relayExports;
+try {relayExports=require('../src/secure-mcp-relay')} finally{Module._load=originalLoad}
+const { BrowserlessSecureMcpRelay, makeTurn, claimUsable } = relayExports;
 
 test('SentinelX relay creates authority-NONE durable turn with causal lineage', () => {
   const rid = 'saas-686efeb1627247548d52ec4a2576f1fa';
@@ -109,4 +122,90 @@ test('attachment turn fails closed when canonical candidate is missing', async (
   const out = await relay.recordCanonicalDispatch(rec, turn);
   assert.deepEqual(out, { required: true, recorded: false });
   assert.equal(rec.dispatch_evidence_error, 'CANONICAL_ATTACHMENT_CANDIDATE_REQUIRED');
+});
+
+const renewedFixture=()=>{
+  const rid='saas-late-response-r11', hash='a'.repeat(64), questionDigest='b'.repeat(64);
+  const turn={turn_id:'turn_late_r11',command_id:'MC-'+rid,request_hash:hash,
+    status:'COMPLETED',input:'LION Mission Control SaaS request',
+    response:{text:'SAAS_R11_LATE_RESPONSE_OK'}};
+  const rec={schema:'lion.node-secure-mcp-relay.state/v1',request_id:rid,
+    question_digest:questionDigest,turn_id:turn.turn_id,turn_command_id:turn.command_id,
+    turn_request_hash:hash,broker_transport:'CHATGPT_SENTINELX_MCP',
+    browser_automation:'DISABLED_BY_POLICY',claim_generation:1,
+    state:'STALE_TURN_GENERATION',reconciliation_state:'CURRENT_BROKER_CLAIM_REQUIRED'};
+  const brokerState={request_id:rid,status:'WAITING_OPERATOR_OVERDUE',claim_generation:1,
+    question_digest:questionDigest,authority_effect:'NONE'};
+  const relay=Object.create(BrowserlessSecureMcpRelay.prototype);
+  relay.claims=new Map();relay.saved=[];
+  relay.save=value=>{relay.saved.push(JSON.parse(JSON.stringify(value)));return value};
+  relay.ingress=async route=>{assert.equal(route,'/v1/turns/'+turn.turn_id);return {turn}};
+  relay.recordCanonicalDispatch=async()=>({required:false,recorded:true});
+  const calls=[];
+  relay.broker=async(route,options={})=>{
+    calls.push([route,options.method||'GET']);
+    if(options.method==='POST'&&route.endsWith('/claim')){
+      return {request_id:rid,question_digest:questionDigest,claim_generation:2,
+        claim_expires_at:new Date(Date.now()+180000).toISOString(),
+        response_token:'response-token-2',authority_effect:'NONE'};
+    }
+    if(options.method==='POST'&&route.endsWith('/respond')){
+      assert.equal(options.body.claim_generation,2);
+      assert.equal(options.body.answer,'SAAS_R11_LATE_RESPONSE_OK');
+      return {receipt:{receipt_digest:'c'.repeat(64)},authority_effect:'NONE'};
+    }
+    if((options.method||'GET')==='GET')return brokerState;
+    throw Error('unexpected broker operation');
+  };
+  return {relay,rec,turn,brokerState,calls,rid};
+};
+
+test('expired transport claim renews only a completed exact ingress turn, without another model send',async()=>{
+  const f=renewedFixture();
+  await f.relay.reconcile(f.rec);
+  assert.equal(f.rec.state,'RECONCILED');
+  assert.equal(f.rec.claim_generation,2);
+  assert.equal(f.rec.broker_receipt_digest,'c'.repeat(64));
+  assert.equal(f.calls.filter(x=>x[1]==='POST'&&x[0].endsWith('/claim')).length,1);
+  assert.equal(f.calls.filter(x=>x[1]==='POST'&&x[0].endsWith('/respond')).length,1);
+  assert.equal(f.rec.broker_respond_attempted_generation,2);
+  assert.equal(f.rec.reclaim_intent_generation,1);
+});
+
+test('reclaim requires exact broker digest and claim generation',async()=>{
+  for(const mutation of [
+    f=>{f.brokerState.question_digest='e'.repeat(64)},
+    f=>{f.brokerState.claim_generation=3},
+    f=>{f.brokerState.status='CLAIMED'},
+  ]){
+    const f=renewedFixture();mutation(f);
+    await f.relay.reconcile(f.rec);
+    assert.equal(f.rec.state,'STALE_TURN_GENERATION');
+    assert.equal(f.calls.filter(x=>x[1]==='POST').length,0);
+  }
+});
+
+test('lost reclaim response never triggers a second blind claim',async()=>{
+  const f=renewedFixture(),base=f.relay.broker;
+  let count=0;
+  f.relay.broker=async(route,options={})=>{
+    if(options.method==='POST'&&route.endsWith('/claim')){count++;throw Error('claim outcome unknown')}
+    return base(route,options);
+  };
+  await f.relay.reconcile(f.rec);
+  assert.equal(count,1);
+  assert.equal(f.rec.state,'RECLAIM_UNKNOWN_RECONCILE_REQUIRED');
+  assert.equal(f.rec.reconciliation_state,'NO_BLIND_RECLAIM_RETRY');
+  await f.relay.reconcile(f.rec);
+  assert.equal(count,1);
+  assert.equal(f.rec.reclaim_intent_generation,1);
+});
+
+test('unknown prior broker response does not re-claim or re-send',async()=>{
+  const f=renewedFixture();
+  f.rec.state='BROKER_RESPOND_UNKNOWN_RECONCILE_REQUIRED';
+  f.rec.reconciliation_state='RECONCILE_BEFORE_RETRY';
+  await f.relay.reconcile(f.rec);
+  assert.equal(f.calls.filter(x=>x[1]==='POST').length,0);
+  assert.equal(f.rec.reconciliation_state,'RECONCILE_BEFORE_RETRY');
 });
