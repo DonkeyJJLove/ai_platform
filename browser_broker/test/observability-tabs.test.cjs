@@ -82,7 +82,9 @@ test('Local GPT has operator-initiated send and provenance, never tools or autos
 test('expanded menu implements actual navigation and guarded SaaS relay',()=>{
  for(const group of ['Control Plane','Intelligence','Diagnostyka','Federacja','Pomoc'])
   assert(main.includes("label:'"+group+"'"));
- assert(main.includes("snapshot.unresolved_count||snapshot.upstream_pending!==0"));
+ assert(main.includes('const decision=evaluateOperatorResume(snapshot)'));
+ assert(main.includes('if(!decision.allowed)'));
+ assert(!main.includes("snapshot.unresolved_count||snapshot.upstream_pending!==0"));
  assert(main.includes("canonicalConsumer?.resume('LOCAL_OPERATOR_MENU_EXACT_BOUNDED')"));
  assert(main.includes('Rozlicz istniejące receipty SaaS (bez wysyłania)'));
  assert(main.includes('canonicalConsumer.reconcileReceiptsOnly({limit:32})'));
