@@ -41,10 +41,10 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertEqual(self.ledger["baseline"]["source_head"],
                          "222d52e57ebf17b950322e2a097f9ed94271cf9c")
 
-    def test_published_revision_replays_eighty_four_source_bound_events(self):
+    def test_published_revision_replays_eighty_seven_source_bound_events(self):
         states = validate_ledger(self.published)
-        self.assertEqual(self.published["revision"], 85)
-        self.assertEqual(len(self.published["events"]), 84)
+        self.assertEqual(self.published["revision"], 88)
+        self.assertEqual(len(self.published["events"]), 87)
         self.assertEqual(states["SVC-0001"], "COMPLETE")
         self.assertEqual(states["SVC-0002"], "COMPLETE")
         self.assertEqual(states["SVC-0016"], "IN_PROGRESS")
@@ -60,7 +60,7 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertEqual(states["SVC-0012"], "SUPERSEDED")
         self.assertEqual(states["SVC-0013"], "SUPERSEDED")
         self.assertEqual(states["SVC-0014"], "SUPERSEDED")
-        self.assertEqual(states["SVC-0024"], "READY")
+        self.assertEqual(states["SVC-0024"], "COMPLETE")
         self.assertTrue(all(states[f"SVC-{i:04d}"] == "BLOCKED" for i in range(25, 30)))
         self.assertEqual(states["SVC-0018"], "COMPLETE")
         self.assertEqual(states["SVC-0019"], "COMPLETE")
@@ -70,7 +70,7 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertEqual(states["SVC-0023"], "COMPLETE")
         self.assertEqual(states["SVC-0017"], "COMPLETE")
         self.assertNotEqual(self.published["event_chain_head"], GENESIS)
-        self.assertEqual(sum(x == "COMPLETE" for x in states.values()), 18)
+        self.assertEqual(sum(x == "COMPLETE" for x in states.values()), 19)
 
     def test_pr446_successor_preserves_history_and_denies_unbound_merge(self):
         historical = deepcopy(self.published)
@@ -81,7 +81,7 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         assert_append_only(historical, self.published)
         states = validate_ledger(self.published)
         self.assertTrue(all(states[x] == "SUPERSEDED" for x in ("SVC-0012","SVC-0013","SVC-0014")))
-        self.assertEqual(states["SVC-0024"], "READY")
+        self.assertEqual(states["SVC-0024"], "COMPLETE")
         self.assertTrue(all(states[f"SVC-{x:04d}"] == "BLOCKED" for x in range(25,30)))
         registered = {ev["task_id"]:ev["task"] for ev in self.published["events"] if ev["kind"]=="REGISTER_TASK"}
         self.assertEqual(registered["SVC-0026"]["dependencies"], ["SVC-0025"])
@@ -93,6 +93,26 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
             propose_event(self.published,kind="TRANSITION",task_id="SVC-0026",
                           actor="assistant",observed_at="2026-10-12T18:00:00Z",
                           evidence_refs=["CI:green-only"],to_state="READY")
+
+    def test_svc0024_scoped_read_only_closure_preserves_unknown_authority(self):
+        historical = deepcopy(self.published)
+        historical["events"] = historical["events"][:84]
+        historical["revision"] = 85
+        historical["event_chain_head"] = historical["events"][-1]["digest"]
+        self.assertEqual(validate_ledger(historical)["SVC-0024"], "READY")
+        assert_append_only(historical, self.published)
+        latest = validate_ledger(self.published)
+        self.assertEqual(latest["SVC-0024"], "COMPLETE")
+        self.assertTrue(all(latest[f"SVC-{k:04d}"] == "BLOCKED" for k in range(25,30)))
+        self.assertEqual(sum(state == "COMPLETE" for state in latest.values()), 19)
+        events = self.published["events"][84:]
+        self.assertEqual([e["to_state"] for e in events], ["IN_PROGRESS", "VERIFIED", "COMPLETE"])
+        self.assertTrue(all(e["task_id"] == "SVC-0024" for e in events))
+        self.assertTrue(all(any(x.startswith("UNKNOWN:PR446_CURRENT_PRODUCTION_AUTHORITY_STORE") for x in e["evidence_refs"]) for e in events))
+        self.assertFalse(any(x.startswith("OPERATOR:") for e in events for x in e["evidence_refs"]))
+        task = next(e["task"] for e in self.published["events"] if e["kind"] == "REGISTER_TASK" and e["task_id"] == "SVC-0025")
+        self.assertEqual(task["effect_class"], "AUTHORITY_WRITE")
+        self.assertEqual(task["authorization_gate"], "SEPARATE_EXACT_OPERATOR_APPROVAL")
 
     def test_next_ready_is_dependency_reduced_no_scheduler(self):
         ready = next_ready_tasks(self.ledger)

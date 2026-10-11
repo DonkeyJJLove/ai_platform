@@ -22,7 +22,7 @@
     "source_head": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
     "source_tree": "68dd5043e6ede09eb5c2c2f348c40205cf2f44b6"
   },
-  "event_chain_head": "2e6b22a2ba7ab6bf4bb267de05b36bb821f3e9d725cdd5ab6d2c0d52119fe451",
+  "event_chain_head": "3589a74be3199005dacc00bd6285037c6c8e3821922ecd97ba265a683e14d54d",
   "events": [
     {
       "actor": "chatgpt-source-proposal-non-authorizing",
@@ -1602,12 +1602,69 @@
         "title": "Application Factory exact LPCL operator START"
       },
       "task_id": "SVC-0029"
+    },
+    {
+      "actor": "r11-scoped-readback",
+      "digest": "69659849c0240ad88685fffe74228f901515cbff82ecf979d92f0717443443b2",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:HEAD_d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "CI:GITHUB:PR446:d8141ce421952bb0b352d873b706e183684f20f9:FIVE_OF_FIVE_SUCCESS",
+        "GITHUB:DonkeyJJLove/ai_platform:PR447:HEAD_28fff99cdef6f0b58b939aeb2c2561c670c4b415:CI_FIVE_SUCCESS",
+        "CHECKPOINT:MOON:LION_R11_SVC0024_READONLY_AUTHORITY_CURRENTNESS_20261011.json@sha256:83e5b7deb64a67ceb2938c2b8833c8047f5e2b45d7468a5bac9acd05bcb5bb8f",
+        "RUNTIME:LION-AUTH-LAB:SAAS_BROKER_UNBOUND_MEDIATOR_READY_SESSION_EXPIRED_READ_ONLY",
+        "UNKNOWN:PR446_CURRENT_PRODUCTION_AUTHORITY_STORE_NOT_REACQUIRED_NO_AUTHORIZATION"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T07:59:41.386Z",
+      "previous_digest": "2e6b22a2ba7ab6bf4bb267de05b36bb821f3e9d725cdd5ab6d2c0d52119fe451",
+      "sequence": 85,
+      "task_id": "SVC-0024",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "r11-scoped-readback",
+      "digest": "956aac404ae783ea1547784279f4bd45582cabe8b7321f7cfaa235b5e189daa3",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:HEAD_d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "CI:GITHUB:PR446:d8141ce421952bb0b352d873b706e183684f20f9:FIVE_OF_FIVE_SUCCESS",
+        "GITHUB:DonkeyJJLove/ai_platform:PR447:HEAD_28fff99cdef6f0b58b939aeb2c2561c670c4b415:CI_FIVE_SUCCESS",
+        "CHECKPOINT:MOON:LION_R11_SVC0024_READONLY_AUTHORITY_CURRENTNESS_20261011.json@sha256:83e5b7deb64a67ceb2938c2b8833c8047f5e2b45d7468a5bac9acd05bcb5bb8f",
+        "RUNTIME:LION-AUTH-LAB:SAAS_BROKER_UNBOUND_MEDIATOR_READY_SESSION_EXPIRED_READ_ONLY",
+        "UNKNOWN:PR446_CURRENT_PRODUCTION_AUTHORITY_STORE_NOT_REACQUIRED_NO_AUTHORIZATION"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T07:59:41.387Z",
+      "previous_digest": "69659849c0240ad88685fffe74228f901515cbff82ecf979d92f0717443443b2",
+      "sequence": 86,
+      "task_id": "SVC-0024",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "r11-scoped-readback",
+      "digest": "3589a74be3199005dacc00bd6285037c6c8e3821922ecd97ba265a683e14d54d",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:HEAD_d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "CI:GITHUB:PR446:d8141ce421952bb0b352d873b706e183684f20f9:FIVE_OF_FIVE_SUCCESS",
+        "GITHUB:DonkeyJJLove/ai_platform:PR447:HEAD_28fff99cdef6f0b58b939aeb2c2561c670c4b415:CI_FIVE_SUCCESS",
+        "CHECKPOINT:MOON:LION_R11_SVC0024_READONLY_AUTHORITY_CURRENTNESS_20261011.json@sha256:83e5b7deb64a67ceb2938c2b8833c8047f5e2b45d7468a5bac9acd05bcb5bb8f",
+        "RUNTIME:LION-AUTH-LAB:SAAS_BROKER_UNBOUND_MEDIATOR_READY_SESSION_EXPIRED_READ_ONLY",
+        "UNKNOWN:PR446_CURRENT_PRODUCTION_AUTHORITY_STORE_NOT_REACQUIRED_NO_AUTHORIZATION"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T07:59:41.388Z",
+      "previous_digest": "956aac404ae783ea1547784279f4bd45582cabe8b7321f7cfaa235b5e189daa3",
+      "sequence": 87,
+      "task_id": "SVC-0024",
+      "to_state": "COMPLETE"
     }
   ],
   "ledger_id": "LION-R11-SERVICE-CONTINUATION-20261010",
   "owner_repository": "DonkeyJJLove/ai_platform",
   "recorded_at": "2026-10-10T21:31:34Z",
-  "revision": 85,
+  "revision": 88,
   "runtime_effect": "NONE",
   "schema": "lion.service-continuation-ledger/v1",
   "tasks": [

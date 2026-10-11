@@ -121,3 +121,9 @@ Exact next step: resolve the blocked GitHub merge via originally approved govern
 Nine append-only source events supersede SVC-0012, SVC-0013 and SVC-0014, whose immutable PR446 identities have become stale. Their original records are retained. Six successor tasks SVC-0024 through SVC-0029 explicitly separate read-only currentness, new authority admission, exact PR merge, broker deployment, 93-file Mission Control installation and exact human LPCL START.
 
 PR446 base d367e47cf4f72e450cc212908b2cdfed14ceb805 and head d8141ce421952bb0b352d873b706e183684f20f9 were independently read at source-candidate time; they are not future authority. Only SVC-0024 is READY for observation; all five effectful successors remain BLOCKED. Neither an expired/consumed grant nor a denied merge tool permits another transport or automatic mission activation. Runtime readiness is not implied by this ledger.
+
+## R1 revision 88 — read-only SVC-0024 observation closed without new authority
+
+Three append-only transitions advance only SVC-0024 through IN_PROGRESS, VERIFIED and COMPLETE. The cited MOON evidence records exact PR446 Git/CI identity, historical consumed-grant receipt, and fresh broker state UNBOUND/EXPIRED. Live production authority-store currentness remains explicitly UNKNOWN. This completion proves a scoped classification and negative effect boundary, not a new authorization.
+
+SVC-0025 through SVC-0029 remain BLOCKED. They require a separately admitted current authority grant, an admitted GitHub merge, independently authorized broker/Mission Control deployment and exact operator LPCL launch. Old consumed authority is not reusable. The original 84 historical events are byte-preserved in the new event-array prefix.
