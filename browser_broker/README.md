@@ -50,6 +50,44 @@ is owned by the main process. Remote web pages receive no IPC bridge. Authentica
 flows needing popups may fail because popups are denied in this initial candidate;
 this is an explicit feasibility question, not permission to bypass the provider.
 
+## Canonical native Desktop entrypoint (source candidate)
+
+**Panel test entrypoint is the Windows desktop shortcut to this Electron
+package, never the browser URL for an individual localhost service.**
+The Electron shell always presents Mission Control in the left half and a
+native tab bar with LPCL Panel / ChatGPT SaaS in the right half.
+The 8780, 8766, 8791 and 8793 addresses are internal service transports
+only; a healthy HTTP endpoint is not a successful desktop UI test.
+
+Install-LION-Desktop-Link.ps1 is an explicit, bounded installer for a
+current-user shortcut named **LION - LPCL Panel**. Run it *inside the exact
+Windows browser_broker installation you intend to test* after an authorized
+deployment. Invoking the script with no flags is preview/readback only.
+Use -Apply to create the shortcut; use -ShortcutName 'EXISTING NAME' to
+select an existing named desktop shortcut without guessing its location.
+If the old shortcut points somewhere else,
+read its preview first and only then use -Apply -ReplaceExisting to rebind
+that known shortcut. The installer does not launch the Panel, bypass execution
+policy, create autostart or install a service. The shortcut targets
+Start-LION-Browser-ISE.ps1 through native Windows PowerShell -NoProfile
+-File; it never stores a localhost URL or an external browser address.
+
+When the operator clicks the desktop shortcut after the Electron shell is
+already running, Electron's single-instance event now restores the **LPCL
+Panel** tab and focuses the existing window, rather than silently leaving the
+right side on SaaS. The native LION menu also offers **Przejdź do LPCL Panel
+(desktop)**; **Otwórz projekt SaaS** selects the SaaS tab *inside Electron*.
+This changes only native view selection, not conversation_id, provider
+session or any LPCL authority. A first launch also defaults to the Panel.
+
+**Operator acceptance is performed exclusively inside Electron**: click the
+Windows desktop shortcut, verify left Mission Control and right LPCL Panel;
+click native ChatGPT SaaS, then click the desktop shortcut again; observe the
+same window return to LPCL Panel with no external browser. Close the desktop
+application before comparing a newly deployed source revision. Source unit
+tests do not claim this Windows native shortcut was created or clicked; an
+actual test must wait for governed deployment and operator interaction.
+
 ## Queue and upstream integration boundary
 
 Express binds only to `127.0.0.1:8793`. Every endpoint requires a locally generated
