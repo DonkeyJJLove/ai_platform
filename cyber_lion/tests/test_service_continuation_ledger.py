@@ -41,10 +41,10 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertEqual(self.ledger["baseline"]["source_head"],
                          "222d52e57ebf17b950322e2a097f9ed94271cf9c")
 
-    def test_published_revision_replays_thirty_source_bound_events(self):
+    def test_published_revision_replays_seventy_five_source_bound_events(self):
         states = validate_ledger(self.published)
-        self.assertEqual(self.published["revision"], 31)
-        self.assertEqual(len(self.published["events"]), 30)
+        self.assertEqual(self.published["revision"], 76)
+        self.assertEqual(len(self.published["events"]), 75)
         self.assertEqual(states["SVC-0001"], "COMPLETE")
         self.assertEqual(states["SVC-0002"], "COMPLETE")
         self.assertEqual(states["SVC-0016"], "IN_PROGRESS")
@@ -53,9 +53,20 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertEqual(states["SVC-0005"], "COMPLETE")
         self.assertEqual(states["SVC-0006"], "COMPLETE")
         self.assertEqual(states["SVC-0007"], "COMPLETE")
-        self.assertEqual(states["SVC-0008"], "IN_PROGRESS")
+        self.assertEqual(states["SVC-0008"], "COMPLETE")
+        self.assertEqual(states["SVC-0009"], "COMPLETE")
+        self.assertEqual(states["SVC-0010"], "COMPLETE")
+        self.assertEqual(states["SVC-0011"], "COMPLETE")
+        self.assertEqual(states["SVC-0012"], "BLOCKED")
+        self.assertEqual(states["SVC-0018"], "COMPLETE")
+        self.assertEqual(states["SVC-0019"], "COMPLETE")
+        self.assertEqual(states["SVC-0020"], "COMPLETE")
+        self.assertEqual(states["SVC-0021"], "COMPLETE")
+        self.assertEqual(states["SVC-0022"], "COMPLETE")
+        self.assertEqual(states["SVC-0023"], "COMPLETE")
+        self.assertEqual(states["SVC-0017"], "COMPLETE")
         self.assertNotEqual(self.published["event_chain_head"], GENESIS)
-        self.assertEqual(sum(x == "COMPLETE" for x in states.values()), 7)
+        self.assertEqual(sum(x == "COMPLETE" for x in states.values()), 18)
 
     def test_next_ready_is_dependency_reduced_no_scheduler(self):
         ready = next_ready_tasks(self.ledger)

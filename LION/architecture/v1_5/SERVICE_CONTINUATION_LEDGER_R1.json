@@ -22,7 +22,7 @@
     "source_head": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
     "source_tree": "68dd5043e6ede09eb5c2c2f348c40205cf2f44b6"
   },
-  "event_chain_head": "039347a76d6f826d2a535fc0ad1d4100c524d2031b26b689f84bce94b1601ec2",
+  "event_chain_head": "91c0764a53d2edfe74672dfb4833552bb8be93c5c3aad887ffc551dc927526e7",
   "events": [
     {
       "actor": "chatgpt-source-proposal-non-authorizing",
@@ -481,12 +481,867 @@
       "sequence": 30,
       "task_id": "SVC-0008",
       "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "r11-currentness-reconciliation",
+      "digest": "7c450c1621db4d95b39e5f453c5510486108879cfb3643229dd3fd312d5fbdd5",
+      "evidence_refs": [
+        "CI:GITHUB:PR446:d8141ce421952bb0b352d873b706e183684f20f9:FIVE_WORKFLOWS_SUCCESS:CORE_RUN_38092247411",
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:HEAD:d8141ce421952bb0b352d873b706e183684f20f9:BASE:d367e47cf4f72e450cc212908b2cdfed14ceb805",
+        "TEST:MOON:PR446_REBOUND_EXACT_SOURCE_71_R24_12_RESTART_14_TRUTH_48_PASS_TWO_SKIPPED"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:51:41Z",
+      "previous_digest": "039347a76d6f826d2a535fc0ad1d4100c524d2031b26b689f84bce94b1601ec2",
+      "sequence": 31,
+      "task_id": "SVC-0008",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "r11-currentness-reconciliation",
+      "digest": "f6961d7a3ff2809ce85caf0da5b6c19a8f9aa1efa599e3ba5be7eb6dc7e03381",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:APPROVAL_TO_CONTINUE_PR446_SOURCE_PREPARATION_AND_FRESH_SIGNING",
+        "CI:GITHUB:PR446:d8141ce421952bb0b352d873b706e183684f20f9:FIVE_WORKFLOWS_SUCCESS:CORE_RUN_38092247411",
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:HEAD:d8141ce421952bb0b352d873b706e183684f20f9:BASE:d367e47cf4f72e450cc212908b2cdfed14ceb805",
+        "TEST:MOON:PR446_REBOUND_EXACT_SOURCE_71_R24_12_RESTART_14_TRUTH_48_PASS_TWO_SKIPPED"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:51:41Z",
+      "previous_digest": "7c450c1621db4d95b39e5f453c5510486108879cfb3643229dd3fd312d5fbdd5",
+      "sequence": 32,
+      "task_id": "SVC-0008",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "r11-currentness-reconciliation",
+      "digest": "60d9dee2b4bc7ca36494ea744403d48cbe3639c0139d5cd3ca531d87ed7455f1",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:HEAD:d8141ce421952bb0b352d873b706e183684f20f9:BASE:d367e47cf4f72e450cc212908b2cdfed14ceb805",
+        "CI:GITHUB:PR446:d8141ce421952bb0b352d873b706e183684f20f9:FIVE_WORKFLOWS_SUCCESS:CORE_RUN_38092247411",
+        "CHECKPOINT:MOON:PR446_UNSIGNED_STAGE1:epoch09ba602020a6_policyb43d33dc780c_root626eec197b9a"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:51:41Z",
+      "previous_digest": "f6961d7a3ff2809ce85caf0da5b6c19a8f9aa1efa599e3ba5be7eb6dc7e03381",
+      "sequence": 33,
+      "task_id": "SVC-0009",
+      "to_state": "READY"
+    },
+    {
+      "actor": "r11-pr446-stage1-signed-verified-handoff",
+      "digest": "7a3127c9dac06d957dc4c953b59e79a4e7b410dbcb3c950dedf61320c97002a4",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9",
+        "CI:GITHUB:PR446:HEAD:d8141ce421952bb0b352d873b706e183684f20f9:5_OF_5_SUCCESS",
+        "SIGNED:MOON:PR446:epoch.payload.sha256:09ba602020a655c18910a7d4cff1506db3c9d89d65debb67d3f1ded863b7bb12:Ed25519-64",
+        "SIGNED:MOON:PR446:merge-policy.payload.sha256:b43d33dc780ce9afdb5e322131a2453829835a2ac1ea92389795750e97fd76af:Ed25519-64",
+        "SIGNED:LAB-UBUNTU:PR446:root-grant.payload.sha256:626eec197b9a6adaf76a882ead54720ca0b0f1be251f6f57e25ee0837f969365:Ed25519-64",
+        "TEST:LAB-DEBIAN:PR446:STAGE1_3_SIGNATURES_AND_STAGE2_EXACT_ROOT_PAYLOAD_RECONSTRUCTION_PASS"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T22:58:14Z",
+      "previous_digest": "60d9dee2b4bc7ca36494ea744403d48cbe3639c0139d5cd3ca531d87ed7455f1",
+      "sequence": 34,
+      "task_id": "SVC-0009",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "service-ledger-proposal-after-operator-report",
+      "digest": "a6df91104367251b2508b9c114b7b8a47b432e625c7b693d5bb5094e681a6332",
+      "evidence_refs": [
+        "SIGNED:MOON:PR446:FIVE_DOCS:TRANSACTION_SHA256:1c78aed5ce9b59851ddd163dc5faf84cf68780a1c431309405da5c35cdc2fd5b",
+        "OPERATOR:LAB-DEBIAN:PR446_VERIFIER_ONLY_REBIND:PASS:SOURCE_SHA256:61fdbe7f53fbc2b947ae5d7ca60e60a8836bc3efa90ddba9ce21397efeb324c5"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-10T23:28:01Z",
+      "previous_digest": "7a3127c9dac06d957dc4c953b59e79a4e7b410dbcb3c950dedf61320c97002a4",
+      "sequence": 35,
+      "task": {
+        "acceptance": [
+          "Source SHA-256 61fdbe7f… bound in runtime config",
+          "Existing workload public key fingerprint preserved",
+          "PR445 and PR446 signatures verified and mutated payload denied",
+          "Control plane restarted, healthy, and PR445 remains 1/1 while PR446 remains 0/0"
+        ],
+        "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+        "dependencies": [
+          "SVC-0008"
+        ],
+        "effect_class": "TRUST_CHANGE",
+        "first_action": "Apply the exact SHA-pinned additive verifier-only rebind with root-only backup and automatic rollback on failure; independently read back systemd and production signature checks.",
+        "initial_state": "READY",
+        "intent": "Preserve historical workload and exact signed PR445 acceptance while enabling the exact signed PR446 root grant in the trusted control plane.",
+        "owner": "Trusted Control Plane operator / LAB-DEBIAN",
+        "scope": "DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9",
+        "source_refs": [
+          "SIGNED:MOON:PR446:FIVE_DOCS:TRANSACTION_SHA256:1c78aed5ce9b59851ddd163dc5faf84cf68780a1c431309405da5c35cdc2fd5b",
+          "OPERATOR:LAB-DEBIAN:PR446_VERIFIER_ONLY_REBIND:PASS:SOURCE_SHA256:61fdbe7f53fbc2b947ae5d7ca60e60a8836bc3efa90ddba9ce21397efeb324c5",
+          "TEST:LAB-DEBIAN:PR446_VERIFIER_PR445_PR446_SIGNED_POSITIVE_LEGACY_PRESERVATION_NEGATIVE_AND_ROLLBACK_PASS"
+        ],
+        "task_id": "SVC-0017",
+        "title": "PR446 additive verifier-only production rebind"
+      },
+      "task_id": "SVC-0017"
+    },
+    {
+      "actor": "operator-provisioning-rebind-readback",
+      "digest": "46f635e6a68c54c7cb4ba647141e017e1062d3ffc97c43c7655c13e2a6aaa6d1",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:PR446_VERIFIER_ONLY_REBIND:PASS:SOURCE_SHA256:61fdbe7f53fbc2b947ae5d7ca60e60a8836bc3efa90ddba9ce21397efeb324c5"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T23:28:01Z",
+      "previous_digest": "a6df91104367251b2508b9c114b7b8a47b432e625c7b693d5bb5094e681a6332",
+      "sequence": 36,
+      "task_id": "SVC-0017",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "operator-provisioning-rebind-readback",
+      "digest": "4498f54f285e2bc710282b229c8482690daf2d3c234a407bf930455583006cb8",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:PR446_VERIFIER_ONLY_REBIND:PASS:SOURCE_SHA256:61fdbe7f53fbc2b947ae5d7ca60e60a8836bc3efa90ddba9ce21397efeb324c5",
+        "RUNTIME:LAB-DEBIAN:CYBER_LION_CONTROL_PLANE_ACTIVE_PID_27966_POST_RESTART_HTTP_401",
+        "TEST:LAB-DEBIAN:PR446_VERIFIER_PR445_PR446_SIGNED_POSITIVE_LEGACY_PRESERVATION_NEGATIVE_AND_ROLLBACK_PASS"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T23:28:01Z",
+      "previous_digest": "46f635e6a68c54c7cb4ba647141e017e1062d3ffc97c43c7655c13e2a6aaa6d1",
+      "sequence": 37,
+      "task_id": "SVC-0017",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "operator-provisioning-rebind-readback",
+      "digest": "122dab8170e0b269e28aa406ea4210e264e6edf543c717d7bccca67580c68ad3",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:PR446_VERIFIER_ONLY_REBIND:PASS:SOURCE_SHA256:61fdbe7f53fbc2b947ae5d7ca60e60a8836bc3efa90ddba9ce21397efeb324c5",
+        "RUNTIME:LAB-DEBIAN:CYBER_LION_CONTROL_PLANE_ACTIVE_PID_27966_POST_RESTART_HTTP_401",
+        "TEST:LAB-DEBIAN:PR446_VERIFIER_PR445_PR446_SIGNED_POSITIVE_LEGACY_PRESERVATION_NEGATIVE_AND_ROLLBACK_PASS"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T23:28:01Z",
+      "previous_digest": "4498f54f285e2bc710282b229c8482690daf2d3c234a407bf930455583006cb8",
+      "sequence": 38,
+      "task_id": "SVC-0017",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "r11-pr446-source-observation-ledger-proposal",
+      "digest": "6428c1146ea9fb908de9ba45dbd8d2f206e6b4dc7e0fdbf9b6c3f587a2e046a8",
+      "evidence_refs": [
+        "SIGNED:MOON:PR446_TRANSACTION_DIGEST:1c78aed5ce9b59851ddd163dc5faf84cf68780a1c431309405da5c35cdc2fd5b",
+        "OPERATOR:LAB-DEBIAN:20261010T233208Z:PR446_PROVISIONING_RECEIPT_SHA256:234db73d39a4455a8cd8186420249a235b5ea7c5c4e0c990fc6a1f9c1b22a832",
+        "RUNTIME:LAB-DEBIAN:20261010T233208Z:PR446_BOOTSTRAP_1_LINEAGE_1_HISTORIC_PR445_1_1_1_1_HTTP_READBACK_PASS",
+        "CI:GITHUB:PR446:RUN_38092247411_ATTEMPT_2_JOB_114340312000:AUTHORITY_CURRENT_YES:OBS_DIGEST_02e5ab01df879f83cf49fdb02d7e069ad3b8af6f7ef00acd47ef258683adc7f3"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T23:37:32Z",
+      "previous_digest": "122dab8170e0b269e28aa406ea4210e264e6edf543c717d7bccca67580c68ad3",
+      "sequence": 39,
+      "task_id": "SVC-0009",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "r11-pr446-source-observation-ledger-proposal",
+      "digest": "49e985cae7bf96c08cf8ab4c0c1adf6659f7c758340aaf9b1db530143b83b519",
+      "evidence_refs": [
+        "OPERATOR:CURRENT_THREAD:EXACT_PR446_SIGNED_ADMIN_DECISION_AND_PROVISION_APPROVAL",
+        "OPERATOR:LAB-DEBIAN:20261010T233208Z:PR446_PROVISIONING_RECEIPT_SHA256:234db73d39a4455a8cd8186420249a235b5ea7c5c4e0c990fc6a1f9c1b22a832",
+        "RUNTIME:LAB-DEBIAN:20261010T233208Z:PR446_BOOTSTRAP_1_LINEAGE_1_HISTORIC_PR445_1_1_1_1_HTTP_READBACK_PASS",
+        "CI:GITHUB:PR446:RUN_38092247411_ATTEMPT_2_JOB_114340312000:AUTHORITY_CURRENT_YES:OBS_DIGEST_02e5ab01df879f83cf49fdb02d7e069ad3b8af6f7ef00acd47ef258683adc7f3"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T23:37:32Z",
+      "previous_digest": "6428c1146ea9fb908de9ba45dbd8d2f206e6b4dc7e0fdbf9b6c3f587a2e046a8",
+      "sequence": 40,
+      "task_id": "SVC-0009",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "r11-pr446-source-observation-ledger-proposal",
+      "digest": "d05f847d95b549131d1867d1b4d4d0f1ad123733903ca34b2c5c1716492fa15c",
+      "evidence_refs": [
+        "CI:GITHUB:PR446:RUN_38092247411_ATTEMPT_2_JOB_114340312000:AUTHORITY_CURRENT_YES:OBS_DIGEST_02e5ab01df879f83cf49fdb02d7e069ad3b8af6f7ef00acd47ef258683adc7f3",
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:BASE_d367e47cf4f72e450cc212908b2cdfed14ceb805:HEAD_d8141ce421952bb0b352d873b706e183684f20f9:OPEN_READY"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T23:37:32Z",
+      "previous_digest": "49e985cae7bf96c08cf8ab4c0c1adf6659f7c758340aaf9b1db530143b83b519",
+      "sequence": 41,
+      "task_id": "SVC-0010",
+      "to_state": "READY"
+    },
+    {
+      "actor": "r11-pr446-source-observation-ledger-proposal",
+      "digest": "73c1ba868bb054ee06a5e4b7cd774f22a6367e612a8040b3f7229e81859b3d36",
+      "evidence_refs": [
+        "CI:GITHUB:PR446:RUN_38092247411_ATTEMPT_2_JOB_114340312000:AUTHORITY_CURRENT_YES:OBS_DIGEST_02e5ab01df879f83cf49fdb02d7e069ad3b8af6f7ef00acd47ef258683adc7f3",
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:BASE_d367e47cf4f72e450cc212908b2cdfed14ceb805:HEAD_d8141ce421952bb0b352d873b706e183684f20f9:OPEN_READY"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T23:37:32Z",
+      "previous_digest": "d05f847d95b549131d1867d1b4d4d0f1ad123733903ca34b2c5c1716492fa15c",
+      "sequence": 42,
+      "task_id": "SVC-0010",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "r11-pr446-source-observation-ledger-proposal",
+      "digest": "06f3f89c70fb73c6dd6bfb3ce87bff0edc35f85bd8a0b582d4b6bce686a1fedf",
+      "evidence_refs": [
+        "CI:GITHUB:PR446:RUN_38092247411_ATTEMPT_2_JOB_114340312000:AUTHORITY_CURRENT_YES:OBS_DIGEST_02e5ab01df879f83cf49fdb02d7e069ad3b8af6f7ef00acd47ef258683adc7f3",
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:BASE_d367e47cf4f72e450cc212908b2cdfed14ceb805:HEAD_d8141ce421952bb0b352d873b706e183684f20f9:OPEN_READY"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T23:37:32Z",
+      "previous_digest": "73c1ba868bb054ee06a5e4b7cd774f22a6367e612a8040b3f7229e81859b3d36",
+      "sequence": 43,
+      "task_id": "SVC-0010",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "r11-pr446-source-observation-ledger-proposal",
+      "digest": "80b99e618c8d8896f7c3f7a24de02d14f5d66c0b1e3ab4ff3c3e88783825af43",
+      "evidence_refs": [
+        "CI:GITHUB:PR446:RUN_38092247411_ATTEMPT_2_JOB_114340312000:AUTHORITY_CURRENT_YES:OBS_DIGEST_02e5ab01df879f83cf49fdb02d7e069ad3b8af6f7ef00acd47ef258683adc7f3",
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:BASE_d367e47cf4f72e450cc212908b2cdfed14ceb805:HEAD_d8141ce421952bb0b352d873b706e183684f20f9:OPEN_READY"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T23:37:32Z",
+      "previous_digest": "06f3f89c70fb73c6dd6bfb3ce87bff0edc35f85bd8a0b582d4b6bce686a1fedf",
+      "sequence": 44,
+      "task_id": "SVC-0010",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "r11-pr446-source-observation-ledger-proposal",
+      "digest": "4c20605548b5d0dbeb4da1622347483e0b040f92a15d4015fadd22ac1597980d",
+      "evidence_refs": [
+        "CI:GITHUB:PR446:RUN_38092247411_ATTEMPT_2_JOB_114340312000:AUTHORITY_CURRENT_YES:OBS_DIGEST_02e5ab01df879f83cf49fdb02d7e069ad3b8af6f7ef00acd47ef258683adc7f3",
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:BASE_d367e47cf4f72e450cc212908b2cdfed14ceb805:HEAD_d8141ce421952bb0b352d873b706e183684f20f9:OPEN_READY",
+        "TEST:LAB-DEBIAN:PR446_ORIGINAL_MERGE_ADMISSION_NONCONSUMING_ALLOW_AND_EPHEMERAL_DURABLE_REPLAY_DENIED"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-10T23:37:32Z",
+      "previous_digest": "80b99e618c8d8896f7c3f7a24de02d14f5d66c0b1e3ab4ff3c3e88783825af43",
+      "sequence": 45,
+      "task_id": "SVC-0011",
+      "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-saas-readback-proposal-operator-scope",
+      "digest": "cfbad273b4013e2406bbf0680e22e620b14f02637ae1c5c06193171ddadc0510",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:PR446_DURABLE_CONSUMED_RECEIPT_SHA256_ddfddf17f1c1d0ac821ad90f0b18097bdad3b11ff87e0d096914882a985d053f",
+        "CI:GITHUB:PR446_AUTHORITY_OBSERVATION_GHA_38092247411_ATTEMPT2_DIGEST_02e5ab01df879f83cf49fdb02d7e069ad3b8af6f7ef00acd47ef258683adc7f3"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "4c20605548b5d0dbeb4da1622347483e0b040f92a15d4015fadd22ac1597980d",
+      "sequence": 46,
+      "task_id": "SVC-0011",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-saas-readback-proposal-operator-scope",
+      "digest": "488e0ad1ec51141cad0a169877bb5016e322b53673062ac3be827df6569462aa",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:PR446_DURABLE_CONSUMED_RECEIPT_SHA256_ddfddf17f1c1d0ac821ad90f0b18097bdad3b11ff87e0d096914882a985d053f",
+        "CI:GITHUB:PR446_AUTHORITY_OBSERVATION_GHA_38092247411_ATTEMPT2_DIGEST_02e5ab01df879f83cf49fdb02d7e069ad3b8af6f7ef00acd47ef258683adc7f3",
+        "TEST:LAB-DEBIAN:PR446_INSTALLED_MERGE_ADMISSION_EPHEMERAL_CONSUMPTION_REPLAY_DENIED"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "cfbad273b4013e2406bbf0680e22e620b14f02637ae1c5c06193171ddadc0510",
+      "sequence": 47,
+      "task_id": "SVC-0011",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-saas-readback-proposal-operator-scope",
+      "digest": "070abd5d66becc7f195543922f145f446d11623c32ef165d56e5f3c4e93d1e9a",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:PR446_DURABLE_CONSUMED_RECEIPT_SHA256_ddfddf17f1c1d0ac821ad90f0b18097bdad3b11ff87e0d096914882a985d053f",
+        "CI:GITHUB:PR446_AUTHORITY_OBSERVATION_GHA_38092247411_ATTEMPT2_DIGEST_02e5ab01df879f83cf49fdb02d7e069ad3b8af6f7ef00acd47ef258683adc7f3",
+        "TEST:LAB-DEBIAN:PR446_INSTALLED_MERGE_ADMISSION_EPHEMERAL_CONSUMPTION_REPLAY_DENIED"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "488e0ad1ec51141cad0a169877bb5016e322b53673062ac3be827df6569462aa",
+      "sequence": 48,
+      "task_id": "SVC-0011",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "chatgpt-saas-readback-proposal-operator-scope",
+      "digest": "a2daf8f1d60740714bd4c2d7621a21ae6a36c0a2b97634c39f470b01983df6f0",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:PR446_DURABLE_CONSUMED_RECEIPT_SHA256_ddfddf17f1c1d0ac821ad90f0b18097bdad3b11ff87e0d096914882a985d053f",
+        "CI:GITHUB:PR446_AUTHORITY_OBSERVATION_GHA_38092247411_ATTEMPT2_DIGEST_02e5ab01df879f83cf49fdb02d7e069ad3b8af6f7ef00acd47ef258683adc7f3",
+        "GITHUB:DonkeyJJLove/ai_platform:PR446_OPEN_UNMERGED_HEAD_d8141ce421952bb0b352d873b706e183684f20f9_MASTER_d367e47cf4f72e450cc212908b2cdfed14ceb805"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "070abd5d66becc7f195543922f145f446d11623c32ef165d56e5f3c4e93d1e9a",
+      "sequence": 49,
+      "task_id": "SVC-0012",
+      "to_state": "READY"
+    },
+    {
+      "actor": "chatgpt-saas-readback-proposal-operator-scope",
+      "digest": "5458a16d75bc038e673f602a1d2a38462db7fa6c2c8f2bf6312f1b4186bba253",
+      "evidence_refs": [
+        "OPERATOR:LAB-DEBIAN:PR446_DURABLE_CONSUMED_RECEIPT_SHA256_ddfddf17f1c1d0ac821ad90f0b18097bdad3b11ff87e0d096914882a985d053f",
+        "GITHUB:DonkeyJJLove/ai_platform:PR446_OPEN_UNMERGED_HEAD_d8141ce421952bb0b352d873b706e183684f20f9_MASTER_d367e47cf4f72e450cc212908b2cdfed14ceb805"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "a2daf8f1d60740714bd4c2d7621a21ae6a36c0a2b97634c39f470b01983df6f0",
+      "sequence": 50,
+      "task_id": "SVC-0012",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-saas-readback-proposal-operator-scope",
+      "digest": "5db45976a59198694dd92da1f93205be2da0914afee523743880c83c375ca8bd",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446_OPEN_UNMERGED_HEAD_d8141ce421952bb0b352d873b706e183684f20f9_MASTER_d367e47cf4f72e450cc212908b2cdfed14ceb805",
+        "UNKNOWN:GITHUB_EXACT_MERGE_CALL_BLOCKED_BY_TOOL_SECURITY_NO_GITHUB_EFFECT_NO_RECONSUMPTION",
+        "OPERATOR:LAB-DEBIAN:PR446_DURABLE_CONSUMED_RECEIPT_SHA256_ddfddf17f1c1d0ac821ad90f0b18097bdad3b11ff87e0d096914882a985d053f"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "5458a16d75bc038e673f602a1d2a38462db7fa6c2c8f2bf6312f1b4186bba253",
+      "sequence": 51,
+      "task_id": "SVC-0012",
+      "to_state": "BLOCKED"
+    },
+    {
+      "actor": "chatgpt-saas-exact-source-candidate",
+      "digest": "b6e9945ae9388ca9e185d1ce7b4d742428d60225bfbfea8592096efc77704f49",
+      "evidence_refs": [
+        "SOURCE:LION-AUTH-LAB:/var/lib/sentinelx/uploads/lion-r11-pr446-source-bound-preactivation-preview/lion_r11_source_bound_production_factory_v1.py@sha256:40ce85a1601a6f83fa8f2ef906482c8caf7ccea20b44c1c56516b9dfbc9646b3",
+        "TEST:LION-AUTH-LAB:R11_CANONICAL_R621_R615_R616_R617_PREACTIVATION_MD001_PASS_NO_ARTIFACT_AND_SUBSTITUTION_DENIED"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "5db45976a59198694dd92da1f93205be2da0914afee523743880c83c375ca8bd",
+      "sequence": 52,
+      "task": {
+        "acceptance": [
+          "Exact provider classes structurally composed and source pinned",
+          "MD001 fixture stepper qualifies without artifact write or new authority",
+          "Wrong worker, producer substitution and SHA drift fail closed",
+          "Production provider remains UNBOUND until independently supplied R6.21 real inputs"
+        ],
+        "authorization_gate": "NONE_READ_ONLY",
+        "dependencies": [],
+        "effect_class": "NONE",
+        "first_action": "Read exact R11 owner code, bind disposable canonical owners, test MD001 preactivation and negative substitution before proposing production deployment.",
+        "initial_state": "READY",
+        "intent": "Compose existing R6.21 preparation, R6.15 exporter, R6.16 materializer and R6.17 worker root from exactly pinned source without minting authority or fabricating live worker readiness.",
+        "owner": "ai_platform Mission Control cooperative preactivation owner",
+        "scope": "PR446:d8141ce421952bb0b352d873b706e183684f20f9;LION-AUTH-LAB:staged-adapter:MD001",
+        "source_refs": [
+          "SOURCE:LION-AUTH-LAB:/var/lib/sentinelx/uploads/lion-r11-pr446-source-bound-preactivation-preview/lion_r11_source_bound_production_factory_v1.py@sha256:40ce85a1601a6f83fa8f2ef906482c8caf7ccea20b44c1c56516b9dfbc9646b3",
+          "TEST:LION-AUTH-LAB:R11_CANONICAL_R621_R615_R616_R617_PREACTIVATION_MD001_PASS_NO_ARTIFACT_AND_SUBSTITUTION_DENIED"
+        ],
+        "task_id": "SVC-0018",
+        "title": "Source-bound R11 preactivation factory qualification"
+      },
+      "task_id": "SVC-0018"
+    },
+    {
+      "actor": "chatgpt-saas-independent-test-readback",
+      "digest": "1f23666052f4ad0d25ad4143547a7454a42d8a2ab8d88ae0161258349c68d442",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:R11_CANONICAL_R621_R615_R616_R617_PREACTIVATION_MD001_PASS_NO_ARTIFACT_AND_SUBSTITUTION_DENIED",
+        "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "b6e9945ae9388ca9e185d1ce7b4d742428d60225bfbfea8592096efc77704f49",
+      "sequence": 53,
+      "task_id": "SVC-0018",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-saas-independent-test-readback",
+      "digest": "c5f341d204ded3dd84945b0b2106de07b4264f6c0af0c8c4411daf07e6f20894",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:R11_CANONICAL_R621_R615_R616_R617_PREACTIVATION_MD001_PASS_NO_ARTIFACT_AND_SUBSTITUTION_DENIED",
+        "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "1f23666052f4ad0d25ad4143547a7454a42d8a2ab8d88ae0161258349c68d442",
+      "sequence": 54,
+      "task_id": "SVC-0018",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-saas-independent-test-readback",
+      "digest": "92b730a8a1c818cc7562eacc47218c8abdfab36f4f7b85d2a537269d298f4324",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:R11_CANONICAL_R621_R615_R616_R617_PREACTIVATION_MD001_PASS_NO_ARTIFACT_AND_SUBSTITUTION_DENIED",
+        "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "c5f341d204ded3dd84945b0b2106de07b4264f6c0af0c8c4411daf07e6f20894",
+      "sequence": 55,
+      "task_id": "SVC-0018",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "chatgpt-saas-exact-source-candidate",
+      "digest": "a482c0c134d8540b2ca68e71eb459696c72da80666e06545be3972733d3d3e87",
+      "evidence_refs": [
+        "SOURCE:LION-AUTH-LAB:/var/lib/sentinelx/uploads/lion-pr446-canonical-master-stage-preview-d8141ce4/stage-isolated-original-owner",
+        "TEST:LION-AUTH-LAB:PR446_93FILE_CANONICAL_STAGE_INSTALL_SUCCESS_ROLLBACK_BYTE_EXACT_SQLITE_PRESERVED",
+        "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "92b730a8a1c818cc7562eacc47218c8abdfab36f4f7b85d2a537269d298f4324",
+      "sequence": 56,
+      "task": {
+        "acceptance": [
+          "All 93 manifest files verified on target host",
+          "Canonical stage owner emits exact package identity",
+          "Canonical installer success and injected failure rollback succeed in temporary dirs",
+          "All live service and live mission database remain unchanged"
+        ],
+        "authorization_gate": "NONE_READ_ONLY",
+        "dependencies": [],
+        "effect_class": "NONE",
+        "first_action": "Execute only canonical stage/install in isolated paths with mock systemd and independent SHA readback, then hand off master-bound effect to authorized installer.",
+        "initial_state": "READY",
+        "intent": "Verify existing broker-owned 93-file Mission Control staging and install paths with exact PR446 source package, deterministic readback, rollback and preserved SQLite.",
+        "owner": "ai_platform effect broker and Mission Control deployment owner",
+        "scope": "LION-AUTH-LAB:isolated:PR446:d8141ce421952bb0b352d873b706e183684f20f9",
+        "source_refs": [
+          "SOURCE:LION-AUTH-LAB:/var/lib/sentinelx/uploads/lion-pr446-canonical-master-stage-preview-d8141ce4/stage-isolated-original-owner",
+          "TEST:LION-AUTH-LAB:PR446_93FILE_CANONICAL_STAGE_INSTALL_SUCCESS_ROLLBACK_BYTE_EXACT_SQLITE_PRESERVED",
+          "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+        ],
+        "task_id": "SVC-0019",
+        "title": "Existing Mission Control staging and deployment proof"
+      },
+      "task_id": "SVC-0019"
+    },
+    {
+      "actor": "chatgpt-saas-independent-test-readback",
+      "digest": "d0ca6ecf65ceb041f5f4baf0cca1b17fec27600e819d3c64dccd03592a4faf60",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:PR446_93FILE_CANONICAL_STAGE_INSTALL_SUCCESS_ROLLBACK_BYTE_EXACT_SQLITE_PRESERVED",
+        "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "a482c0c134d8540b2ca68e71eb459696c72da80666e06545be3972733d3d3e87",
+      "sequence": 57,
+      "task_id": "SVC-0019",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-saas-independent-test-readback",
+      "digest": "b1f97fca96ec0480a3ae554dd6cbca8573082e9efe9feddbe557343f4302ab26",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:PR446_93FILE_CANONICAL_STAGE_INSTALL_SUCCESS_ROLLBACK_BYTE_EXACT_SQLITE_PRESERVED",
+        "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "d0ca6ecf65ceb041f5f4baf0cca1b17fec27600e819d3c64dccd03592a4faf60",
+      "sequence": 58,
+      "task_id": "SVC-0019",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-saas-independent-test-readback",
+      "digest": "d62594cfab77db4d7117b46372b3f8f12348a494120e1bff89ef3d4d327d5a82",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:PR446_93FILE_CANONICAL_STAGE_INSTALL_SUCCESS_ROLLBACK_BYTE_EXACT_SQLITE_PRESERVED",
+        "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "b1f97fca96ec0480a3ae554dd6cbca8573082e9efe9feddbe557343f4302ab26",
+      "sequence": 59,
+      "task_id": "SVC-0019",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "chatgpt-saas-exact-source-candidate",
+      "digest": "2fcd17c99da02832b7845ebd0b4e9c10264e8d93d1d45ee194a735fb14ba7208",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:PR446_ACTUAL_HTTP_LPCL_INGRESS_201_201_400_FIVE_CONTRACTS",
+        "TEST:LION-AUTH-LAB:PR446_CONTROL_PLANE_RECONNAISSANCE_NO_PREEXISTING_SAAS_DELEGATION_BINDING_REQUIRED_AT_EXPLICIT_START_4_UNIT_PASS",
+        "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "d62594cfab77db4d7117b46372b3f8f12348a494120e1bff89ef3d4d327d5a82",
+      "sequence": 60,
+      "task": {
+        "acceptance": [
+          "Actual HTTP ingress accepts source-bound LPCL with five phase contracts",
+          "Idempotent second registration accepted and tampered digest denied",
+          "Explicit operator start is not conditioned on earlier SaaS completion for CONTROL_PLANE_RECONNAISSANCE",
+          "Cross-model LOCAL+SaaS evidence remains mandatory before phase-one completion"
+        ],
+        "authorization_gate": "NONE_READ_ONLY",
+        "dependencies": [],
+        "effect_class": "NONE",
+        "first_action": "Validate canonical PhaseExecutionContract mapping and real ephemeral HTTP registration, then derive cognitive producer order and separate exact human START.",
+        "initial_state": "READY",
+        "intent": "Test actual LPCL HTTP ingress and correct phase-zero cognitive launch ordering while preserving explicit activation and cross-model completion evidence.",
+        "owner": "ai_platform LPCL process and cognitive runtime owner",
+        "scope": "PR446:d8141ce421952bb0b352d873b706e183684f20f9:ApplicationFactoryLPCL",
+        "source_refs": [
+          "TEST:LION-AUTH-LAB:PR446_ACTUAL_HTTP_LPCL_INGRESS_201_201_400_FIVE_CONTRACTS",
+          "TEST:LION-AUTH-LAB:PR446_CONTROL_PLANE_RECONNAISSANCE_NO_PREEXISTING_SAAS_DELEGATION_BINDING_REQUIRED_AT_EXPLICIT_START_4_UNIT_PASS",
+          "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+        ],
+        "task_id": "SVC-0020",
+        "title": "Application Factory LPCL ingress and activation boundary"
+      },
+      "task_id": "SVC-0020"
+    },
+    {
+      "actor": "chatgpt-saas-independent-test-readback",
+      "digest": "29519900be5218c5683de0c1d0367a1ed2a225b857cd45bef0350d2f9ede292f",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:PR446_ACTUAL_HTTP_LPCL_INGRESS_201_201_400_FIVE_CONTRACTS",
+        "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "2fcd17c99da02832b7845ebd0b4e9c10264e8d93d1d45ee194a735fb14ba7208",
+      "sequence": 61,
+      "task_id": "SVC-0020",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "chatgpt-saas-independent-test-readback",
+      "digest": "93932135c5046d66a144bd58ff5a6a4a034b7d785c8b45ebe56a7eb74f3f4da2",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:PR446_ACTUAL_HTTP_LPCL_INGRESS_201_201_400_FIVE_CONTRACTS",
+        "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "29519900be5218c5683de0c1d0367a1ed2a225b857cd45bef0350d2f9ede292f",
+      "sequence": 62,
+      "task_id": "SVC-0020",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "chatgpt-saas-independent-test-readback",
+      "digest": "bbafb872d848ae1bbce11dde86bb1bcc3ba31535e55ef2826cb31ff9c534b68e",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:PR446_ACTUAL_HTTP_LPCL_INGRESS_201_201_400_FIVE_CONTRACTS",
+        "CHECKPOINT:LION-AUTH-LAB:LION_R11_PR446_AUTONOMOUS_QUALIFICATION_20261011.tar.gz@sha256:44532408775e18c1e8d8d1baddde929832163e02f396af68af989d5484679610"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:28:33Z",
+      "previous_digest": "93932135c5046d66a144bd58ff5a6a4a034b7d785c8b45ebe56a7eb74f3f4da2",
+      "sequence": 63,
+      "task_id": "SVC-0020",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "r11-read-only-observation-source-candidate",
+      "digest": "a238a7f7f88d0988a44e4573d0e751c9f22f559763121bdd03be04700375fcbe",
+      "evidence_refs": [
+        "SOURCE:LION-AUTH-LAB:/var/lib/sentinelx/uploads/lion-r11-pr446-autonomous-readiness/lion_r11_pr446_readiness_probe.py@sha256:2d2a6ab8f392f1e6c8bc252f2c047347f88bf80046470a809a077479b4003461",
+        "CHECKPOINT:LION-AUTH-LAB:PR446_PROBE_CORRECTED_READBACK_JSON@sha256:ed7087107dd85fe1c3311716a6c557cca2a593b355e48c56f7f0a1c77a5a014e"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T00:31:53Z",
+      "previous_digest": "bbafb872d848ae1bbce11dde86bb1bcc3ba31535e55ef2826cb31ff9c534b68e",
+      "sequence": 64,
+      "task": {
+        "acceptance": [
+          "Reports exact source HEAD/BASE and whether GitHub merge actually occurred",
+          "Distinguishes running service from matching deployed source bytes and mission registration",
+          "Never reads SQLite without mode=ro and PRAGMA query_only=ON",
+          "32-worker status must be independently qualified; unavailable status remains BLOCKED",
+          "Reports source archive pin and preserves UNKNOWN when unavailable",
+          "No effect endpoint, mission activation, GitHub write, authority consumption or production DB mutation"
+        ],
+        "authorization_gate": "NONE_READ_ONLY",
+        "dependencies": [],
+        "effect_class": "NONE",
+        "first_action": "Execute the scoped readiness script, read JSON blockers and unknowns, and reconcile only changed gates without global restart.",
+        "initial_state": "READY",
+        "intent": "Replace repeated fleet-wide audits with one bounded passive comparison of PR446 Git identity, live Mission Control and broker modules, mission registration, preactivation capability, 32-worker proof and package SHA.",
+        "owner": "ai_platform / Mission Control / LION-AUTH-LAB read-only observer",
+        "scope": "LION-AUTH-LAB:PR446:d8141ce421952bb0b352d873b706e183684f20f9:READ_ONLY",
+        "source_refs": [
+          "SOURCE:LION-AUTH-LAB:/var/lib/sentinelx/uploads/lion-r11-pr446-autonomous-readiness/lion_r11_pr446_readiness_probe.py@sha256:2d2a6ab8f392f1e6c8bc252f2c047347f88bf80046470a809a077479b4003461",
+          "CHECKPOINT:LION-AUTH-LAB:PR446_PROBE_CORRECTED_READBACK_JSON@sha256:ed7087107dd85fe1c3311716a6c557cca2a593b355e48c56f7f0a1c77a5a014e"
+        ],
+        "task_id": "SVC-0021",
+        "title": "Repeatable scoped LPCL readiness readback"
+      },
+      "task_id": "SVC-0021"
+    },
+    {
+      "actor": "r11-exact-readonly-host-test",
+      "digest": "d0c671866fdb07d4407b3e8d22a756094dfbccb46a33bb8ec4c4711749df60a9",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:PR446_READ_ONLY_SOURCE_CURRENTNESS_MC_BROKER_FACTORY_PROVIDER_32WORKERS_ARCHIVE_READBACK_PASS",
+        "CHECKPOINT:LION-AUTH-LAB:PR446_PROBE_CORRECTED_READBACK_JSON@sha256:ed7087107dd85fe1c3311716a6c557cca2a593b355e48c56f7f0a1c77a5a014e"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:31:53Z",
+      "previous_digest": "a238a7f7f88d0988a44e4573d0e751c9f22f559763121bdd03be04700375fcbe",
+      "sequence": 65,
+      "task_id": "SVC-0021",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "r11-exact-readonly-host-test",
+      "digest": "2d1a516bf1f1a3fb287db4de9f686506932d7c5a7d7c5791d653c7e5057834af",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:PR446_READ_ONLY_SOURCE_CURRENTNESS_MC_BROKER_FACTORY_PROVIDER_32WORKERS_ARCHIVE_READBACK_PASS",
+        "CHECKPOINT:LION-AUTH-LAB:PR446_PROBE_CORRECTED_READBACK_JSON@sha256:ed7087107dd85fe1c3311716a6c557cca2a593b355e48c56f7f0a1c77a5a014e"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:31:53Z",
+      "previous_digest": "d0c671866fdb07d4407b3e8d22a756094dfbccb46a33bb8ec4c4711749df60a9",
+      "sequence": 66,
+      "task_id": "SVC-0021",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "r11-exact-readonly-host-test",
+      "digest": "db1f776b5c8745d7de62bbe1f17f8a9d295a368ff332731477f46dcd536fe5f3",
+      "evidence_refs": [
+        "TEST:LION-AUTH-LAB:PR446_READ_ONLY_SOURCE_CURRENTNESS_MC_BROKER_FACTORY_PROVIDER_32WORKERS_ARCHIVE_READBACK_PASS",
+        "CHECKPOINT:LION-AUTH-LAB:PR446_PROBE_CORRECTED_READBACK_JSON@sha256:ed7087107dd85fe1c3311716a6c557cca2a593b355e48c56f7f0a1c77a5a014e"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T00:31:53Z",
+      "previous_digest": "2d1a516bf1f1a3fb287db4de9f686506932d7c5a7d7c5791d653c7e5057834af",
+      "sequence": 67,
+      "task_id": "SVC-0021",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "r11-readonly-scope-reconcile",
+      "digest": "85f1613d330800d64d73817d53d9c3c5d1ace3583ed026339b861e17d282832b",
+      "evidence_refs": [
+        "RUNTIME:MOON:LOCAL_PANEL_SOURCE_SHA222d52e57ebf17b950322e2a097f9ed94271cf9c_TREE68dd5043e6ede09eb5c2c2f348c40205cf2f44b6_DIRTY_1139",
+        "CHECKPOINT:MOON:LION_R11_PANEL_LOCAL_SOURCE_CURRENTNESS_20261011@sha256:437bca94eb081ab79aee1c09d728d6c303b2f8766bb257ba5989e1b74ea6b893",
+        "SOURCE:DonkeyJJLove/ai_platform:LION/runtime_compat/r20/node-panel/src/mission-control.js:_localIdentity"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T06:23:54Z",
+      "previous_digest": "db1f776b5c8745d7de62bbe1f17f8a9d295a368ff332731477f46dcd536fe5f3",
+      "sequence": 68,
+      "task": {
+        "acceptance": [
+          "Local HEAD and tree independently read with Git safe.directory per process only",
+          "GitHub master comparison shows drift, while live Panel configured source remains UNKNOWN",
+          "No reset/checkout/clean on 1139 dirty entries"
+        ],
+        "authorization_gate": "NONE_READ_ONLY",
+        "dependencies": [],
+        "effect_class": "NONE",
+        "first_action": "Read exact scoped source/runtime evidence and store nonauthoritative checkpoint.",
+        "initial_state": "READY",
+        "intent": "Bounded read-only Git source comparison of MOON checkout against actual GitHub master; never reset the dirty user working tree.",
+        "owner": "MOON source-currentness observer",
+        "scope": "MOON:/mnt/c/Users/d2j3/PycharmProjects/ai_platform",
+        "source_refs": [
+          "RUNTIME:MOON:LOCAL_PANEL_SOURCE_SHA222d52e57ebf17b950322e2a097f9ed94271cf9c_TREE68dd5043e6ede09eb5c2c2f348c40205cf2f44b6_DIRTY_1139",
+          "CHECKPOINT:MOON:LION_R11_PANEL_LOCAL_SOURCE_CURRENTNESS_20261011@sha256:437bca94eb081ab79aee1c09d728d6c303b2f8766bb257ba5989e1b74ea6b893",
+          "SOURCE:DonkeyJJLove/ai_platform:LION/runtime_compat/r20/node-panel/src/mission-control.js:_localIdentity"
+        ],
+        "task_id": "SVC-0022",
+        "title": "Observe local Panel source drift"
+      },
+      "task_id": "SVC-0022"
+    },
+    {
+      "actor": "r11-scoped-readback",
+      "digest": "fd5fbefb46b9ce87aeb53451fe6e5d1a92067e5ab6bacc8aa88030d51b9eab0c",
+      "evidence_refs": [
+        "RUNTIME:MOON:LOCAL_PANEL_SOURCE_SHA222d52e57ebf17b950322e2a097f9ed94271cf9c_TREE68dd5043e6ede09eb5c2c2f348c40205cf2f44b6_DIRTY_1139",
+        "CHECKPOINT:MOON:LION_R11_PANEL_LOCAL_SOURCE_CURRENTNESS_20261011@sha256:437bca94eb081ab79aee1c09d728d6c303b2f8766bb257ba5989e1b74ea6b893",
+        "SOURCE:DonkeyJJLove/ai_platform:LION/runtime_compat/r20/node-panel/src/mission-control.js:_localIdentity"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T06:23:54Z",
+      "previous_digest": "85f1613d330800d64d73817d53d9c3c5d1ace3583ed026339b861e17d282832b",
+      "sequence": 69,
+      "task_id": "SVC-0022",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "r11-scoped-readback",
+      "digest": "e102f1874c4f807843d19d6eb7501695d8e8e16a7e2f61e67a8cdf7146cbad01",
+      "evidence_refs": [
+        "RUNTIME:MOON:LOCAL_PANEL_SOURCE_SHA222d52e57ebf17b950322e2a097f9ed94271cf9c_TREE68dd5043e6ede09eb5c2c2f348c40205cf2f44b6_DIRTY_1139",
+        "CHECKPOINT:MOON:LION_R11_PANEL_LOCAL_SOURCE_CURRENTNESS_20261011@sha256:437bca94eb081ab79aee1c09d728d6c303b2f8766bb257ba5989e1b74ea6b893",
+        "SOURCE:DonkeyJJLove/ai_platform:LION/runtime_compat/r20/node-panel/src/mission-control.js:_localIdentity"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T06:23:54Z",
+      "previous_digest": "fd5fbefb46b9ce87aeb53451fe6e5d1a92067e5ab6bacc8aa88030d51b9eab0c",
+      "sequence": 70,
+      "task_id": "SVC-0022",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "r11-scoped-readback",
+      "digest": "b0769510ac6f6e01e7ca9becb3d59d82e4ef064234a5ba72a00af6abc5f70931",
+      "evidence_refs": [
+        "RUNTIME:MOON:LOCAL_PANEL_SOURCE_SHA222d52e57ebf17b950322e2a097f9ed94271cf9c_TREE68dd5043e6ede09eb5c2c2f348c40205cf2f44b6_DIRTY_1139",
+        "CHECKPOINT:MOON:LION_R11_PANEL_LOCAL_SOURCE_CURRENTNESS_20261011@sha256:437bca94eb081ab79aee1c09d728d6c303b2f8766bb257ba5989e1b74ea6b893",
+        "SOURCE:DonkeyJJLove/ai_platform:LION/runtime_compat/r20/node-panel/src/mission-control.js:_localIdentity"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T06:23:54Z",
+      "previous_digest": "e102f1874c4f807843d19d6eb7501695d8e8e16a7e2f61e67a8cdf7146cbad01",
+      "sequence": 71,
+      "task_id": "SVC-0022",
+      "to_state": "COMPLETE"
+    },
+    {
+      "actor": "r11-readonly-scope-reconcile",
+      "digest": "1e310b489f31254e257af2c572241a2209b8a0a0ed53cd3868fbdeb69233ace3",
+      "evidence_refs": [
+        "RUNTIME:LION-AUTH-LAB:NATIVE_MODEL_172.25.128.1_8772_HEALTH200_MODELS200_gpt-oss-20b-MXFP4_NO_INFERENCE",
+        "RUNTIME:LION-AUTH-LAB:SAAS_CHANNEL_SENTINELX_MCP_READY_MEDIATOR_READY_SESSION_UNBOUND_EXPIRED",
+        "TEST:LION-AUTH-LAB:DIAGNOSTIC_V3_EIGHT_NEGATIVE_TESTS_PASS",
+        "CHECKPOINT:LION-AUTH-LAB:readiness_20261011_v3.json@sha256:6393eea6f6b74a98d3cc8c692dac074126a4d53cb421fa97d764dfba242c4e09"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T06:23:54Z",
+      "previous_digest": "b0769510ac6f6e01e7ca9becb3d59d82e4ef064234a5ba72a00af6abc5f70931",
+      "sequence": 72,
+      "task": {
+        "acceptance": [
+          "Exact local model identified via GET only",
+          "SaaS mediator and transport availability observed without binding",
+          "UNBOUND and EXPIRED not promoted to active session, no model effects"
+        ],
+        "authorization_gate": "NONE_READ_ONLY",
+        "dependencies": [],
+        "effect_class": "NONE",
+        "first_action": "Read exact scoped source/runtime evidence and store nonauthoritative checkpoint.",
+        "initial_state": "READY",
+        "intent": "Read native llama.cpp 8772 and SaaS broker 8766 without inferencing, sending a request, or creating a session.",
+        "owner": "LION-AUTH-LAB cognitive source observation",
+        "scope": "LION-AUTH-LAB:PR446:SOURCE_BOUND_READ_ONLY_COGNITIVE",
+        "source_refs": [
+          "RUNTIME:LION-AUTH-LAB:NATIVE_MODEL_172.25.128.1_8772_HEALTH200_MODELS200_gpt-oss-20b-MXFP4_NO_INFERENCE",
+          "RUNTIME:LION-AUTH-LAB:SAAS_CHANNEL_SENTINELX_MCP_READY_MEDIATOR_READY_SESSION_UNBOUND_EXPIRED",
+          "TEST:LION-AUTH-LAB:DIAGNOSTIC_V3_EIGHT_NEGATIVE_TESTS_PASS",
+          "CHECKPOINT:LION-AUTH-LAB:readiness_20261011_v3.json@sha256:6393eea6f6b74a98d3cc8c692dac074126a4d53cb421fa97d764dfba242c4e09"
+        ],
+        "task_id": "SVC-0023",
+        "title": "Classify native LOCAL and SaaS transport separately from live session"
+      },
+      "task_id": "SVC-0023"
+    },
+    {
+      "actor": "r11-scoped-readback",
+      "digest": "4df8441b3078478eeae0973925d0f73ad5bca5fcb9407b83d24f9620b0fe86ad",
+      "evidence_refs": [
+        "RUNTIME:LION-AUTH-LAB:NATIVE_MODEL_172.25.128.1_8772_HEALTH200_MODELS200_gpt-oss-20b-MXFP4_NO_INFERENCE",
+        "RUNTIME:LION-AUTH-LAB:SAAS_CHANNEL_SENTINELX_MCP_READY_MEDIATOR_READY_SESSION_UNBOUND_EXPIRED",
+        "TEST:LION-AUTH-LAB:DIAGNOSTIC_V3_EIGHT_NEGATIVE_TESTS_PASS",
+        "CHECKPOINT:LION-AUTH-LAB:readiness_20261011_v3.json@sha256:6393eea6f6b74a98d3cc8c692dac074126a4d53cb421fa97d764dfba242c4e09"
+      ],
+      "from_state": "READY",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T06:23:54Z",
+      "previous_digest": "1e310b489f31254e257af2c572241a2209b8a0a0ed53cd3868fbdeb69233ace3",
+      "sequence": 73,
+      "task_id": "SVC-0023",
+      "to_state": "IN_PROGRESS"
+    },
+    {
+      "actor": "r11-scoped-readback",
+      "digest": "aae8a6896db3b68b198afd53057d9e0cfc371b475836c3f13ec9aa87764be7ea",
+      "evidence_refs": [
+        "RUNTIME:LION-AUTH-LAB:NATIVE_MODEL_172.25.128.1_8772_HEALTH200_MODELS200_gpt-oss-20b-MXFP4_NO_INFERENCE",
+        "RUNTIME:LION-AUTH-LAB:SAAS_CHANNEL_SENTINELX_MCP_READY_MEDIATOR_READY_SESSION_UNBOUND_EXPIRED",
+        "TEST:LION-AUTH-LAB:DIAGNOSTIC_V3_EIGHT_NEGATIVE_TESTS_PASS",
+        "CHECKPOINT:LION-AUTH-LAB:readiness_20261011_v3.json@sha256:6393eea6f6b74a98d3cc8c692dac074126a4d53cb421fa97d764dfba242c4e09"
+      ],
+      "from_state": "IN_PROGRESS",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T06:23:54Z",
+      "previous_digest": "4df8441b3078478eeae0973925d0f73ad5bca5fcb9407b83d24f9620b0fe86ad",
+      "sequence": 74,
+      "task_id": "SVC-0023",
+      "to_state": "VERIFIED"
+    },
+    {
+      "actor": "r11-scoped-readback",
+      "digest": "91c0764a53d2edfe74672dfb4833552bb8be93c5c3aad887ffc551dc927526e7",
+      "evidence_refs": [
+        "RUNTIME:LION-AUTH-LAB:NATIVE_MODEL_172.25.128.1_8772_HEALTH200_MODELS200_gpt-oss-20b-MXFP4_NO_INFERENCE",
+        "RUNTIME:LION-AUTH-LAB:SAAS_CHANNEL_SENTINELX_MCP_READY_MEDIATOR_READY_SESSION_UNBOUND_EXPIRED",
+        "TEST:LION-AUTH-LAB:DIAGNOSTIC_V3_EIGHT_NEGATIVE_TESTS_PASS",
+        "CHECKPOINT:LION-AUTH-LAB:readiness_20261011_v3.json@sha256:6393eea6f6b74a98d3cc8c692dac074126a4d53cb421fa97d764dfba242c4e09"
+      ],
+      "from_state": "VERIFIED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T06:23:54Z",
+      "previous_digest": "aae8a6896db3b68b198afd53057d9e0cfc371b475836c3f13ec9aa87764be7ea",
+      "sequence": 75,
+      "task_id": "SVC-0023",
+      "to_state": "COMPLETE"
     }
   ],
   "ledger_id": "LION-R11-SERVICE-CONTINUATION-20261010",
   "owner_repository": "DonkeyJJLove/ai_platform",
   "recorded_at": "2026-10-10T21:31:34Z",
-  "revision": 31,
+  "revision": 76,
   "runtime_effect": "NONE",
   "schema": "lion.service-continuation-ledger/v1",
   "tasks": [
