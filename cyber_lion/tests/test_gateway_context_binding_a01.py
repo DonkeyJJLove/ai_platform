@@ -102,9 +102,26 @@ class GatewayContextBindingA01Tests(unittest.TestCase):
         source=(Path(__file__).resolve().parents[2]/"LION/runtime_compat/r20/node-panel/src/secure-mcp-relay.js").read_text(encoding="utf-8")
         self.assertIn("makeTurn(row, claim.claim_generation)",source)
         self.assertIn("turn.request_hash !== rec.turn_request_hash",source)
+        self.assertIn("turn.command_id !== rec.turn_command_id",source)
         self.assertIn("STALE_TURN_GENERATION",source)
-        self.assertIn("NEW_BROKER_REQUEST_REQUIRED",source)
-        self.assertNotIn("rec.claim_generation = claim.claim_generation",source)
+        self.assertIn("if (turn.status !== 'COMPLETED')",source)
+        # A late COMPLETE can only reclaim the SAME broker request for receipt
+        # publication. It cannot create another ingress turn or browser send.
+        completed=source.split("if (turn.status !== 'COMPLETED')",1)[1].split("async heartbeat(",1)[0]
+        self.assertNotIn("this.claimAndCreate(",completed)
+        self.assertIn("Number(brokerState.claim_generation) === rec.claim_generation",completed)
+        self.assertIn("brokerState.question_digest === rec.question_digest",completed)
+        self.assertIn("rec.turn_id === turn.turn_id && rec.turn_request_hash === turn.request_hash",completed)
+        self.assertIn("rec.turn_command_id === turn.command_id",completed)
+        self.assertIn("rec.reclaim_intent_generation == null",completed)
+        self.assertIn("rec.broker_respond_attempted_generation == null",completed)
+        self.assertIn("rec.state = 'RECLAIM_INTENT'",completed)
+        self.assertIn("claim.request_id !== rid",completed)
+        self.assertIn("claim.claim_generation !== rec.claim_generation + 1",completed)
+        self.assertIn("claim.question_digest !== rec.question_digest",completed)
+        self.assertIn("NO_BLIND_RECLAIM_RETRY",completed)
+        self.assertIn("rec.state = 'BROKER_RESPOND_ATTEMPT'; this.save(rec)",completed)
+        self.assertIn("rec.claim_generation = claim.claim_generation",completed)
 
     def test_capability_answer_keeps_unknown_identity_unknown(self):
         td,root=self.repo();self.addCleanup(td.cleanup)
