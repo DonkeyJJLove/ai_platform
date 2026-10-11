@@ -416,7 +416,7 @@
     },
     {
       "path": "tools/lion_effect_admission_broker.py",
-      "sha256": "5e2073f2b3fa83e085c7b308d09cad8bffb3090cf3b8bf066ed14fbdd2f1604c"
+      "sha256": "9679c43a80fc25e5b84d18b5bd593ba1d15319ae7b79ef3a759d3f32fba3839f"
     },
     {
       "path": "tools/lion_firefox_broker_relay.py",
@@ -475,7 +475,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "3e5365636c2f07e52668bac387c98ce6761be8c27792dc22780b7675321860ea",
+  "package_digest": "a533171d3e304760f5dc6238cf0e1356cbcda810641ee2e79a7e002fd30b41cb",
   "purpose": "R10 exact Application Factory phase-zero native LOCAL model proposal with durable SEND_UNKNOWN, real request/response byte digest and shared-model ancestor; original single MC scheduler and 93-file deployment, no Docker or LPCL autoactivation. Requires separate source/authority review for new HTTP POST effect surface.",
   "schema": "lion.source-package-manifest/v1"
 }
