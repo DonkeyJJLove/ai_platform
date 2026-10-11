@@ -68,6 +68,89 @@ class ApplicationFactoryProgramTests(unittest.TestCase):
         self.assertTrue(recon.saas_advisory_required(contract))
         self.assertEqual(contract["completion_predicates"],["CROSS_MODEL_INTELLIGENCE_BOUND=PASS"])
 
+    def test_exact_factory_requires_dual_provider_readiness_before_ui_start(self):
+        import importlib
+        import sys
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+
+        from cyber_lion.contracts.phase_execution_contract import required_cognitive_providers
+        from cyber_lion.app_coordination.cognitive_continuity import provider_requirements
+
+        contracts=[row.as_dict() for row in panel_contracts()]
+        self.assertEqual(required_cognitive_providers(contracts), ("LOCAL", "SAAS"))
+        self.assertEqual(provider_requirements(contracts), ("LOCAL", "SAAS"))
+        tools=Path(__file__).resolve().parents[2]/"tools"
+        if str(tools) not in sys.path:
+            sys.path.insert(0,str(tools))
+        compat=importlib.import_module("lion_mission_control_compat")
+        sys.modules["mission_control_compat"]=compat
+        mc=importlib.import_module("lion_mission_control_v3")
+
+        with tempfile.TemporaryDirectory(prefix="lion-r11-cognitive-start-") as td:
+            old_db,old_legacy=mc.DB,mc.LEGACY_DB
+            try:
+                mc.DB=Path(td)/"test-only.sqlite"
+                mc.LEGACY_DB=Path(td)/"absent.sqlite"
+                mc.migrate()
+                payload=registration_payload(HEAD,TREE)
+                mc.register_lpcl_mission(payload)
+                db=mc.connect()
+                try:
+                    self.assertEqual(mc._cognitive_requirements(db,MISSION_ID), ("LOCAL","SAAS"))
+                finally:
+                    db.close()
+                with patch.object(mc,"bind_lpcl_execution",side_effect=AssertionError("START forbidden")) as start:
+                    with self.assertRaisesRegex(ValueError,"cognitive readiness binding required"):
+                        mc.activate_lpcl_mission(
+                            MISSION_ID,
+                            {"lpcl_digest":payload["lpcl_digest"],
+                             "activation_event":"EXPLICIT_UI_ACTIVATION"},
+                        )
+                    with patch.object(
+                        mc,"_cognitive_readiness_readback",
+                        side_effect=ValueError("canonical Windows readiness unavailable"),
+                    ) as readback:
+                        with self.assertRaisesRegex(ValueError,"canonical Windows readiness unavailable"):
+                            mc.activate_lpcl_mission(
+                                MISSION_ID,
+                                {"lpcl_digest":payload["lpcl_digest"],
+                                 "activation_event":"EXPLICIT_UI_ACTIVATION",
+                                 "conversation_id":"conv-readonly",
+                                 "binding_epoch":1,
+                                 "readiness_projection_digest":"a"*64},
+                            )
+                        readback.assert_called_once_with(MISSION_ID,"conv-readonly",1)
+                    start.assert_not_called()
+                db=mc.connect()
+                try:
+                    mission=db.execute(
+                        "SELECT state,runtime_state,authorized_at FROM missions WHERE mission_id=?",
+                        (MISSION_ID,),
+                    ).fetchone()
+                    authority=db.execute(
+                        "SELECT authority_state FROM mission_process_specs WHERE mission_id=?",
+                        (MISSION_ID,),
+                    ).fetchone()
+                    trajectories=db.execute(
+                        "SELECT COUNT(*) FROM mission_native_cognitive_trajectories WHERE mission_id=?",
+                        (MISSION_ID,),
+                    ).fetchone()[0]
+                    saas_requests=db.execute(
+                        "SELECT COUNT(*) FROM saas_handoff_requests WHERE mission_id=?",
+                        (MISSION_ID,),
+                    ).fetchone()[0]
+                finally:
+                    db.close()
+                self.assertEqual((mission["state"],mission["runtime_state"]),("REGISTERED","NOT_STARTED"))
+                self.assertIsNone(mission["authorized_at"])
+                self.assertEqual(authority["authority_state"],"NONE")
+                self.assertEqual((trajectories,saas_requests),(0,0))
+            finally:
+                mc.DB=old_db
+                mc.LEGACY_DB=old_legacy
+
     def test_staged_capability_preflight_preserves_deployment_boundary(self):
         contracts=panel_contracts()
         recon_cap={
@@ -191,6 +274,105 @@ class ApplicationFactoryProgramTests(unittest.TestCase):
             finally:
                 mc.DB=old_db
                 mc.LEGACY_DB=old_legacy
+
+    def test_http_registration_replay_rejects_source_and_spec_substitution(self):
+        import copy
+        import importlib
+        import sys
+        import tempfile
+        import threading
+        import urllib.error
+        import urllib.request
+
+        tools=Path(__file__).resolve().parents[2]/"tools"
+        if str(tools) not in sys.path:sys.path.insert(0,str(tools))
+        compat=importlib.import_module("lion_mission_control_compat")
+        sys.modules["mission_control_compat"]=compat
+        mc=importlib.import_module("lion_mission_control_v3")
+        def request(base,path,value):
+            raw=json.dumps(value).encode("utf-8")
+            req=urllib.request.Request(
+                base+path,data=raw,method="POST",
+                headers={"Content-Type":"application/json"}
+            )
+            try:
+                with urllib.request.urlopen(req,timeout=5) as response:
+                    return response.status,json.loads(response.read(1<<20))
+            except urllib.error.HTTPError as exc:
+                return exc.code,json.loads(exc.read(1<<20))
+
+        payload=registration_payload(HEAD,TREE)
+        with tempfile.TemporaryDirectory(prefix="lion-reg-idempotency-") as scratch:
+            old_db,old_legacy=mc.DB,mc.LEGACY_DB
+            mc.DB=Path(scratch)/"mission.db"
+            mc.LEGACY_DB=Path(scratch)/"absent.db"
+            try:
+                mc.migrate()
+                server=mc.FleetThreadingHTTPServer(("127.0.0.1",0),mc.H)
+                base=f"http://127.0.0.1:{server.server_address[1]}"
+                thread=threading.Thread(target=server.serve_forever,daemon=True)
+                thread.start()
+                try:
+                    path="/api/v3/missions/register-lpcl"
+                    code,first=request(base,path,payload)
+                    self.assertEqual(code,201)
+                    self.assertFalse(first["idempotent"])
+                    code,replayed=request(base,path,payload)
+                    self.assertEqual(code,201)
+                    self.assertTrue(replayed["idempotent"])
+                    cases=(
+                        ("source_head","f"*40),
+                        ("source_tree","e"*40),
+                        ("material_target",payload["material_target"]+1),
+                        ("logical_count",payload["logical_count"]+1),
+                        ("title",payload["title"]+" mutated"),
+                        ("description",payload["description"]+" mutated"),
+                    )
+                    for field,value in cases:
+                        with self.subTest(field=field):
+                            mutated=copy.deepcopy(payload)
+                            mutated[field]=value
+                            code,result=request(base,path,mutated)
+                            self.assertEqual(code,400,result)
+                            self.assertIn("mission_id already bound",result["error"])
+                    altered=copy.deepcopy(payload)
+                    altered["phases"][0]["title"]+=" mutated"
+                    code,result=request(base,path,altered)
+                    self.assertEqual(code,400,result)
+                    self.assertIn("mission_id already bound",result["error"])
+                    code,result=request(
+                        base,"/api/v3/missions/"+MISSION_ID+"/activate",
+                        {"lpcl_digest":payload["lpcl_digest"],"activation_event":"BACKGROUND_PROCESS"}
+                    )
+                    self.assertEqual(code,409,result)
+                    db=mc.connect()
+                    try:
+                        registered=db.execute(
+                            "SELECT source_head,source_tree,state,runtime_state FROM missions WHERE mission_id=?",
+                            (MISSION_ID,),
+                        ).fetchone()
+                        auth=db.execute(
+                            "SELECT authority_state FROM mission_process_specs WHERE mission_id=?",
+                            (MISSION_ID,),
+                        ).fetchone()
+                        count=db.execute(
+                            "SELECT count(*) FROM mission_phases WHERE mission_id=?",
+                            (MISSION_ID,),
+                        ).fetchone()[0]
+                    finally:db.close()
+                    self.assertEqual(
+                        (registered["source_head"],registered["source_tree"]),
+                        (HEAD,TREE)
+                    )
+                    self.assertEqual((registered["state"],registered["runtime_state"]),("REGISTERED","NOT_STARTED"))
+                    self.assertEqual(auth["authority_state"],"NONE")
+                    self.assertEqual(count,5)
+                finally:
+                    server.shutdown()
+                    server.server_close()
+                    thread.join(timeout=7)
+            finally:
+                mc.DB,mc.LEGACY_DB=old_db,old_legacy
 
     def test_persisted_application_factory_package_matches_generator(self):
         root=Path(__file__).resolve().parents[2]

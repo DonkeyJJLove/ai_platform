@@ -28,7 +28,7 @@ class CognitiveReadinessActivationTests(unittest.TestCase):
         self.mc.LEGACY_DB = Path(self.td.name) / "none.db"
         self.mc.migrate()
 
-    def _lpcl(self, mission_id: str, capability: str) -> str:
+    def _lpcl(self, mission_id: str, capability: str, execution_class: str = "COGNITIVE") -> str:
         return (
             "PROJECT=LION_EVOLUSION\n"
             "MODE=AUTONOMOUS_EXECUTE\n"
@@ -41,7 +41,7 @@ class CognitiveReadinessActivationTests(unittest.TestCase):
             "MATERIAL_DRONE_COUNT=0\n"
             "PROTOCOLS=LPCL,AUTHORITY,CURRENTNESS,EVIDENCE,VALIDATION,RECEIPT,CONTROL\n"
             "PHASE_01=COGNITIVE_PHASE|Cognitive phase\n"
-            "PHASE_01_EXECUTION_CLASS=COGNITIVE\n"
+            f"PHASE_01_EXECUTION_CLASS={execution_class}\n"
             f"PHASE_01_CAPABILITY_CLASS={capability}\n"
             "PHASE_01_EFFECT_CEILING=NONE\n"
             "PHASE_01_BINDING_MODE=DYNAMIC\n"
@@ -53,8 +53,8 @@ class CognitiveReadinessActivationTests(unittest.TestCase):
             "PHASE_01_COMPLETION_01=COGNITIVE_PHASE_DONE=PASS\n"
         )
 
-    def _register(self, mission_id: str, capability: str):
-        text = self._lpcl(mission_id, capability)
+    def _register(self, mission_id: str, capability: str, execution_class: str = "COGNITIVE"):
+        text = self._lpcl(mission_id, capability, execution_class=execution_class)
         spec = {
             "mission_id": mission_id,
             "title": mission_id,
@@ -199,7 +199,12 @@ class CognitiveReadinessActivationTests(unittest.TestCase):
                 )
 
     def test_non_cognitive_mission_preserves_existing_activation_path(self):
-        spec = self._register("COG-NONE-R1", "CONTROL_PLANE_RECONNAISSANCE")
+        # The old fixture declared COGNITIVE while claiming this was a
+        # non-cognitive route. OBSERVE is the actual non-cognitive contract.
+        spec = self._register(
+            "COG-NONE-R1", "CONTROL_PLANE_RECONNAISSANCE",
+            execution_class="OBSERVE",
+        )
         with (
             patch.object(self.mc, "_cognitive_readiness_readback") as readback,
             patch.object(self.mc, "bind_lpcl_execution", return_value={"mission_id": spec["mission_id"], "state": "AUTHORIZED"}),

@@ -807,14 +807,39 @@ def register_lpcl_mission(x):
       if type(row) is not dict or set(row)!={'id','title'} or not _safe_id(row['id'],64) or row['id'] in seen or not isinstance(row['title'],str) or not 1<=len(row['title'])<=180:raise ValueError('phase row')
       seen.add(row['id']);phase_rows.append((row['id'],row['title']))
     if hashlib.sha256(x['lpcl_text'].encode('utf-8')).hexdigest()!=x['lpcl_digest']:raise ValueError('lpcl digest mismatch')
-    t=now();c=connect();existing=c.execute('SELECT spec_digest,state FROM missions WHERE mission_id=?',(mid,)).fetchone()
-    if existing:
-      if existing['spec_digest']==x['lpcl_digest']:
-       c.close();return {'idempotent':True,'mission':process_snapshot(mid)}
-      c.close();raise ValueError('mission_id already bound')
+    # Replays are idempotent only for the full original source and mission
+    # identity. The LPCL text digest alone does not bind HEAD/TREE, phase
+    # descriptors or the logical/material counts; accepting a changed request
+    # as idempotent would falsely acknowledge a different source epoch.
     spec={'mission_id':mid,'title':x['title'],'objective':x['objective'],'description':x['description'],'lpcl_digest':x['lpcl_digest'],'protocols':x['protocols'],'phases':x['phases'],'logical_count':x['logical_count'],'material_target':x['material_target'],'source_head':x['source_head'],'source_tree':x['source_tree']}
     spec['schema_version']=RUNTIME_SCHEMA_VERSION
     spec['mission_class']='LPCL_MISSION'
+    t=now();c=connect()
+    existing=c.execute('SELECT adapter,spec_digest,source_head,source_tree,spec_json FROM missions WHERE mission_id=?',(mid,)).fetchone()
+    if existing:
+      stored_process=c.execute(
+       'SELECT lpcl_digest,lpcl_text FROM mission_process_specs WHERE mission_id=?',(mid,)
+      ).fetchone()
+      stored_phases=[
+       (row['phase_id'],row['title']) for row in
+       c.execute('SELECT phase_id,title FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(mid,)).fetchall()
+      ]
+      try:stored_spec=json.loads(existing['spec_json'])
+      except (ValueError,TypeError):stored_spec=None
+      same=(
+       existing['adapter']=='LPCL_MISSION'
+       and existing['spec_digest']==x['lpcl_digest']
+       and existing['source_head']==x['source_head']
+       and existing['source_tree']==x['source_tree']
+       and stored_spec==spec
+       and stored_process is not None
+       and stored_process['lpcl_digest']==x['lpcl_digest']
+       and stored_process['lpcl_text']==x['lpcl_text']
+       and stored_phases==phase_rows
+      )
+      c.close()
+      if same:return {'idempotent':True,'mission':process_snapshot(mid)}
+      raise ValueError('mission_id already bound to different source or spec')
     c.execute('INSERT INTO missions VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(mid,x['title'],'LPCL_MISSION',x['lpcl_digest'],x['source_head'],x['source_tree'],None,'REGISTERED','NOT_STARTED',x['logical_count'],x['material_target'],0,0,t,None,t,None,json.dumps(spec,sort_keys=True,ensure_ascii=False)))
     c.execute('INSERT INTO mission_process_specs VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(mid,x['title'],x['objective'],x['description'],x['lpcl_digest'],x['lpcl_text'],json.dumps(x['protocols']), 'NONE',None,0.0,t,t))
     for i,(pid,title) in enumerate(phase_rows,1):c.execute('INSERT INTO mission_phases VALUES(?,?,?,?,?,?,?,?,?,?)',(mid,pid,i,title,'PENDING',0.0,None,None,None,t))

@@ -198,17 +198,22 @@ class ExecutionPreflight:
 
 
 def required_cognitive_providers(contracts: Sequence[Mapping[str, Any] | PhaseExecutionContract]) -> tuple[str, ...]:
-    """Derive provider requirements from existing process capability classes.
+    """Bind cognition to the capability owner's actual provider requirements.
 
-    DUAL is represented by declaring both LOCAL_MODEL_INFERENCE and
-    SAAS_DELEGATION; this function does not introduce a parallel mission enum.
+    Standalone LOCAL_MODEL_INFERENCE and SAAS_DELEGATION remain explicit.
+    A COGNITIVE CONTROL_PLANE_RECONNAISSANCE phase necessarily invokes the
+    owner's independent LOCAL trajectories and responded SaaS advisory.
+    An OBSERVE/VERIFY reconnaissance phase does not inherit that obligation.
+    This is a source-semantic requirement, not new capability or authority.
     """
     providers: set[str] = set()
     for contract in contracts:
         if isinstance(contract, PhaseExecutionContract):
             classes = contract.capability_classes
+            execution_class = contract.execution_class
         elif isinstance(contract, Mapping):
             classes = contract.get("capability_classes") or ()
+            execution_class = contract.get("execution_class")
         else:
             raise PhaseExecutionContractError("phase contract")
         if isinstance(classes, str):
@@ -219,6 +224,8 @@ def required_cognitive_providers(contracts: Sequence[Mapping[str, Any] | PhaseEx
             if not isinstance(capability_class, str):
                 raise PhaseExecutionContractError("capability_class")
             providers.update(COGNITIVE_PROVIDER_CAPABILITY_CLASSES.get(capability_class, ()))
+        if execution_class == "COGNITIVE" and "CONTROL_PLANE_RECONNAISSANCE" in classes:
+            providers.update(("LOCAL", "SAAS"))
     return tuple(sorted(providers))
 
 
