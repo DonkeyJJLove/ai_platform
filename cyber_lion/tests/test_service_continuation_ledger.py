@@ -41,10 +41,10 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertEqual(self.ledger["baseline"]["source_head"],
                          "222d52e57ebf17b950322e2a097f9ed94271cf9c")
 
-    def test_published_revision_replays_seventy_five_source_bound_events(self):
+    def test_published_revision_replays_eighty_four_source_bound_events(self):
         states = validate_ledger(self.published)
-        self.assertEqual(self.published["revision"], 76)
-        self.assertEqual(len(self.published["events"]), 75)
+        self.assertEqual(self.published["revision"], 85)
+        self.assertEqual(len(self.published["events"]), 84)
         self.assertEqual(states["SVC-0001"], "COMPLETE")
         self.assertEqual(states["SVC-0002"], "COMPLETE")
         self.assertEqual(states["SVC-0016"], "IN_PROGRESS")
@@ -57,7 +57,11 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertEqual(states["SVC-0009"], "COMPLETE")
         self.assertEqual(states["SVC-0010"], "COMPLETE")
         self.assertEqual(states["SVC-0011"], "COMPLETE")
-        self.assertEqual(states["SVC-0012"], "BLOCKED")
+        self.assertEqual(states["SVC-0012"], "SUPERSEDED")
+        self.assertEqual(states["SVC-0013"], "SUPERSEDED")
+        self.assertEqual(states["SVC-0014"], "SUPERSEDED")
+        self.assertEqual(states["SVC-0024"], "READY")
+        self.assertTrue(all(states[f"SVC-{i:04d}"] == "BLOCKED" for i in range(25, 30)))
         self.assertEqual(states["SVC-0018"], "COMPLETE")
         self.assertEqual(states["SVC-0019"], "COMPLETE")
         self.assertEqual(states["SVC-0020"], "COMPLETE")
@@ -67,6 +71,28 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertEqual(states["SVC-0017"], "COMPLETE")
         self.assertNotEqual(self.published["event_chain_head"], GENESIS)
         self.assertEqual(sum(x == "COMPLETE" for x in states.values()), 18)
+
+    def test_pr446_successor_preserves_history_and_denies_unbound_merge(self):
+        historical = deepcopy(self.published)
+        historical["events"] = historical["events"][:75]
+        historical["revision"] = 76
+        historical["event_chain_head"] = historical["events"][-1]["digest"]
+        self.assertEqual(validate_ledger(historical)["SVC-0012"], "BLOCKED")
+        assert_append_only(historical, self.published)
+        states = validate_ledger(self.published)
+        self.assertTrue(all(states[x] == "SUPERSEDED" for x in ("SVC-0012","SVC-0013","SVC-0014")))
+        self.assertEqual(states["SVC-0024"], "READY")
+        self.assertTrue(all(states[f"SVC-{x:04d}"] == "BLOCKED" for x in range(25,30)))
+        registered = {ev["task_id"]:ev["task"] for ev in self.published["events"] if ev["kind"]=="REGISTER_TASK"}
+        self.assertEqual(registered["SVC-0026"]["dependencies"], ["SVC-0025"])
+        self.assertEqual(registered["SVC-0026"]["effect_class"], "MERGE")
+        self.assertEqual(registered["SVC-0026"]["authorization_gate"], "SEPARATE_EXACT_OPERATOR_APPROVAL")
+        self.assertIn("base:d367e47cf4f72e450cc212908b2cdfed14ceb805", registered["SVC-0026"]["scope"])
+        self.assertIn("head:d8141ce421952bb0b352d873b706e183684f20f9", registered["SVC-0026"]["scope"])
+        with self.assertRaises(ServiceContinuationLedgerError):
+            propose_event(self.published,kind="TRANSITION",task_id="SVC-0026",
+                          actor="assistant",observed_at="2026-10-12T18:00:00Z",
+                          evidence_refs=["CI:green-only"],to_state="READY")
 
     def test_next_ready_is_dependency_reduced_no_scheduler(self):
         ready = next_ready_tasks(self.ledger)
@@ -237,11 +263,20 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
 
     def test_formalization_registry_routes_six_surfaces_and_digest(self):
         from cyber_lion.contracts.formalization_registry import FormalizationRegistry
-        reg_data = json.loads((ROOT / "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json").read_text("utf-8"))
+        reg_data = json.loads((ROOT / "LION/architecture/v1_5/SERVICE_CONTINUATION_FORMALIZATION_REGISTRY_R1.json").read_text("utf-8"))
         registry = FormalizationRegistry.from_dict(reg_data)
         self.assertEqual(registry.registry_digest, registry.compute_digest())
         owners = [x for x in reg_data["entries"] if x["semantic_owner_concept"] == "service_continuation"]
+        self.assertEqual(registry.registry_id, "formalization-registry:service-continuation-r11-candidate")
+        self.assertEqual(registry.authority_effect, "NONE")
         self.assertEqual(len(owners), 12)
+        integrated = json.loads((ROOT / "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json").read_text("utf-8"))
+        FormalizationRegistry.from_dict(integrated)
+        required = json.loads((ROOT / "LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_FEDERATION_R1.json").read_text("utf-8"))
+        self.assertEqual(integrated["registry_digest"], required["registry_digest"])
+        self.assertEqual(len(integrated["entries"]), 36)
+        self.assertFalse(any(x["semantic_owner_concept"] == "service_continuation" for x in integrated["entries"]))
+        self.assertEqual(len({x["artifact_id"] for x in integrated["entries"] + reg_data["entries"]}), 48)
         self.assertEqual(len({x["artifact_id"] for x in owners}), 12)
         self.assertTrue(all((ROOT / x["path"]).is_file() for x in owners))
         self.assertTrue(all("cyber_lion/tests/test_service_continuation_ledger.py" in x["validation_refs"] for x in owners))
@@ -326,7 +361,7 @@ class ServiceContinuationLedgerTests(unittest.TestCase):
         self.assertTrue(any(x["id"] == "G10" and not x["required_before_first_productive_launch"] for x in snap["gates"]))
         self.assertIn("NOT READY FOR PRODUCTIVE LPCL LAUNCH", report)
         self.assertIn("PR447", report)
-        reg = json.loads((ROOT / "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json").read_text("utf-8"))
+        reg = json.loads((ROOT / "LION/architecture/v1_5/SERVICE_CONTINUATION_FORMALIZATION_REGISTRY_R1.json").read_text("utf-8"))
         FormalizationRegistry.from_dict(reg)
         self.assertEqual({x["artifact_id"] for x in reg["entries"] if x["semantic_owner_concept"] == "service_continuation"},
                          {"service-continuation-contract", "service-continuation-schema",

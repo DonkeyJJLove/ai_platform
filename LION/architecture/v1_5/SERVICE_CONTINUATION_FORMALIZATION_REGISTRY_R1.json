@@ -1,0 +1,410 @@
+{
+  "architecture_epoch": "1.5",
+  "authority_effect": "NONE",
+  "entries": [
+    {
+      "artifact_class": "CONTRACT",
+      "artifact_id": "service-continuation-contract",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "dependency_refs": [],
+      "generator": null,
+      "invalidates": [],
+      "path": "cyber_lion/contracts/service_continuation_ledger.py",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "ServiceContinuationLedger",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Python non-authorizing ledger validation/event replay and append-only proposal contract",
+      "source_dependencies": [
+        "versioned operator evidence and GitHub state"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "CONTRACT",
+      "artifact_id": "service-continuation-schema",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "dependency_refs": [
+        "service-continuation-contract"
+      ],
+      "generator": null,
+      "invalidates": [],
+      "path": "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER.schema.json",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "lion.service-continuation-ledger/v1",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Strict structural schema for baseline/tasks/typed events",
+      "source_dependencies": [
+        "versioned operator evidence and GitHub state"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "SOURCE",
+      "artifact_id": "service-continuation-ledger",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "MIXED",
+      "dependency_refs": [
+        "service-continuation-contract",
+        "service-continuation-schema"
+      ],
+      "generator": null,
+      "invalidates": [],
+      "path": "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "lion.service-continuation-ledger/v1",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Human-reviewed versioned service work register with evidence-bound forward tasks",
+      "source_dependencies": [
+        "versioned operator evidence and GitHub state"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "DOCUMENTATION",
+      "artifact_id": "service-continuation-guide",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "dependency_refs": [
+        "service-continuation-ledger"
+      ],
+      "generator": null,
+      "invalidates": [],
+      "path": "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER.md",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "non-authorizing service continuation guide",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Operational semantics and explicit cross-system handoff/runbook",
+      "source_dependencies": [
+        "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "SOURCE",
+      "artifact_id": "service-continuation-cli",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "dependency_refs": [
+        "service-continuation-contract",
+        "service-continuation-ledger"
+      ],
+      "generator": null,
+      "invalidates": [],
+      "path": "tools/lion_service_continuation_ledger.py",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "service ledger CLI",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Read-only validation, DAG projection and stdout-only proposed ledger evolution",
+      "source_dependencies": [
+        "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "EVAL",
+      "artifact_id": "service-continuation-tests",
+      "consumers": [
+        "operator service handoff",
+        "architecture currentness and human entrypoints"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "dependency_refs": [
+        "service-continuation-cli",
+        "service-continuation-schema"
+      ],
+      "generator": null,
+      "invalidates": [],
+      "path": "cyber_lion/tests/test_service_continuation_ledger.py",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "unittest TestCase",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Falsification of authority inference, mutation, DAG and event-chain bugs",
+      "source_dependencies": [
+        "LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "RESEARCH_ARTIFACT",
+      "artifact_id": "service-readiness-snapshot",
+      "consumers": [
+        "operator service readiness report",
+        "LPCL launch preflight",
+        "architecture knowledge"
+      ],
+      "currentness_mode": "MIXED",
+      "dependency_refs": [
+        "service-continuation-ledger"
+      ],
+      "generator": null,
+      "invalidates": [],
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261010.json",
+      "refresh_triggers": [
+        "RUNTIME_OBSERVATION",
+        "CURRENTNESS_CHANGE",
+        "SOURCE_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "lion.r11-service-readiness-snapshot/v1",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Exact-time evidence-scoped readiness gate vector, never live runtime truth",
+      "source_dependencies": [
+        "service ledger revision 10",
+        "exact GitHub PR445/446/447",
+        "runtime observations on MOON and LION-AUTH-LAB and LAB-DEBIAN"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "DOCUMENTATION",
+      "artifact_id": "service-readiness-report",
+      "consumers": [
+        "human operator",
+        "Codex runbook",
+        "documentation entrypoints"
+      ],
+      "currentness_mode": "MIXED",
+      "dependency_refs": [
+        "service-readiness-snapshot",
+        "service-continuation-guide"
+      ],
+      "generator": null,
+      "invalidates": [],
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261010.md",
+      "refresh_triggers": [
+        "RUNTIME_OBSERVATION",
+        "CURRENTNESS_CHANGE",
+        "SOURCE_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "human-readable service readiness and LPCL operator launch gates",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Operator-facing, time-scoped gate diagnosis and explicit earliest readiness conditions",
+      "source_dependencies": [
+        "SERVICE_READINESS_SNAPSHOT_R11_20261010.json",
+        "Application Factory five phase source",
+        "operator evidence readback"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "RESEARCH_ARTIFACT",
+      "artifact_id": "service-readiness-snapshot-r11-20261011",
+      "consumers": [
+        "operator readiness report",
+        "LPCL operator preflight",
+        "federated architecture knowledge"
+      ],
+      "currentness_mode": "MIXED",
+      "dependency_refs": [
+        "service-readiness-snapshot",
+        "service-continuation-ledger"
+      ],
+      "generator": null,
+      "invalidates": [],
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_20261011.json",
+      "refresh_triggers": [
+        "CURRENTNESS_CHANGE",
+        "RUNTIME_OBSERVATION",
+        "SOURCE_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "lion.r11-service-readiness-snapshot/v2",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Versioned superseding post-provisioning PR445 and merge admission observation",
+      "source_dependencies": [
+        "PR445 live CI observation GHA:38066162833:3",
+        "signed PR445 production provisioning",
+        "service ledger revision 22",
+        "2026-10-10 GitHub review/currentness"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "DOCUMENTATION",
+      "artifact_id": "service-readiness-report-r11-20261011",
+      "consumers": [
+        "human operator",
+        "Codex continuation",
+        "documentation entrypoints"
+      ],
+      "currentness_mode": "MIXED",
+      "dependency_refs": [
+        "service-readiness-snapshot-r11-20261011",
+        "service-readiness-report"
+      ],
+      "generator": null,
+      "invalidates": [],
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_20261011.md",
+      "refresh_triggers": [
+        "CURRENTNESS_CHANGE",
+        "RUNTIME_OBSERVATION",
+        "SOURCE_CHANGE",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "R11 human-readable source-bound readiness successor",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Time-scoped readiness report after PR445 authority_current YES and before consuming merge",
+      "source_dependencies": [
+        "SERVICE_READINESS_SNAPSHOT_R11_20261011.json",
+        "source-bound GitHub PR445 readiness",
+        "Application Factory LPCL source"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "RESEARCH_ARTIFACT",
+      "artifact_id": "service-readiness-snapshot-post-pr445-merge",
+      "consumers": [
+        "operator",
+        "architecture knowledge",
+        "LPCL preflight"
+      ],
+      "currentness_mode": "MIXED",
+      "dependency_refs": [
+        "service-readiness-snapshot-r11-20261011",
+        "service-continuation-ledger"
+      ],
+      "generator": null,
+      "invalidates": [],
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_SNAPSHOT_R11_POST_PR445_MERGE_20261011.json",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "RUNTIME_OBSERVATION",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "lion.r11-service-readiness-snapshot/v3",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Exact Git tree/CI/source continuation snapshot after first merge",
+      "source_dependencies": [
+        "PR445 merge commit and parent readback",
+        "PR446 exact source rebind",
+        "service ledger revision 31"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    },
+    {
+      "artifact_class": "DOCUMENTATION",
+      "artifact_id": "service-readiness-report-post-pr445-merge",
+      "consumers": [
+        "operator",
+        "documentation entrypoints"
+      ],
+      "currentness_mode": "MIXED",
+      "dependency_refs": [
+        "service-readiness-snapshot-post-pr445-merge",
+        "service-continuation-guide"
+      ],
+      "generator": null,
+      "invalidates": [],
+      "path": "LION/architecture/v1_5/SERVICE_READINESS_REPORT_R11_POST_PR445_MERGE_20261011.md",
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "RUNTIME_OBSERVATION",
+        "MANUAL_REVIEW"
+      ],
+      "repository": "DonkeyJJLove/ai_platform",
+      "schema_or_type": "operator report after PR445 merge and PR446 source rebind",
+      "scope": "LOCAL",
+      "semantic_owner_concept": "service_continuation",
+      "semantic_role": "Explicit post-merge execution readiness and next signing requirements",
+      "source_dependencies": [
+        "SERVICE_READINESS_SNAPSHOT_R11_POST_PR445_MERGE_20261011.json",
+        "PR446 source HEAD and exact CI readback"
+      ],
+      "validation_refs": [
+        "cyber_lion/tests/test_service_continuation_ledger.py"
+      ]
+    }
+  ],
+  "registry_digest": "a129c4df79b8bec15b0833932ec5630bac2f21839f0efb54209c2dd49f6f12fd",
+  "registry_id": "formalization-registry:service-continuation-r11-candidate",
+  "schema_id": "lion.formalization-registry/v1"
+}

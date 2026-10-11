@@ -22,7 +22,7 @@
     "source_head": "222d52e57ebf17b950322e2a097f9ed94271cf9c",
     "source_tree": "68dd5043e6ede09eb5c2c2f348c40205cf2f44b6"
   },
-  "event_chain_head": "91c0764a53d2edfe74672dfb4833552bb8be93c5c3aad887ffc551dc927526e7",
+  "event_chain_head": "2e6b22a2ba7ab6bf4bb267de05b36bb821f3e9d725cdd5ab6d2c0d52119fe451",
   "events": [
     {
       "actor": "chatgpt-source-proposal-non-authorizing",
@@ -1336,12 +1336,278 @@
       "sequence": 75,
       "task_id": "SVC-0023",
       "to_state": "COMPLETE"
+    },
+    {
+      "actor": "r11-source-reconciliation",
+      "digest": "0cd8e54231dbdadd135fe3336499c1a5b1f1d123d7e7c7365ff758520948ece5",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "SOURCE:LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json@revision:76",
+        "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T06:58:46.564Z",
+      "previous_digest": "91c0764a53d2edfe74672dfb4833552bb8be93c5c3aad887ffc551dc927526e7",
+      "sequence": 76,
+      "task_id": "SVC-0012",
+      "to_state": "SUPERSEDED"
+    },
+    {
+      "actor": "r11-source-reconciliation",
+      "digest": "23e0dbeba2238f1cbd13d65706791a961cacfc8048c9ecf274d780c91949ba8f",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "SOURCE:LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json@revision:76",
+        "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T06:58:46.565Z",
+      "previous_digest": "0cd8e54231dbdadd135fe3336499c1a5b1f1d123d7e7c7365ff758520948ece5",
+      "sequence": 77,
+      "task_id": "SVC-0013",
+      "to_state": "SUPERSEDED"
+    },
+    {
+      "actor": "r11-source-reconciliation",
+      "digest": "770ab546f777f12a142f3383c55313f9d7a867ab405ad2b96b114e62ecd50ad8",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "SOURCE:LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json@revision:76",
+        "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+      ],
+      "from_state": "BLOCKED",
+      "kind": "TRANSITION",
+      "observed_at": "2026-10-11T06:58:46.566Z",
+      "previous_digest": "23e0dbeba2238f1cbd13d65706791a961cacfc8048c9ecf274d780c91949ba8f",
+      "sequence": 78,
+      "task_id": "SVC-0014",
+      "to_state": "SUPERSEDED"
+    },
+    {
+      "actor": "r11-source-reconciliation",
+      "digest": "d0f4c2900e2b29118edab17e35a1e7b578393d61b39cf5aabc852f8fbfd540f9",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "SOURCE:LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json@revision:76",
+        "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T06:58:46.567Z",
+      "previous_digest": "770ab546f777f12a142f3383c55313f9d7a867ab405ad2b96b114e62ecd50ad8",
+      "sequence": 79,
+      "task": {
+        "acceptance": [
+          "Current head/base and exact-head CI independently read",
+          "Durable grant and consumption or UNKNOWN separately classified",
+          "Merge remains blocked without new admitted approval"
+        ],
+        "authorization_gate": "NONE_READ_ONLY",
+        "dependencies": [],
+        "effect_class": "NONE",
+        "first_action": "Read exact PR446 refs/CI and approved read-only authority receipts; classify old grant as consumed, any live state UNKNOWN until observed.",
+        "initial_state": "READY",
+        "intent": "Reobserve exact PR446 CI and separate durable authority/consumption and security-tool disposition without replay or write.",
+        "owner": "ai_platform / governed R11 existing owner",
+        "scope": "DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:READ_ONLY_CURRENTNESS",
+        "source_refs": [
+          "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+          "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+        ],
+        "task_id": "SVC-0024",
+        "title": "PR446 current authority and denied merge readback"
+      },
+      "task_id": "SVC-0024"
+    },
+    {
+      "actor": "r11-source-reconciliation",
+      "digest": "7b3c7dff7016a65295c36e4142f5b17309023d8fced45cf45f0cf879bf247928",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "SOURCE:LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json@revision:76",
+        "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T06:58:46.568Z",
+      "previous_digest": "d0f4c2900e2b29118edab17e35a1e7b578393d61b39cf5aabc852f8fbfd540f9",
+      "sequence": 80,
+      "task": {
+        "acceptance": [
+          "New signed exact eligible grant and role separation proven",
+          "Single provision receipt and independent readback",
+          "Old consumed grant not replayed"
+        ],
+        "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+        "dependencies": [
+          "SVC-0024"
+        ],
+        "effect_class": "AUTHORITY_WRITE",
+        "first_action": "Present current source and earlier tool refusal to operator; use existing signed admission and durable readback only after separate approval.",
+        "initial_state": "BLOCKED",
+        "intent": "Independently approved new exact grant and protected provisioning for current head and base, never reuse old consumed permission.",
+        "owner": "ai_platform / governed R11 existing owner",
+        "scope": "DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:NEW_AUTHORITY_PROVISIONING",
+        "source_refs": [
+          "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+          "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+        ],
+        "task_id": "SVC-0025",
+        "title": "New exact PR446 authority"
+      },
+      "task_id": "SVC-0025"
+    },
+    {
+      "actor": "r11-source-reconciliation",
+      "digest": "0365b1c3dbd02dfde6bbb7c1fa0b5eb1dddd58792ab0b3c370d95023aff80c53",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "SOURCE:LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json@revision:76",
+        "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T06:58:46.569Z",
+      "previous_digest": "7b3c7dff7016a65295c36e4142f5b17309023d8fced45cf45f0cf879bf247928",
+      "sequence": 81,
+      "task": {
+        "acceptance": [
+          "Current approval and exact merge admission read back",
+          "One GitHub merge receipt and two-parent master independently verified",
+          "No alternative transport after denied admission"
+        ],
+        "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+        "dependencies": [
+          "SVC-0025"
+        ],
+        "effect_class": "MERGE",
+        "first_action": "Read new authority and live source before any merge; on security denial stop without another tool.",
+        "initial_state": "BLOCKED",
+        "intent": "Perform at most one newly authorized merge after production admission and reconcile actual successor HEAD/TREE.",
+        "owner": "ai_platform / governed R11 existing owner",
+        "scope": "DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:EXACT_MERGE",
+        "source_refs": [
+          "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+          "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+        ],
+        "task_id": "SVC-0026",
+        "title": "One admitted exact PR446 merge"
+      },
+      "task_id": "SVC-0026"
+    },
+    {
+      "actor": "r11-source-reconciliation",
+      "digest": "9705fe56f3df1917327ca30f343c819cf3c18c8e60a8b5b98c851767d9fcc24e",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "SOURCE:LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json@revision:76",
+        "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T06:58:46.570Z",
+      "previous_digest": "0365b1c3dbd02dfde6bbb7c1fa0b5eb1dddd58792ab0b3c370d95023aff80c53",
+      "sequence": 82,
+      "task": {
+        "acceptance": [
+          "Installed broker exact SHA with rollback and readback",
+          "Current transport distinguished from active SaaS session"
+        ],
+        "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+        "dependencies": [
+          "SVC-0026"
+        ],
+        "effect_class": "DEPLOY",
+        "first_action": "Reacquire actual merged source and pinned broker SHA; request separate install admission for original rollout path.",
+        "initial_state": "BLOCKED",
+        "intent": "Use existing broker update owner after separate approval and integrated source readback.",
+        "owner": "ai_platform / governed R11 existing owner",
+        "scope": "LION-AUTH-LAB:BROKER:POST_PR446_MASTER_PENDING",
+        "source_refs": [
+          "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+          "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+        ],
+        "task_id": "SVC-0027",
+        "title": "Existing broker source-bound deployment"
+      },
+      "task_id": "SVC-0027"
+    },
+    {
+      "actor": "r11-source-reconciliation",
+      "digest": "e1aa7511e7f2b97e2a661217f169dbedf038b7209ede0a1e73768aecd765dd8e",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "SOURCE:LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json@revision:76",
+        "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T06:58:46.571Z",
+      "previous_digest": "9705fe56f3df1917327ca30f343c819cf3c18c8e60a8b5b98c851767d9fcc24e",
+      "sequence": 83,
+      "task": {
+        "acceptance": [
+          "93/93 files verified against integrated source",
+          "Original installer/rollback and independent 8766/DB observation"
+        ],
+        "authorization_gate": "SEPARATE_EXACT_OPERATOR_APPROVAL",
+        "dependencies": [
+          "SVC-0027"
+        ],
+        "effect_class": "DEPLOY",
+        "first_action": "Stage current merged HEAD/TREE using original owner and separate admission; read back 93/93 service and DB.",
+        "initial_state": "BLOCKED",
+        "intent": "Run original staged installer with verified 93-file source and rollback, no hand-copied drift files.",
+        "owner": "ai_platform / governed R11 existing owner",
+        "scope": "LION-AUTH-LAB:MISSION_CONTROL_8766:POST_PR446_MASTER_PENDING",
+        "source_refs": [
+          "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+          "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+        ],
+        "task_id": "SVC-0028",
+        "title": "Existing Mission Control 93-file deployment"
+      },
+      "task_id": "SVC-0028"
+    },
+    {
+      "actor": "r11-source-reconciliation",
+      "digest": "2e6b22a2ba7ab6bf4bb267de05b36bb821f3e9d725cdd5ab6d2c0d52119fe451",
+      "evidence_refs": [
+        "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+        "SOURCE:LION/architecture/v1_5/SERVICE_CONTINUATION_LEDGER_R1.json@revision:76",
+        "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+      ],
+      "kind": "REGISTER_TASK",
+      "observed_at": "2026-10-11T06:58:46.572Z",
+      "previous_digest": "e1aa7511e7f2b97e2a661217f169dbedf038b7209ede0a1e73768aecd765dd8e",
+      "sequence": 84,
+      "task": {
+        "acceptance": [
+          "Five phases and execution contracts derived from deployed source",
+          "UNLAUNCHED registration independently read back",
+          "Explicit operator START and proper LOCAL/SaaS receipts; full material fleet separate"
+        ],
+        "authorization_gate": "EXPLICIT_EXACT_LPCL_OPERATOR_LAUNCH",
+        "dependencies": [
+          "SVC-0028"
+        ],
+        "effect_class": "LPCL_ACTIVATE",
+        "first_action": "Compile exact program, separately register without start, present exact current LPCL for explicit operator activation.",
+        "initial_state": "BLOCKED",
+        "intent": "Use exact deployed-source compiler and separately admitted UNLAUNCHED registration, then require operator UI START; material BUILD/VERIFY remains guarded.",
+        "owner": "ai_platform / governed R11 existing owner",
+        "scope": "LION-APPLICATION-FACTORY-R1:DEPLOYED_HEAD_OPERATOR_START",
+        "source_refs": [
+          "GITHUB:DonkeyJJLove/ai_platform:PR446:base:d367e47cf4f72e450cc212908b2cdfed14ceb805:head:d8141ce421952bb0b352d873b706e183684f20f9:OPEN_UNMERGED",
+          "CHECKPOINT:MOON:LION_R11_AUTONOMOUS_CURRENTNESS_HANDOFF_20261011.json@sha256:860799321fae3cad207af38781745f7359e05291547e201d4faa8def4d2ef2db"
+        ],
+        "task_id": "SVC-0029",
+        "title": "Application Factory exact LPCL operator START"
+      },
+      "task_id": "SVC-0029"
     }
   ],
   "ledger_id": "LION-R11-SERVICE-CONTINUATION-20261010",
   "owner_repository": "DonkeyJJLove/ai_platform",
   "recorded_at": "2026-10-10T21:31:34Z",
-  "revision": 76,
+  "revision": 85,
   "runtime_effect": "NONE",
   "schema": "lion.service-continuation-ledger/v1",
   "tasks": [

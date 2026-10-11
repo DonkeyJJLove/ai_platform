@@ -428,7 +428,22 @@ class HostAuthoritySeparationTests(unittest.TestCase):
                     for alias in node.names)
             for node in ast.walk(native_ast)
         ))
-        self.assertEqual(len(sources), 424 + len(r4_added) + len(r8_added) + len(r9_added) + len(r10_added))
+        # R11 service ledger adds one pure in-memory source contract, not a
+        # new runtime effect, scheduler, filesystem writer, or authority issuer.
+        service_source = "cyber_lion/contracts/service_continuation_ledger.py"
+        self.assertIn(service_source, sources)
+        service_ast = ast.parse(sources[service_source])
+        self.assertFalse(any(
+            isinstance(node,(ast.Import,ast.ImportFrom))
+            and any(alias.name in {"subprocess","os","socket","sqlite3","ctypes"}
+                    for alias in node.names)
+            for node in ast.walk(service_ast)
+        ))
+        self.assertFalse(any(
+            service_source in surface.implementation_refs
+            for surface in inv.surfaces
+        ))
+        self.assertEqual(len(sources), 424 + len(r4_added) + len(r8_added) + len(r9_added) + len(r10_added) + 1)
         self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (578, 6))
 
     def test_p1_fake_world_harness_not_skipped(self):
