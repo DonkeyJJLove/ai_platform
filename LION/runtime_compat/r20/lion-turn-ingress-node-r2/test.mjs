@@ -29,19 +29,33 @@ try {
   }
   assert(healthy, "server did not become healthy");
 
+  const claimMetadata = {
+    source: "LION_MISSION_CONTROL",
+    transport: "CHATGPT_SENTINELX_MCP",
+    broker_request_id: "saas-TEST-CMD-001",
+    claim_generation: 1,
+    browser_automation: "DISABLED_BY_POLICY",
+    authority_effect: "NONE"
+  };
   const payload = {
-    command_id: "TEST-CMD-001",
-    mission_id: "TEST-MISSION",
-    session_id: "TEST-SESSION",
-    thread_id: "TEST-THREAD",
+    command_id: "MC-saas-TEST-CMD-001",
+    mission_id: null,
+    session_id: "CHATGPT-SAAS",
+    thread_id: null,
     cursor: 1,
     parent_event_id: "saas_request:saas-TEST-CMD-001",
-    input: "ping"
+    input: "ping",
+    metadata: {...claimMetadata, private_secret: "DO_NOT_EXPOSE_THIS_TEST_VALUE"}
   };
   const a = await req("/v1/turns", { method:"POST", body: JSON.stringify(payload) });
   assert(a.status === 202, "first submit must be 202");
   const id = a.body.turn.turn_id;
   assert(a.body.turn.parent_event_id === payload.parent_event_id, "parent event lineage missing");
+  assert(JSON.stringify(a.body.turn.metadata) === JSON.stringify(claimMetadata), "creation should project exact safe SentinelX metadata");
+  assert(!JSON.stringify(a.body.turn).includes("DO_NOT_EXPOSE_THIS_TEST_VALUE"), "raw private turn metadata must not escape ingress");
+  const firstRead = await req(`/v1/turns/${id}`);
+  assert(firstRead.status === 200 && JSON.stringify(firstRead.body.turn.metadata) === JSON.stringify(claimMetadata), "GET must preserve verified transport metadata");
+  assert(firstRead.body.turn.request_hash === a.body.turn.request_hash, "metadata projection must not mutate immutable request hash");
 
   const b = await req("/v1/turns", { method:"POST", body: JSON.stringify(payload) });
   assert(b.status === 200 && b.body.duplicate === true, "duplicate must collapse exactly-once");
@@ -58,12 +72,25 @@ try {
 
   const claim = await req(`/v1/turns/${id}/claim`, { method:"POST", body: JSON.stringify({actor:"test-runner"}) });
   assert(claim.status === 200 && claim.body.turn.status === "CLAIMED", "claim failed");
+  assert(JSON.stringify(claim.body.turn.metadata) === JSON.stringify(claimMetadata), "claimed turn must preserve exact safe metadata");
 
   const done = await req(`/v1/turns/${id}/complete`, { method:"POST", body: JSON.stringify({response:{text:"pong"},actor:"test-runner"}) });
   assert(done.status === 200 && done.body.turn.status === "COMPLETED", "complete failed");
+  assert(JSON.stringify(done.body.turn.metadata) === JSON.stringify(claimMetadata), "completed turn must preserve exact safe metadata");
 
   const state = await req("/v1/state");
   assert(state.body.completed === 1 && state.body.pending === 0, "state counters wrong");
+
+  // Foreign or malformed metadata must not become a trusted transport claim.
+  const foreign = await req("/v1/turns", { method:"POST", body: JSON.stringify({
+    command_id:"MC-saas-BAD-001", mission_id:null, session_id:"CHATGPT-SAAS",
+    thread_id:null, parent_event_id:"saas_request:saas-BAD-001", input:"foreign",
+    metadata:{...claimMetadata,broker_request_id:"saas-OTHER",private_secret:"SHOULD_NEVER_LEAK"}
+  }) });
+  assert(foreign.status === 202 && !Object.hasOwn(foreign.body.turn,"metadata"), "unbound transport claim must be omitted");
+  const badRead = await req(`/v1/turns/${foreign.body.turn.turn_id}`);
+  assert(badRead.status === 200 && !Object.hasOwn(badRead.body.turn,"metadata"), "GET must omit untrusted metadata");
+  assert(!JSON.stringify(badRead.body.turn).includes("SHOULD_NEVER_LEAK"), "no raw metadata disclosure");
 
   const mcp = await req("/mcp", { method:"POST", body: JSON.stringify({jsonrpc:"2.0",id:1,method:"tools/list",params:{}}) });
   assert(mcp.status === 200 && mcp.body.result.tools.length >= 3, "mcp tools/list failed");

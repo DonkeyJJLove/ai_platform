@@ -129,7 +129,36 @@ async function body(req) {
   return value;
 }
 
+// Expose only the bounded, non-authoritative SentinelX claim provenance needed
+// by the native R4 consumer. Raw ingress metadata is untrusted and may contain
+// unrelated/private fields; never expose it wholesale or synthesize a claim.
+// This is an identity projection, not authorization to perform a browser send.
+function sourceBoundSaaSMetadata(t) {
+  const m = t?.metadata;
+  if (!m || typeof m !== "object" || Array.isArray(m)) return null;
+  const rid = m.broker_request_id;
+  if (m.source !== "LION_MISSION_CONTROL" ||
+      m.transport !== "CHATGPT_SENTINELX_MCP" ||
+      m.browser_automation !== "DISABLED_BY_POLICY" ||
+      m.authority_effect !== "NONE" ||
+      typeof rid !== "string" || !/^saas-[A-Za-z0-9-]+$/.test(rid) ||
+      !Number.isSafeInteger(m.claim_generation) || m.claim_generation < 1 ||
+      t.command_id !== "MC-" + rid ||
+      t.parent_event_id !== "saas_request:" + rid ||
+      t.session_id !== "CHATGPT-SAAS" ||
+      t.thread_id !== null) return null;
+  return {
+    source: m.source,
+    transport: m.transport,
+    broker_request_id: rid,
+    claim_generation: m.claim_generation,
+    browser_automation: m.browser_automation,
+    authority_effect: m.authority_effect
+  };
+}
+
 function publicTurn(t) {
+  const metadata = sourceBoundSaaSMetadata(t);
   return {
     schema: t.schema,
     turn_id: t.turn_id,
@@ -146,6 +175,7 @@ function publicTurn(t) {
     completed_at: t.completed_at || null,
     request_hash: t.request_hash,
     input: t.input,
+    ...(metadata ? { metadata } : {}),
     response: t.response ?? null,
     claim: t.claim ?? null
   };
