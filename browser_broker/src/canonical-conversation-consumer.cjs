@@ -103,13 +103,13 @@ function canonicalPrompt(turn,candidate){
  ];
  return [
   'Use the SentinelX connector only. Do not use LION-MCP-R2 or OpenAI Secure MCP Tunnel.',
-  'Target host: MOON.',
+  'Target host: moon.',
   'Canonical Model Chat identity is frozen for this request:',
   ...ids.map(([k,v])=>k+'='+v),
-  '1. Call SentinelX sentinel_exec on MOON with command exactly:',
+  '1. Call SentinelX sentinel_exec on moon with command exactly:',
   '/usr/local/bin/lion-sentinelx-turn get '+turn.turn_id,
   '2. Read the returned JSON input field and answer that cognitive request.',
-  '3. Call SentinelX sentinel_exec on MOON again with command:',
+  '3. Call SentinelX sentinel_exec on moon again with command:',
   '/usr/local/bin/lion-sentinelx-turn complete '+turn.turn_id+' chatgpt-saas-sentinelx \'{"text":"<your answer>"}\'',
   'The final argument must be one valid shell-quoted JSON object with exactly one key: text.',
   'Do not call any other write tool.',

@@ -77,7 +77,7 @@
     },
     {
       "path": "browser_broker/src/canonical-conversation-consumer.cjs",
-      "sha256": "b68959b3feb715f8f932a9c47e7c88b352f134d8dd847b563af4237df8302cf7"
+      "sha256": "a2fc41926fed5aba578a6fd0c9329c8d8223d93252e03eb935ecaa5db9f19685"
     },
     {
       "path": "browser_broker/src/desktop-read-model.cjs",
@@ -432,7 +432,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "60e716fc1c57e623df565044f7d61efc4611e4ec6261b7e08510920fb0fdd133",
+  "package_digest": "2cf05449ecdba3b895ef92019fa96f42d2c16db0cf7e30d75b77d88edeed47f8",
   "authority_effect": "NONE",
   "supersedes": "SOURCE_PACKAGE_MANIFEST_CCF_R3.json"
 }
