@@ -2,7 +2,7 @@
   "authority_effect": "NONE",
   "candidate_source_parent": "34cdc8a17fcd235807bee6340762839bc8a71fb0",
   "execution_effect": "NONE",
-  "file_count": 93,
+  "file_count": 94,
   "files": [
     {
       "sha256": "ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8",
@@ -265,7 +265,7 @@
       "target": "cyber_lion/mission_control/cooperative_preactivation.py"
     },
     {
-      "sha256": "7f702e7122527a92da621cc483d3b1fe1f8e0c0d9ded52a9e6ee1b17c40e0502",
+      "sha256": "f971132aceecbe88670968a4ef8851bbdee421e382af7022f29cbae09511ee51",
       "source": "cyber_lion/mission_control/cooperative_preactivation_bootstrap.py",
       "target": "cyber_lion/mission_control/cooperative_preactivation_bootstrap.py"
     },
@@ -358,6 +358,11 @@
       "sha256": "9a6d9d62c25bbc4a3c15aeb1731223fc7c08e62bf8099717a9c58e85aab0ed24",
       "source": "cyber_lion/mission_control/runtime_projection.py",
       "target": "cyber_lion/mission_control/runtime_projection.py"
+    },
+    {
+      "source": "cyber_lion/mission_control/source_bound_preactivation_factory.py",
+      "target": "cyber_lion/mission_control/source_bound_preactivation_factory.py",
+      "sha256": "b95f680b04a963516d8b1fa1a5b0b2fbc20b52d2289dcbf50e236e1db7a3eaba"
     },
     {
       "sha256": "d6ffc5c07caf5db6e4040c38962987c3c0c6effb2bfb022e88373c71e773fb80",

@@ -68,6 +68,7 @@ SOURCE_MAP = {
     'cyber_lion/mission_control/cooperative_materialization_registry.py': ROOT / 'cyber_lion/mission_control/cooperative_materialization_registry.py',
     'cyber_lion/mission_control/cooperative_preactivation.py': ROOT / 'cyber_lion/mission_control/cooperative_preactivation.py',
     'cyber_lion/mission_control/cooperative_preactivation_bootstrap.py': ROOT / 'cyber_lion/mission_control/cooperative_preactivation_bootstrap.py',
+    'cyber_lion/mission_control/source_bound_preactivation_factory.py': ROOT / 'cyber_lion/mission_control/source_bound_preactivation_factory.py',
     'cyber_lion/mission_control/cooperative_process_bootstrap.py': ROOT / 'cyber_lion/mission_control/cooperative_process_bootstrap.py',
     'cyber_lion/mission_control/cooperative_production.py': ROOT / 'cyber_lion/mission_control/cooperative_production.py',
     'cyber_lion/mission_control/cooperative_readiness.py': ROOT / 'cyber_lion/mission_control/cooperative_readiness.py',

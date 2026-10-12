@@ -428,7 +428,27 @@ class HostAuthoritySeparationTests(unittest.TestCase):
                     for alias in node.names)
             for node in ast.walk(native_ast)
         ))
-        self.assertEqual(len(sources), 424 + len(r4_added) + len(r8_added) + len(r9_added) + len(r10_added))
+        r11_added = {
+            "cyber_lion/mission_control/source_bound_preactivation_factory.py",
+        }
+        self.assertTrue(r11_added.issubset(sources))
+        r11_source = sources[next(iter(r11_added))]
+        r11_tree = ast.parse(r11_source)
+        # R11 introduces a pinned, explicit source composition library, not a
+        # new authority issuer, shell runner, scheduler or network dispatcher.
+        self.assertIn("compose_existing_owners", r11_source)
+        self.assertIn("source-bound owner module digest unavailable", r11_source)
+        self.assertFalse(any(
+            isinstance(node, (ast.Import, ast.ImportFrom))
+            and any(alias.name in {"subprocess", "socketserver"}
+                    for alias in node.names)
+            for node in ast.walk(r11_tree)
+        ))
+        self.assertEqual(
+            len(sources),
+            424 + len(r4_added) + len(r8_added) + len(r9_added)
+                + len(r10_added) + len(r11_added),
+        )
         self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (578, 6))
 
     def test_p1_fake_world_harness_not_skipped(self):
