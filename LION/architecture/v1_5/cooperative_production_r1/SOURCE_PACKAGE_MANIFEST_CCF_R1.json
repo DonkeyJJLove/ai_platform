@@ -16,7 +16,7 @@
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R11_ORIGINAL_OWNER_CONSTRUCTION_R1.md",
-      "sha256": "d11949fb20e32f3ce88e5085ea373c11c6e83ec8a84ef2712a22ebec6bd3407d"
+      "sha256": "b0f46a156fd423510588e70aa494473768c24970500ff63630f6e3bdf7084bd9"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R4_CANARY_SAAS_STATUS_AND_LPCL_CURRENTNESS_R1.md",
@@ -53,6 +53,10 @@
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R9_PHASE_SCOPED_MATERIAL_FLEET_PROJECTION_R1.md",
       "sha256": "1aa7019823bd7f26b06e1288054e5069d98f61f6889e2f92d0b8386870c9f3e0"
+    },
+    {
+      "path": "LION/architecture/v1_5/cooperative_production_r1/r11_external_current_owner_source.py",
+      "sha256": "d1951d5cd473e5af6902b5ecfe12987ea25000dc68fa582108bc197e15b613a4"
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
@@ -347,6 +351,10 @@
       "sha256": "6e8ddd3cc9eeda7dab7fff78c50b352420ca72964823a5a9a03ec9634aa87f03"
     },
     {
+      "path": "cyber_lion/tests/test_r11_external_current_owner_source.py",
+      "sha256": "00856c81764fcd77cbd502560860da52c203e044410d84a8762e5be1a25cfbaf"
+    },
+    {
       "path": "cyber_lion/tests/test_r11_typed_owner_factory.py",
       "sha256": "600980fb19e26e3090759bf4e9fb2b3e623f9ba46349dabc26dcb5f68e40075d"
     },
@@ -495,7 +503,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "5eb1cdfd15a0fb456e230195126081b5da99890d5b9793d65a536ac0fa9d16f7",
+  "package_digest": "88cdf35c58dcfe05e19bf9c2802407c8f28e7a37af5978b07788bc9092d8d98d",
   "purpose": "R10 exact Application Factory phase-zero native LOCAL model proposal with durable SEND_UNKNOWN, real request/response byte digest and shared-model ancestor; original single MC scheduler and 93-file deployment, no Docker or LPCL autoactivation. Requires separate source/authority review for new HTTP POST effect surface.",
   "schema": "lion.source-package-manifest/v1"
 }

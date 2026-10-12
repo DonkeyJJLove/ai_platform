@@ -41,3 +41,31 @@ Producer -> consumer:
   separate admission and original LPCL operator START.
 
 AUTHORITY_EFFECT=NONE; SOURCE_ONLY_NOT_DEPLOYED=TRUE.
+
+
+## R11 external source-bound builder
+
+r11_external_current_owner_source.py is the reviewed, versioned source
+of an external, separately SHA-256-pinned build_current_owners() module,
+not an installed provider. The operator's original protected release workflow
+must copy the exact reviewed bytes outside the Mission Control repository.
+
+The canonical R11 outer factory first validates source file SHA and invokes
+build_current_owners(). The inner builder requires all three immutable
+environment properties for the independent original source provider:
+LION_R11_CURRENT_OWNER_SOURCES_MODULE_PATH,
+LION_R11_CURRENT_OWNER_SOURCES_MODULE_SHA256,
+LION_R11_CURRENT_OWNER_SOURCES_MODULE_VERSION=1.0.0.
+The independent upstream file must expose build_current_owner_sources() and
+return exact CurrentOwnerSources. The loader compiles only SHA-pinned bytes,
+rejects writable/indirect modules and checks source identity after import.
+
+The source of actual RuntimeAdmission/PDP/authorization/currentness evidence is
+not installed by this builder. These objects cannot be reconstructed from
+Mission Control receipts or synthetic fixtures. An independent existing
+authority/evidence producer remains necessary; NONE is provided as default.
+The three-file source chain, isolated canary, real proof of currentness and
+exact operator activation are independent gating steps.
+
+The canonical SQLite is never copied from LION-AUTH-LAB to MOON and workers
+receive no new raw canonical DB write permission. SOURCE_ONLY; no MD001 launch.
