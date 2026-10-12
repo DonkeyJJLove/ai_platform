@@ -129,3 +129,32 @@ or infer current policy from a persisted record. Refer to
 R11_ORIGINAL_PDP_EVIDENCE_R1.md for exact external owners and effects.
 The original R11 source composition still requires a live, independently
 qualified build_current_owner_sources() and production governance.
+
+
+## Original worker verifier exact-byte import
+
+The existing R24 cooperative worker source
+cyber_lion/enterprise/cooperative_dependency_provider.py remains the
+original source for read-only worker authority/epoch/root lookups. Before
+an R11 production owner can trust that worker-side verifier, the
+externally pinned verifier Python module MUST run only the SHA-256
+checked bytes; an importlib SourceFileLoader reopen after prehash is a
+time-of-check/time-of-use executable-source substitution hazard.
+
+The source-only fix compiles/executes the very same checked bytes,
+requires a direct non-group/world-writable original file and parent,
+rechecks (device,inode) and SHA-256 after import and after ready(),
+and cleans the transient module namespace on failures. The original
+TrustedSignatureVerifierAdapter and issuer key/epoch/root validation are
+reused; this does not generate a key, signature, grant, RuntimeAdmission,
+current PDP result or operator activation.
+
+Negative tests swap the verifier source after the first digest-bound
+read and prove the substituted code does not execute (a harmless
+temporary-file marker stays absent). Tests also deny writable modules
+and verify no importlib second loader read is invoked. These
+are isolated source tests with an intentionally fake verifier fixture;
+they do not establish live cryptographic trust or production deployment.
+
+Source-only; original PR #446 platform-security refusal and exact
+release/runtime/operator admission remain separate hard boundaries.

@@ -135,7 +135,7 @@
       "target": "cyber_lion/enterprise/cooperative_control_plane_materializer.py"
     },
     {
-      "sha256": "35d7609382682a6ccf6323fe0f5468987060afe89f4203ee7b5986f70c946abb",
+      "sha256": "413d4dcb355923453b63951275fd84fbaa75fef6f467c50c6508cde7586adca2",
       "source": "cyber_lion/enterprise/cooperative_dependency_provider.py",
       "target": "cyber_lion/enterprise/cooperative_dependency_provider.py"
     },
