@@ -368,7 +368,13 @@ class CooperativeRuntimePreparationProvider:
                 return context
 
             now=_zoned(self.now_fn(),"trusted preparation clock")
-            evidence=self.evidence_source(assignment_id)
+            exact_time_resolver=getattr(self.evidence_source,"resolve_at",None)
+            if callable(exact_time_resolver):
+                # The independent original producer must bind its sealed
+                # currentness to THIS SAME journal/admission timestamp.
+                evidence=exact_time_resolver(assignment_id,now)
+            else:
+                evidence=self.evidence_source(assignment_id)
             _require(type(evidence) is CooperativeRuntimePreparationEvidence,
                      "exact preparation evidence required")
             evidence.validate()

@@ -174,6 +174,25 @@ class CooperativeRuntimePreparationProviderTests(unittest.TestCase):
                 ).fetchone()
             )
 
+    def test_r621_passes_one_captured_trusted_now_to_original_evidence_source(self):
+        provider=self.provider()
+        seen=[]
+        original=self.fixture.evidence
+
+        class OriginalTimeBoundEvidence:
+            def __call__(self,aid):
+                raise AssertionError("original R6.21 must not take unbound time")
+
+            def resolve_at(self,aid,trusted_now):
+                seen.append((aid,trusted_now))
+                return original
+
+        provider.evidence_source=OriginalTimeBoundEvidence()
+        context=provider(self.aid)
+        self.assertEqual(len(seen),1)
+        self.assertEqual(seen[0],(self.aid,NOW))
+        self.assertEqual(context.execution.assignment_id,self.aid)
+
     def test_exact_preparation_publishes_durable_admission_and_is_repeatable(self):
         provider = self.provider()
         context = provider(self.aid)

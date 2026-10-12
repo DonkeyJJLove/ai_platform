@@ -174,22 +174,41 @@ def build_current_owner_sources(owners: OriginalR11ServiceOwners) -> CurrentOwne
         replay_guard=owner.admission_replay_guard,
     )
 
-    def original_preparation_for(assignment_id: str) -> CooperativeRuntimePreparationEvidence:
+    def original_preparation_at(
+        assignment_id: str, trusted_now: datetime,
+    ) -> CooperativeRuntimePreparationEvidence:
         _need(type(assignment_id) is str and bool(assignment_id),
               "canonical assignment identity required")
+        _need(type(trusted_now) is datetime and trusted_now.tzinfo is not None,
+              "original trusted preparation clock required")
         _need(_binding(owner.preparation_source)==owner.preparation_trust.binding(),
               "original preparation source drift before resolve")
-        observed=owner.preparation_source.resolve(assignment_id)
+        resolve_at=getattr(owner.preparation_source,"resolve_at",None)
+        if callable(resolve_at):
+            observed=resolve_at(assignment_id,trusted_now)
+        else:
+            observed=owner.preparation_source.resolve(assignment_id)
         _need(_binding(owner.preparation_source)==owner.preparation_trust.binding(),
               "original preparation source drift after resolve")
         _need(type(observed) is CooperativeRuntimePreparationEvidence,
               "independent original R6.20 evidence unavailable")
         observed.validate()
+        _need(observed.currentness.trusted_now.astimezone(timezone.utc)
+              ==trusted_now.astimezone(timezone.utc),
+              "original R6.20 input and R6.21 admission clock split")
         # The exact mission is captured from the already validated owner
         # envelope; global config changes cannot rebind this callback later.
         _need(observed.proposal.mission_id==owner.mission_id,
               "original preparation evidence mission mismatch")
         return observed
+
+    def original_preparation_for(assignment_id: str) -> CooperativeRuntimePreparationEvidence:
+        return original_preparation_at(assignment_id,owner.now_fn())
+
+    # Existing R6.21 accepts a one-argument callable for historical
+    # providers. The original source-only wrapper additionally advertises
+    # an exact timestamp-bound resolver to the R6.21 journal owner.
+    original_preparation_for.resolve_at=original_preparation_at
 
     sources=CurrentOwnerSources(
         mission_db=Path(owner.mission_db),

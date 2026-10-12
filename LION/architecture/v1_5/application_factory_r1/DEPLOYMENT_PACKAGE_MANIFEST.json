@@ -2,7 +2,7 @@
   "authority_effect": "NONE",
   "candidate_source_parent": "34cdc8a17fcd235807bee6340762839bc8a71fb0",
   "execution_effect": "NONE",
-  "file_count": 98,
+  "file_count": 99,
   "files": [
     {
       "sha256": "ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8",
@@ -160,7 +160,7 @@
       "target": "cyber_lion/enterprise/cooperative_runtime_evidence_sources.py"
     },
     {
-      "sha256": "7cd30cec01a01b7da1fa912828ac109fe07d4301dc4b50c8a17c56de21695a89",
+      "sha256": "3f56a2133f7cfcbdaf1ec006448da1bf7fd6c18d0090c904c451a8b44b55e725",
       "source": "cyber_lion/enterprise/cooperative_runtime_preparation_provider.py",
       "target": "cyber_lion/enterprise/cooperative_runtime_preparation_provider.py"
     },
@@ -212,7 +212,12 @@
     {
       "source": "cyber_lion/enterprise/r11_original_current_owner_builder.py",
       "target": "cyber_lion/enterprise/r11_original_current_owner_builder.py",
-      "sha256": "6444b5797360c20f309978080ae7eb80cd51cfc9cf79a8cfef31f22a7f567168"
+      "sha256": "5ddc38681759ec42d9ac75dcda7be0f124417a86e724e762e086bab2736e865d"
+    },
+    {
+      "source": "cyber_lion/enterprise/r11_original_r620_evidence_source.py",
+      "target": "cyber_lion/enterprise/r11_original_r620_evidence_source.py",
+      "sha256": "4ea3b06975731e77587dcd23b089d5681167c807cdc58c96c6f3e1e59db29f27"
     },
     {
       "source": "cyber_lion/enterprise/r11_runtime_admission_replay.py",

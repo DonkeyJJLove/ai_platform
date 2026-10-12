@@ -200,3 +200,18 @@ material execution mechanism.
 
 SOURCE_ONLY; ORIGINAL_PLATFORM_SECURITY_REFUSAL=UNRESOLVED;
 RUNTIME_ADMISSION=NOT_PROVEN; PRODUCTION_MD001=HOLD.
+
+
+## Original R6.20 independent input producer — R11
+
+A new source-only ReadOnlyOriginalR620EvidenceSource now binds twelve
+independently already-issued preparation input contracts to the exact
+canonical Mission Control HELD assignment, with original R6.20
+pure preflight and an independent canonical PDP readback.
+It returns the exact CooperativeRuntimePreparationEvidence needed by
+the original R6.21 journal owner, while R6.21 captures and passes one
+trusted_now through the optional resolve_at interface. See
+R11_ORIGINAL_R620_EVIDENCE_SOURCE_R1.md for precise source/consumer
+and negative test scope. A real independently authenticated upstream
+twelve-part original input owner remains a hard prerequisite; no
+synthetic live authority or deployment is provided by this change.

@@ -116,7 +116,7 @@ class MissionControlV3StageDispatchTests(unittest.TestCase):
             self.assertEqual(result["file_count"], len(SOURCE_MAP))
             # R11 original-source typed assembly is the 98th pinned source item.
             # No live evidence DB is created by its import.
-            self.assertEqual(len(identity), 98)
+            self.assertEqual(len(identity), 99)
             self.assertEqual(result["package_identity"], identity)
             self.assertEqual(meta["source_head"], HEAD)
             self.assertEqual(meta["source_tree"], TREE)
@@ -171,7 +171,7 @@ class MissionControlV3StageDispatchTests(unittest.TestCase):
                 )
                 self.assertTrue(good["staged"])
                 old_identity = broker.mission_control_v3_package_identity_at(stage)
-                self.assertEqual(len(old_identity), 98)
+                self.assertEqual(len(old_identity), 99)
                 missing = checkout / "cyber_lion/mission_control/cooperative_preactivation.py"
                 self.assertTrue(missing.exists())
                 missing.unlink()
@@ -182,7 +182,7 @@ class MissionControlV3StageDispatchTests(unittest.TestCase):
                     )
                 after = broker.mission_control_v3_package_identity_at(stage)
                 self.assertEqual(after, old_identity)
-                self.assertEqual(len(after), 98)
+                self.assertEqual(len(after), 99)
                 self.assertEqual(
                     json.loads((stage / broker.MISSION_CONTROL_V3_STAGE_IDENTITY)
                                .read_text(encoding="utf-8"))["source_head"], HEAD

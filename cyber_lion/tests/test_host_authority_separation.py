@@ -434,8 +434,15 @@ class HostAuthoritySeparationTests(unittest.TestCase):
             "cyber_lion/enterprise/r11_runtime_admission_replay.py",
             "cyber_lion/enterprise/r11_canonical_pdp_evidence.py",
             "cyber_lion/enterprise/r11_original_current_owner_builder.py",
+            "cyber_lion/enterprise/r11_original_r620_evidence_source.py",
         }
         self.assertTrue(r11_added.issubset(sources))
+        original_r620_source = sources["cyber_lion/enterprise/r11_original_r620_evidence_source.py"]
+        self.assertIn("OriginalR620PreparationParts",original_r620_source)
+        self.assertIn("ReadOnlyOriginalR620EvidenceSource",original_r620_source)
+        self.assertIn("validate_cooperative_runtime_preparation_inputs",original_r620_source)
+        self.assertIn("bind_allowed_action_to_runtime_inputs",original_r620_source)
+        self.assertNotIn("LiveAuthorityAdmission.admit(",original_r620_source)
         typed_original_source = sources["cyber_lion/enterprise/r11_original_current_owner_builder.py"]
         self.assertIn("OriginalR11ServiceOwners",typed_original_source)
         self.assertIn("OriginalPreparationEvidenceTrust",typed_original_source)
