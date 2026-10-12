@@ -2,7 +2,7 @@
   "authority_effect": "NONE",
   "candidate_source_parent": "34cdc8a17fcd235807bee6340762839bc8a71fb0",
   "execution_effect": "NONE",
-  "file_count": 95,
+  "file_count": 96,
   "files": [
     {
       "sha256": "ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8",
@@ -205,6 +205,11 @@
       "target": "cyber_lion/enterprise/policy_gate.py"
     },
     {
+      "source": "cyber_lion/enterprise/r11_runtime_admission_replay.py",
+      "target": "cyber_lion/enterprise/r11_runtime_admission_replay.py",
+      "sha256": "9fa7bb1b3cc9ce8f7653fcbe60a4d4fabf1fac2a47492f18c7ab38973603f71c"
+    },
+    {
       "sha256": "69c5c2a8f4ce620ce1a6f8c89d85afd2e19104d12afa8b6514900e7e92271a36",
       "source": "cyber_lion/enterprise/runtime_currentness.py",
       "target": "cyber_lion/enterprise/runtime_currentness.py"
@@ -255,7 +260,7 @@
       "target": "cyber_lion/mission_control/cooperative_artifacts.py"
     },
     {
-      "sha256": "5187b31c1fae083a5e4f869957fa2d3c86b55ff2c4b4cc700d57f64346f868f8",
+      "sha256": "d25422ba952f9e9950fc974b201a5fe23ff44df5334c310a1605379c38e91d5e",
       "source": "cyber_lion/mission_control/cooperative_current_owner_wiring.py",
       "target": "cyber_lion/mission_control/cooperative_current_owner_wiring.py"
     },

@@ -431,8 +431,25 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         r11_added = {
             "cyber_lion/mission_control/source_bound_preactivation_factory.py",
             "cyber_lion/mission_control/cooperative_current_owner_wiring.py",
+            "cyber_lion/enterprise/r11_runtime_admission_replay.py",
         }
         self.assertTrue(r11_added.issubset(sources))
+        durable_source = sources["cyber_lion/enterprise/r11_runtime_admission_replay.py"]
+        self.assertIn("BEGIN IMMEDIATE",durable_source)
+        self.assertIn("SQLiteR11RuntimeAdmissionReplayGuard",durable_source)
+        self.assertIn("mode=rw",durable_source)
+        replay_surfaces = [
+            surface for surface in inv.surfaces
+            if "cyber_lion/enterprise/r11_runtime_admission_replay.py"
+               in surface.implementation_refs
+        ]
+        self.assertEqual(len(replay_surfaces),2)
+        self.assertEqual(
+            sorted(x.effect_class for x in replay_surfaces),
+            ["persistent_state.write", "persistent_state.write"],
+        )
+        # CREATE TABLE and INSERT are genuine persistent effects, explicitly
+        # inventoried; there must be no dynamic-SQL UNKNOWN added.
         r11_source = sources["cyber_lion/mission_control/source_bound_preactivation_factory.py"]
         r11_wiring = sources["cyber_lion/mission_control/cooperative_current_owner_wiring.py"]
         self.assertIn("assemble_original_owners", r11_wiring)
@@ -456,7 +473,7 @@ class HostAuthoritySeparationTests(unittest.TestCase):
             424 + len(r4_added) + len(r8_added) + len(r9_added)
                 + len(r10_added) + len(r11_added),
         )
-        self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (578, 6))
+        self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (580, 6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",

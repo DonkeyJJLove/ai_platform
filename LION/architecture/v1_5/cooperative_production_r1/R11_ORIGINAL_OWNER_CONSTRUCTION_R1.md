@@ -69,3 +69,27 @@ exact operator activation are independent gating steps.
 
 The canonical SQLite is never copied from LION-AUTH-LAB to MOON and workers
 receive no new raw canonical DB write permission. SOURCE_ONLY; no MD001 launch.
+
+
+## Persistent RuntimeAdmission replay boundary
+
+The original RuntimeAdmissionEngine protocol relies on a one-shot replay
+guard. R11 now provides a narrowly scoped
+cyber_lion.enterprise.r11_runtime_admission_replay.SQLiteR11RuntimeAdmissionReplayGuard.
+The guard consumes exactly one original 64-character admission replay key
+with SQLite BEGIN IMMEDIATE, rejects duplicates across process restarts
+and racing workers, and pins a private, direct, single-link SQLite inode.
+Missing, replaced, symlinked, group/world-readable or incompatible database
+files deny rather than silently initializing a replacement.
+
+CurrentOwnerSources.validate() now requires this durable guard to be
+attached to the original RuntimeAdmissionEngine before R6.21/R6.16/R6.17
+are constructed. The original independent owner producer must construct the
+engine using that guard in a separate, private, explicitly admitted SQLite
+path; in-memory replay guards or reused canonical Mission Control SQLite
+are invalid for production. The test fixture injects the real durable guard
+but uses synthetic canonical evidence only in disposable isolated tests.
+
+This is a persistence and replay boundary, NOT a second issuer of
+RuntimeAdmission and NOT an operator grant, approval, LPCL START, fleet
+activation or production deployment.

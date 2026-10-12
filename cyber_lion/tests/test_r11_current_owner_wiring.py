@@ -24,6 +24,12 @@ from cyber_lion.enterprise.cooperative_control_plane_materializer import (
 from cyber_lion.enterprise.cooperative_runtime_root import (
     CooperativeRuntimeCompositionRoot,
 )
+from cyber_lion.enterprise.r11_runtime_admission_replay import (
+    SQLiteR11RuntimeAdmissionReplayGuard,
+)
+from cyber_lion.enterprise.runtime_enforcement import (
+    InMemoryRuntimeAdmissionReplayGuard,
+)
 from cyber_lion.tests.test_r11_preactivation_production_binding import (
     R11SourceBoundProductionAcceptance,
 )
@@ -37,6 +43,13 @@ class R11OriginalCurrentOwnersTest(unittest.TestCase):
         self.fixture.setUp()
         self.addCleanup(self.fixture.doCleanups)
         f=self.fixture
+        # The original integration fixture uses an in-memory replay guard.
+        # Replace only its disposable replay owner to prove production wiring
+        # needs a durable, separately pinned database across process restarts.
+        self.admission_replay=SQLiteR11RuntimeAdmissionReplayGuard(
+            f.state/"r11-original-admission-replay.sqlite"
+        )
+        f.f.fixture.engine._replay=self.admission_replay
         export=f.r616.exporter
         self.inputs=CurrentOwnerSources(
             mission_db=f.f.mission_db,
@@ -109,6 +122,22 @@ class R11OriginalCurrentOwnersTest(unittest.TestCase):
         self.assertEqual(receipts,0)
         self.assertEqual(prep.status(self.fixture.f.aid)["state"],"PUBLISHED")
         self.assertEqual(list(self.fixture.f.fixture.root.iterdir()),[])
+
+    def test_in_memory_replay_cannot_be_wired_into_current_owners(self):
+        self.fixture.f.fixture.engine._replay = InMemoryRuntimeAdmissionReplayGuard()
+        with self.assertRaisesRegex(R11CurrentOwnerWiringError, "durable RuntimeAdmission replay"):
+            assemble_original_owners(self.inputs)
+        self.assertFalse(self.inputs.worker_materialization_db.exists())
+
+    def test_durable_replay_sqlite_cannot_alias_original_runtime_state(self):
+        self.fixture.f.fixture.engine._replay = SQLiteR11RuntimeAdmissionReplayGuard(
+            self.admission_replay.path
+        )
+        guard=self.fixture.f.fixture.engine._replay
+        guard.path=self.inputs.admission_source.path  # substitution of checked path
+        with self.assertRaisesRegex(Exception, "identity drift|replay SQLite"):
+            assemble_original_owners(self.inputs)
+        self.assertFalse(self.inputs.worker_materialization_db.exists())
 
     def test_wrong_worker_is_denied_before_private_sqlite_init(self):
         with self.assertRaisesRegex(R11CurrentOwnerWiringError,"only MD001"):

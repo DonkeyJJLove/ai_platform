@@ -46,6 +46,7 @@ from cyber_lion.enterprise.cooperative_runtime_root import (
     CooperativeRuntimeCompositionRoot,
 )
 from cyber_lion.enterprise.runtime_enforcement import RuntimeAdmissionEngine
+from cyber_lion.enterprise.r11_runtime_admission_replay import SQLiteR11RuntimeAdmissionReplayGuard
 from cyber_lion.enterprise.runtime_execution import SQLiteRuntimeAdmissionSource
 from cyber_lion.enterprise.live_authority_admission import LiveAuthorityAdmission
 from cyber_lion.mission_control.cooperative_preactivation_bootstrap import (
@@ -162,6 +163,15 @@ class CurrentOwnerSources:
               "existing R6.21 SQLiteRuntimeAdmissionSource required")
         _need(type(self.admission_engine) is RuntimeAdmissionEngine,
               "existing canonical RuntimeAdmissionEngine required")
+        replay = getattr(self.admission_engine, "_replay", None)
+        _need(type(replay) is SQLiteR11RuntimeAdmissionReplayGuard,
+              "original durable RuntimeAdmission replay guard required")
+        replay.verify_identity()
+        replay_db = _direct_file(replay.path, "durable replay SQLite")
+        _need(replay_db != db and replay_db != runtime
+              and replay_db not in {state1, state2, provider}
+              and _inode(replay_db) not in {_inode(db), _inode(runtime)},
+              "replay SQLite must not alias original stores")
         _need(isinstance(self.authority_admission, LiveAuthorityAdmission),
               "canonical live authority revalidator required")
         _need(type(self.currentness_trust) is CurrentnessSourceTrustBinding,
