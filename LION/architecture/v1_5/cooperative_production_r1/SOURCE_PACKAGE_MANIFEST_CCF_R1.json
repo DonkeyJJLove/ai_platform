@@ -8,7 +8,7 @@
     },
     {
       "path": "LION/architecture/v1_5/application_factory_r1/DEPLOYMENT_PACKAGE_MANIFEST.json",
-      "sha256": "7d437ede25f4577be9474f6f221e7194dff522efb553654598fdc643e719526a"
+      "sha256": "30242cd243978f27978c6858e621be1b802392b537f0db2b806eca7a887fcf55"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R10_NATIVE_PHASE_ZERO_COGNITIVE_RECEIPTS_R1.md",
@@ -16,7 +16,7 @@
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R11_ORIGINAL_OWNER_CONSTRUCTION_R1.md",
-      "sha256": "a8e08eecc0a048289b89bd815d6ce1a960b67393440cf12e3ae54f11c8b41659"
+      "sha256": "07827787602650cf8e4a2d727d25403b29ec0d7d503f4a95732f84c8ef1abcb1"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R11_ORIGINAL_PDP_EVIDENCE_R1.md",
@@ -195,6 +195,10 @@
       "sha256": "01514bdd1bdebca6812997ff45a8a10626b19c7a8d9c65794dd37f5fb75bc63b"
     },
     {
+      "path": "cyber_lion/enterprise/r11_original_current_owner_builder.py",
+      "sha256": "6444b5797360c20f309978080ae7eb80cd51cfc9cf79a8cfef31f22a7f567168"
+    },
+    {
       "path": "cyber_lion/enterprise/r11_runtime_admission_replay.py",
       "sha256": "9fa7bb1b3cc9ce8f7653fcbe60a4d4fabf1fac2a47492f18c7ab38973603f71c"
     },
@@ -332,7 +336,7 @@
     },
     {
       "path": "cyber_lion/tests/test_host_authority_separation.py",
-      "sha256": "7e385d8d354b25f6f5ffd9337f6cf55dc2a463c1c7572baa2da8759aa48532c4"
+      "sha256": "b565f7cc5836b853c2db27a8e7d75ab2ec6edc127264bc1e3eda5de2024cc284"
     },
     {
       "path": "cyber_lion/tests/test_lpcl_panel_exact_source.py",
@@ -348,11 +352,11 @@
     },
     {
       "path": "cyber_lion/tests/test_mission_control_v3_restart_package.py",
-      "sha256": "dfdec88dd31374d9c6ee63dd2beb87a9740d81ebb0635aa9de5f752343e123f0"
+      "sha256": "f768d3de52146c2e178aba89bcd43862eb4e7be605e5a41a7cdbc6dde6e53bc6"
     },
     {
       "path": "cyber_lion/tests/test_mission_control_v3_stage_dispatch.py",
-      "sha256": "36cb984e1fb6dd568c0de2d36e1bcbbada7262213b2fa0c97a9569984bebc26a"
+      "sha256": "9b1438d9b3f131e5fcfdd28b45b157060ea96c92d1f15d364a470aaef0764618"
     },
     {
       "path": "cyber_lion/tests/test_p0_current_candidate_inventory_delta.py",
@@ -373,6 +377,10 @@
     {
       "path": "cyber_lion/tests/test_r11_external_current_owner_source.py",
       "sha256": "00856c81764fcd77cbd502560860da52c203e044410d84a8762e5be1a25cfbaf"
+    },
+    {
+      "path": "cyber_lion/tests/test_r11_original_current_owner_builder.py",
+      "sha256": "78e371565fa24dd99f621f1f4395172dcc9d27cf4c83e056dd18fe7b75a47b6d"
     },
     {
       "path": "cyber_lion/tests/test_r11_runtime_admission_replay.py",
@@ -468,7 +476,7 @@
     },
     {
       "path": "tools/lion_effect_admission_broker.py",
-      "sha256": "6d57abdecb13ed35ac8d97b736467319213f89055e03f08815a10001b31a0427"
+      "sha256": "ae508eaad3bc379ccf55a1c1a25d3d39288d3d25b15fa7ffea1d2aee046570e2"
     },
     {
       "path": "tools/lion_firefox_broker_relay.py",
@@ -527,7 +535,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "d091a5ed044e65055143b5889c250369beab9aa56ba569d63caa4d64b4c1ba40",
+  "package_digest": "4ba674dee137aa8b32549bffeb1f4225dcbdc7a873457f14b2c89a0487a3946f",
   "purpose": "R10 exact Application Factory phase-zero native LOCAL model proposal with durable SEND_UNKNOWN, real request/response byte digest and shared-model ancestor; original single MC scheduler and 93-file deployment, no Docker or LPCL autoactivation. Requires separate source/authority review for new HTTP POST effect surface.",
   "schema": "lion.source-package-manifest/v1"
 }

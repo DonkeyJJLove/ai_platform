@@ -158,3 +158,45 @@ they do not establish live cryptographic trust or production deployment.
 
 Source-only; original PR #446 platform-security refusal and exact
 release/runtime/operator admission remain separate hard boundaries.
+
+
+## Original source service handle assembly — R11
+
+The source-only r11_original_current_owner_builder.py supplies an
+explicitly parameterized build_current_owner_sources(OriginalR11ServiceOwners).
+It accepts already-existing control-plane service objects, not a document,
+inferred receipt, self-asserted authority or a generic default constructor.
+
+The original service must independently supply:
+- exactly scoped Application Factory / MD001 paths and source identity;
+- an independent exact preparation-evidence resolver with its own
+  source/trust binding and validated R6.20 preparation evidence;
+- an original read-only SQLiteR11CanonicalPDPEvidenceReader and its
+  distinct canonical PDP source-trust binding;
+- the SAME existing LiveAuthorityAdmission instance reused for original
+  R6.21 issuer and downstream exporter, with real verified issuer roots;
+- the original private durable RuntimeAdmission replay guard and
+  PREEXISTING R6.21 admission SQLite source;
+- original currentness, dispatch, provisioned identity/binding, transfer,
+  worker durable source trust and timezone-aware trusted clock.
+
+The function constructs the ORIGINAL RuntimeAdmissionEngine from these
+objects and returns an exact CurrentOwnerSources, after both its own and
+the original CurrentOwnerSources source-only validation. No file, journal
+or signature is created by this function. Preparation resolver callbacks
+re-check original trust before and after their original owner call, and
+the exact verified mission ID is captured in the closure rather than
+reinterpreted later from global configuration.
+
+The original separately SHA-pinned external zero-argument
+build_current_owner_sources() implementation can invoke this bounded
+constructor after the ORIGINAL owner service acquired the trusted handles.
+A disposable integration test exercises exactly that loader path, using
+clearly marked synthetic original service handles. The production
+zero-argument upstream owner service itself remains NOT INSTALLED and
+NOT VERIFIED on LION-AUTH-LAB. This constructor is not an issuer,
+registry, provisioning source, authority grant, LPCL activation or
+material execution mechanism.
+
+SOURCE_ONLY; ORIGINAL_PLATFORM_SECURITY_REFUSAL=UNRESOLVED;
+RUNTIME_ADMISSION=NOT_PROVEN; PRODUCTION_MD001=HOLD.

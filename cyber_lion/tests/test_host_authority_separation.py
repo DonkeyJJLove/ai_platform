@@ -433,8 +433,15 @@ class HostAuthoritySeparationTests(unittest.TestCase):
             "cyber_lion/mission_control/cooperative_current_owner_wiring.py",
             "cyber_lion/enterprise/r11_runtime_admission_replay.py",
             "cyber_lion/enterprise/r11_canonical_pdp_evidence.py",
+            "cyber_lion/enterprise/r11_original_current_owner_builder.py",
         }
         self.assertTrue(r11_added.issubset(sources))
+        typed_original_source = sources["cyber_lion/enterprise/r11_original_current_owner_builder.py"]
+        self.assertIn("OriginalR11ServiceOwners",typed_original_source)
+        self.assertIn("OriginalPreparationEvidenceTrust",typed_original_source)
+        self.assertIn("build_current_owner_sources",typed_original_source)
+        self.assertNotIn("InMemoryRuntimeAdmissionReplayGuard",typed_original_source)
+        self.assertNotIn("PDPDecisionReceipt(",typed_original_source)
         durable_source = sources["cyber_lion/enterprise/r11_runtime_admission_replay.py"]
         self.assertIn("BEGIN IMMEDIATE",durable_source)
         self.assertIn("SQLiteR11RuntimeAdmissionReplayGuard",durable_source)
