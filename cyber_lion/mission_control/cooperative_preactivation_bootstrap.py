@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from hashlib import sha256
-import importlib.util
+import sys
 import os
 from pathlib import Path
 import re
@@ -72,21 +72,35 @@ def _direct_file(value:str|Path,label:str)->Path:
 
 
 def _load_module(path:Path,expected:str)->ModuleType:
+    """Load SHA-256 verified bytes without a second import loader read."""
     _require(_SHA.fullmatch(expected) is not None,"preactivation dependency module digest")
-    actual=sha256(path.read_bytes()).hexdigest()
+    initial=path.stat()
+    raw=path.read_bytes()
+    actual=sha256(raw).hexdigest()
     _require(actual==expected,"preactivation dependency module digest mismatch")
     name="_lion_cooperative_preactivation_"+actual[:20]
+    module=ModuleType(name)
+    module.__file__=str(path)
+    module.__package__=""
     try:
-        spec=importlib.util.spec_from_file_location(name,path)
-        _require(spec is not None and spec.loader is not None,"preactivation dependency module unavailable")
-        module=importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
-    except CooperativePreactivationBootstrapError:
-        raise
+        compiled=compile(raw,str(path),"exec",dont_inherit=True)
+        sys.modules[name]=module
+        exec(compiled,module.__dict__)
     except Exception as exc:
+        sys.modules.pop(name,None)
         raise CooperativePreactivationBootstrapError("preactivation dependency module failed closed") from exc
-
+    try:
+        final=path.stat()
+        _require(
+            initial.st_dev==final.st_dev
+            and initial.st_ino==final.st_ino
+            and sha256(path.read_bytes()).hexdigest()==expected,
+            "preactivation dependency module changed during import",
+        )
+    except Exception:
+        sys.modules.pop(name,None)
+        raise
+    return module
 
 @dataclass(frozen=True)
 class CooperativeSourceBoundPreactivation:
