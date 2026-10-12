@@ -58,6 +58,24 @@ class FixtureOriginalIssuanceSource:
         )
 
 
+class FixtureIndependentCurrentPolicy:
+    """Only a disposable, simulated policy owner; not production currentness."""
+
+    def __init__(self,trust):
+        self.source_id=trust.source_id
+        self.source_instance_id=trust.source_instance_id
+        self.implementation_digest=trust.source_implementation_digest
+        self.trust_anchor_id=trust.trust_anchor_id
+        self.trust_anchor_digest=trust.trust_anchor_digest
+        self.override=None
+        self.fail=False
+
+    def current_policy_binding(self,binding):
+        if self.fail:
+            raise RuntimeError("fixture original policy source unavailable")
+        return binding if self.override is None else self.override
+
+
 class R11CanonicalPDPSourceTests(unittest.TestCase):
     def setUp(self):
         self.parts = fixture()
@@ -79,6 +97,11 @@ class R11CanonicalPDPSourceTests(unittest.TestCase):
             self.result,self.issuance_trust,
             NOW-timedelta(seconds=2),NOW+timedelta(seconds=200),
         )
+        self.policy_trust=PDPSourceTrustBinding(
+            "r11:original-policy", "r11:original-policy:fixture",
+            "5"*64, "r11:policy-anchor", "6"*64,
+        ).validate()
+        self.policy=FixtureIndependentCurrentPolicy(self.policy_trust)
 
     def publisher(self,*,now=NOW,path=None):
         database=path or self.path
@@ -106,7 +129,8 @@ class R11CanonicalPDPSourceTests(unittest.TestCase):
         return Reader(
             database=path or self.path,
             source_trust=trust or self.trust,
-            current_policy_source=policy or (lambda binding: binding),
+            current_policy_source=self.policy if policy is None else policy,
+            current_policy_trust=self.policy_trust,
             now_fn=lambda:now,
         )
 
@@ -321,9 +345,8 @@ class R11CanonicalPDPSourceTests(unittest.TestCase):
 
     def test_reader_provides_fresh_independent_policy_not_stored_echo(self):
         evidence=self.published()
-        def stale_policy(_binding):
-            return "policy@999:sha256:"+"f"*64
-        reader=self.reader(policy=stale_policy)
+        self.policy.override="policy@999:sha256:"+"f"*64
+        reader=self.reader()
         self.assertEqual(reader.resolve("r","g"),evidence)
         self.assertNotEqual(
             reader.current_policy_binding(evidence.policy_binding),
@@ -343,16 +366,40 @@ class R11CanonicalPDPSourceTests(unittest.TestCase):
     def test_missing_independent_current_policy_denied(self):
         self.published()
         with self.assertRaisesRegex(R11CanonicalPDPSourceError,
-                                    "independent current policy source required"):
+                                    "independent current policy source/trust mismatch"):
             Reader(database=self.path,source_trust=self.trust,
-                   current_policy_source=None)
+                   current_policy_source=None,
+                   current_policy_trust=self.policy_trust)
 
     def test_current_policy_provider_error_fails_closed(self):
         self.published()
-        reader=self.reader(policy=lambda _:(_ for _ in ()).throw(RuntimeError("offline")))
+        self.policy.fail=True
+        reader=self.reader()
         with self.assertRaisesRegex(R11CanonicalPDPSourceError,
                                     "independent policy unavailable"):
             reader.current_policy_binding(self.result.applied.policy_binding)
+
+    def test_unpinned_policy_echo_callback_rejected(self):
+        self.published()
+        with self.assertRaisesRegex(R11CanonicalPDPSourceError,
+                                    "independent current policy source/trust mismatch"):
+            self.reader(policy=lambda binding:binding)
+
+    def test_pinned_policy_owner_identity_drift_rejected(self):
+        self.published()
+        reader=self.reader()
+        self.policy.source_instance_id="substituted-policy-owner"
+        with self.assertRaisesRegex(R11CanonicalPDPSourceError,
+                                    "independent policy source identity drift"):
+            reader.current_policy_binding(self.result.applied.policy_binding)
+
+    def test_pinned_policy_owner_missing_trust_rejected(self):
+        self.published()
+        with self.assertRaisesRegex(R11CanonicalPDPSourceError,
+                                    "independent current policy trust required"):
+            Reader(database=self.path,source_trust=self.trust,
+                   current_policy_source=self.policy,
+                   current_policy_trust=None)
 
     def test_wrong_current_source_anchor_rejected(self):
         self.published()

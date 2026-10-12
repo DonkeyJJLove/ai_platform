@@ -220,7 +220,7 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
             {s.entrypoints for s in pdp},
             {
                 ("cyber_lion/enterprise/r11_canonical_pdp_evidence.py:90:db.execute",),
-                ("cyber_lion/enterprise/r11_canonical_pdp_evidence.py:402:db.execute",),
+                ("cyber_lion/enterprise/r11_canonical_pdp_evidence.py:413:db.execute",),
             },
         )
         pdp_source = (self.root / "cyber_lion/enterprise/r11_canonical_pdp_evidence.py").read_text(
@@ -230,7 +230,7 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
         calls = [
             node for node in ast.walk(tree)
             if isinstance(node,ast.Call)
-            and node.lineno in {90,402}
+            and node.lineno in {90,413}
             and isinstance(node.func,ast.Attribute)
             and isinstance(node.func.value,ast.Name)
             and node.func.value.id == "db"
@@ -242,7 +242,7 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
                    for node in calls),
             [
                 (90,"PRAGMA query_only=ON"),
-                (402,"INSERT INTO r11_original_pdp_evidence VALUES(?,?,?)"),
+                (413,"INSERT INTO r11_original_pdp_evidence VALUES(?,?,?)"),
             ],
         )
         self.assertIn("OriginalPDPIssuanceObservation",pdp_source)

@@ -465,7 +465,7 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         )
         self.assertEqual(
             {surf.entrypoints for surf in pdp_surface},
-            {(pdp_path+":90:db.execute",),(pdp_path+":402:db.execute",)}
+            {(pdp_path+":90:db.execute",),(pdp_path+":413:db.execute",)}
         )
         # query_only=ON is a connection-local read restriction conservatively
         # identified as a state write by the scanner; the other is the

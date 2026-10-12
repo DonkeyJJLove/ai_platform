@@ -35,8 +35,11 @@ This is a source/consumer boundary, not a second PDP or a source of ALLOW.
   PRAGMA query_only=ON, validates file identity and permissions, strict
   record schema/digest/trust, exact request/gate and bounded timestamps.
 - Current policy is read from an INDEPENDENT original current-policy owner
-  every time, never inferred from the stored decision. Returning a
-  different policy binding makes original RuntimeAdmissionEngine deny.
+  every time, never inferred from the stored decision. The object must be
+  pinned by its own exact PDPSourceTrustBinding source ID, instance,
+  implementation and trust anchor; the reader checks this binding before
+  and after each call. Bare echo lambdas cannot be passed as source.
+  Returning a different policy binding makes RuntimeAdmissionEngine deny.
 - No step in this module obtains an authority grant, creates a canonical
   PDPResult, provisions a worker or executes an effect.
 

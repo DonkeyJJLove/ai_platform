@@ -167,13 +167,18 @@ class SQLiteR11CanonicalPDPEvidenceReader:
         *,
         database: Path | str,
         source_trust: PDPSourceTrustBinding,
-        current_policy_source: Callable[[str], str],
+        current_policy_source: object,
+        current_policy_trust: PDPSourceTrustBinding,
         now_fn: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
     ):
         _need(type(source_trust) is PDPSourceTrustBinding, "original PDP trust required")
         source_trust.validate()
-        _need(callable(current_policy_source),
-              "independent current policy source required")
+        _need(type(current_policy_trust) is PDPSourceTrustBinding,
+              "independent current policy trust required")
+        current_policy_trust.validate()
+        _need(_identity_tuple(current_policy_source) == current_policy_trust.binding()
+              and callable(getattr(current_policy_source,"current_policy_binding",None)),
+              "independent current policy source/trust mismatch")
         _need(callable(now_fn), "trusted clock required")
         self.path, self._inode = _safe_file(database, must_exist=True)
         self.source_id = source_trust.source_id
@@ -183,6 +188,7 @@ class SQLiteR11CanonicalPDPEvidenceReader:
         self.trust_anchor_digest = source_trust.trust_anchor_digest
         self._trust = source_trust
         self._policy = current_policy_source
+        self._policy_trust = current_policy_trust
         self._now = now_fn
         self._check_store()
 
@@ -241,12 +247,17 @@ class SQLiteR11CanonicalPDPEvidenceReader:
     def current_policy_binding(self, policy_binding: str) -> str:
         _need(type(policy_binding) is str and bool(policy_binding),
               "canonical PDP policy binding required")
-        # NEVER use the stored PDP row as a source of current policy.
-        # The owner callback must independently reread actual policy.
+        # NEVER echo the stored PDP row as current policy. Require a
+        # separately pinned real owner and re-observe its identity on
+        # EACH read, including after the current-policy callback.
+        _need(_identity_tuple(self._policy) == self._policy_trust.binding(),
+              "independent policy source identity drift")
         try:
-            result = self._policy(policy_binding)
+            result = self._policy.current_policy_binding(policy_binding)
         except Exception as exc:
             raise R11CanonicalPDPSourceError("independent policy unavailable") from exc
+        _need(_identity_tuple(self._policy) == self._policy_trust.binding(),
+              "independent policy source identity drift")
         _need(type(result) is str and bool(result),
               "independent policy invalid")
         self._check_store()
