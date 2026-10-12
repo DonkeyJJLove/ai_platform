@@ -28,6 +28,7 @@ ADDED_PROVIDER_PATHS = frozenset({
     "cyber_lion.app_coordination.conversation_chat.py",
     "cyber_lion.mission_control.native_cognitive_phase_zero.py",
     "cyber_lion.enterprise.r11_runtime_admission_replay.py",
+    "cyber_lion.enterprise.r11_canonical_pdp_evidence.py",
 })
 # Historical source P0 is reconstructed from its Git object and checked
 # against the frozen tree/scan digest by pinned_p0_inventory. Compare old
@@ -113,17 +114,18 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
         # Historical P0 (567) is immutable. R10 has 23 relocations of
         # the *same* semantic callsites: 15 conversation-chat (+1 line)
         # and eight recon records at explicitly verified AST locations.
-        # Of the 36 newly minted location IDs, 23 replace historical
-        # callsite locations (15 conversation + 8 recon), while 13 are
-        # NEW effect sites: six cooperative writes, one native-recon
-        # journal write, four native-model ledger/HTTP effects, and
-        # two new durable R11 RuntimeAdmission replay SQLite writes.
-        # They are inventory, NOT inherited P0 mediation or approval.
+        # Of 38 newly minted location IDs, 23 replace historical
+        # callsite locations (15 conversation + 8 recon), while 15 are
+        # NEW observed scanner sites: the previous 13 plus two R11
+        # canonical PDP evidence call sites. One is the connection-local
+        # read-only query_only PRAGMA conservatively classified as a
+        # write; the other is an actual private evidence INSERT.
+        # Neither creates authority or inherits historical P0 mediation.
         self.assertEqual(len(previous & current), 544)
-        self.assertEqual(len(current - previous), 36)
+        self.assertEqual(len(current - previous), 38)
         self.assertEqual(len(previous - current), 23)
-        self.assertEqual(len(current), 580)
-        self.assertEqual(len(current - previous) - len(previous - current), 13)
+        self.assertEqual(len(current), 582)
+        self.assertEqual(len(current - previous) - len(previous - current), 15)
         self.assertFalse(self.candidate.unclassified_refs)
         self.assertFalse(self.candidate_taxonomy.unresolved_refs)
         self.assertNotEqual(
@@ -158,6 +160,7 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
             "cyber_lion.app_coordination.conversation_chat.py": 15,
             "cyber_lion.mission_control.native_cognitive_phase_zero.py": 4,
             "cyber_lion.enterprise.r11_runtime_admission_replay.py": 2,
+            "cyber_lion.enterprise.r11_canonical_pdp_evidence.py": 2,
         }))
         native = [
             s for s in new.values()
@@ -207,7 +210,43 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
         )
         self.assertIn("BEGIN IMMEDIATE", source)
         self.assertIn("mode=rw", source)
-        # No replay guard write can inherit P0 admission or closure.
+        # The separate original PDP evidence read/write bridge has exactly
+        # two scanner-visible sites; this MUST NOT inherit a P0 admission.
+        pdp_owner = "cyber_lion.enterprise.r11_canonical_pdp_evidence.py"
+        pdp = [s for s in new.values() if s.effect_provider == pdp_owner]
+        self.assertEqual(len(pdp),2)
+        self.assertEqual({s.effect_class for s in pdp},{"persistent_state.write"})
+        self.assertEqual(
+            {s.entrypoints for s in pdp},
+            {
+                ("cyber_lion/enterprise/r11_canonical_pdp_evidence.py:90:db.execute",),
+                ("cyber_lion/enterprise/r11_canonical_pdp_evidence.py:402:db.execute",),
+            },
+        )
+        pdp_source = (self.root / "cyber_lion/enterprise/r11_canonical_pdp_evidence.py").read_text(
+            encoding="utf-8"
+        )
+        tree = ast.parse(pdp_source)
+        calls = [
+            node for node in ast.walk(tree)
+            if isinstance(node,ast.Call)
+            and node.lineno in {90,402}
+            and isinstance(node.func,ast.Attribute)
+            and isinstance(node.func.value,ast.Name)
+            and node.func.value.id == "db"
+            and node.func.attr == "execute"
+            and node.args
+        ]
+        self.assertEqual(
+            sorted((node.lineno,ast.literal_eval(node.args[0]))
+                   for node in calls),
+            [
+                (90,"PRAGMA query_only=ON"),
+                (402,"INSERT INTO r11_original_pdp_evidence VALUES(?,?,?)"),
+            ],
+        )
+        self.assertIn("OriginalPDPIssuanceObservation",pdp_source)
+        self.assertIn("source/trust mismatch",pdp_source)
         self.assertFalse(set(new) & set(self.historical_surfaces))
 
     def test_relocated_effects_keep_class_and_exact_callsite_identity(self):

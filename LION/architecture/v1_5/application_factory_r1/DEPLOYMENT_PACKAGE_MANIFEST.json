@@ -2,7 +2,7 @@
   "authority_effect": "NONE",
   "candidate_source_parent": "34cdc8a17fcd235807bee6340762839bc8a71fb0",
   "execution_effect": "NONE",
-  "file_count": 96,
+  "file_count": 97,
   "files": [
     {
       "sha256": "ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8",
@@ -203,6 +203,11 @@
       "sha256": "4c5acc3573a6043b8202ff207a3155713ce1a5faa54af454129ddbd4045dc4d2",
       "source": "cyber_lion/enterprise/policy_gate.py",
       "target": "cyber_lion/enterprise/policy_gate.py"
+    },
+    {
+      "source": "cyber_lion/enterprise/r11_canonical_pdp_evidence.py",
+      "target": "cyber_lion/enterprise/r11_canonical_pdp_evidence.py",
+      "sha256": "e4c048ad173db91943f86ce16906e933dfa167c87b449989ce799a6b0f8a8d0f"
     },
     {
       "source": "cyber_lion/enterprise/r11_runtime_admission_replay.py",

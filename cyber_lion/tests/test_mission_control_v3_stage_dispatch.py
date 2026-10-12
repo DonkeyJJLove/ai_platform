@@ -114,9 +114,9 @@ class MissionControlV3StageDispatchTests(unittest.TestCase):
             source.assert_called_once_with(HEAD, TREE)
             self.assertTrue(result["staged"])
             self.assertEqual(result["file_count"], len(SOURCE_MAP))
-            # The durable replay guard is the 96th exact-source package item.
-            # It initializes a private SQLite only in an admitted release.
-            self.assertEqual(len(identity), 96)
+            # R11 canonical PDP read/publish source is the 97th pinned item.
+            # No live evidence DB is created by its import.
+            self.assertEqual(len(identity), 97)
             self.assertEqual(result["package_identity"], identity)
             self.assertEqual(meta["source_head"], HEAD)
             self.assertEqual(meta["source_tree"], TREE)
@@ -171,7 +171,7 @@ class MissionControlV3StageDispatchTests(unittest.TestCase):
                 )
                 self.assertTrue(good["staged"])
                 old_identity = broker.mission_control_v3_package_identity_at(stage)
-                self.assertEqual(len(old_identity), 96)
+                self.assertEqual(len(old_identity), 97)
                 missing = checkout / "cyber_lion/mission_control/cooperative_preactivation.py"
                 self.assertTrue(missing.exists())
                 missing.unlink()
@@ -182,7 +182,7 @@ class MissionControlV3StageDispatchTests(unittest.TestCase):
                     )
                 after = broker.mission_control_v3_package_identity_at(stage)
                 self.assertEqual(after, old_identity)
-                self.assertEqual(len(after), 96)
+                self.assertEqual(len(after), 97)
                 self.assertEqual(
                     json.loads((stage / broker.MISSION_CONTROL_V3_STAGE_IDENTITY)
                                .read_text(encoding="utf-8"))["source_head"], HEAD

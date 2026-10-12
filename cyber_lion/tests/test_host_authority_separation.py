@@ -432,6 +432,7 @@ class HostAuthoritySeparationTests(unittest.TestCase):
             "cyber_lion/mission_control/source_bound_preactivation_factory.py",
             "cyber_lion/mission_control/cooperative_current_owner_wiring.py",
             "cyber_lion/enterprise/r11_runtime_admission_replay.py",
+            "cyber_lion/enterprise/r11_canonical_pdp_evidence.py",
         }
         self.assertTrue(r11_added.issubset(sources))
         durable_source = sources["cyber_lion/enterprise/r11_runtime_admission_replay.py"]
@@ -450,6 +451,27 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         )
         # CREATE TABLE and INSERT are genuine persistent effects, explicitly
         # inventoried; there must be no dynamic-SQL UNKNOWN added.
+        pdp_path = "cyber_lion/enterprise/r11_canonical_pdp_evidence.py"
+        pdp_source = sources[pdp_path]
+        self.assertIn("SQLiteR11CanonicalPDPEvidenceReader",pdp_source)
+        self.assertIn("SQLiteR11CanonicalPDPEvidencePublisher",pdp_source)
+        self.assertIn("OriginalPDPIssuanceObservation",pdp_source)
+        pdp_surface = [surf for surf in inv.surfaces
+                       if pdp_path in surf.implementation_refs]
+        self.assertEqual(len(pdp_surface),2)
+        self.assertEqual(
+            sorted(surf.effect_class for surf in pdp_surface),
+            ["persistent_state.write","persistent_state.write"]
+        )
+        self.assertEqual(
+            {surf.entrypoints for surf in pdp_surface},
+            {(pdp_path+":90:db.execute",),(pdp_path+":402:db.execute",)}
+        )
+        # query_only=ON is a connection-local read restriction conservatively
+        # identified as a state write by the scanner; the other is the
+        # genuine, separately gated persisted evidence INSERT.
+        self.assertIn("PRAGMA query_only=ON",pdp_source)
+        self.assertIn("INSERT INTO r11_original_pdp_evidence VALUES(?,?,?)",pdp_source)
         r11_source = sources["cyber_lion/mission_control/source_bound_preactivation_factory.py"]
         r11_wiring = sources["cyber_lion/mission_control/cooperative_current_owner_wiring.py"]
         self.assertIn("assemble_original_owners", r11_wiring)
@@ -473,7 +495,7 @@ class HostAuthoritySeparationTests(unittest.TestCase):
             424 + len(r4_added) + len(r8_added) + len(r9_added)
                 + len(r10_added) + len(r11_added),
         )
-        self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (580, 6))
+        self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (582, 6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",

@@ -8,7 +8,7 @@
     },
     {
       "path": "LION/architecture/v1_5/application_factory_r1/DEPLOYMENT_PACKAGE_MANIFEST.json",
-      "sha256": "842e03fd4acd134974af01b5203e4cf41edcb732542598bde0193fef765e3994"
+      "sha256": "3581e86232fd0f4b1c8ced3f14f9613e920c6916963f5feb9ab5e41c26287190"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R10_NATIVE_PHASE_ZERO_COGNITIVE_RECEIPTS_R1.md",
@@ -16,7 +16,11 @@
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R11_ORIGINAL_OWNER_CONSTRUCTION_R1.md",
-      "sha256": "8f953c4d652c9a663399496369910e873b78a670ddf8c7f19bc6d828f333d669"
+      "sha256": "40da1fcfb475afd7f8018b5161694b1f3f543704ccea44d6d60002b5c0064cce"
+    },
+    {
+      "path": "LION/architecture/v1_5/cooperative_production_r1/R11_ORIGINAL_PDP_EVIDENCE_R1.md",
+      "sha256": "468314b4e221fb969089396ee34803d1f86ef8d5325089b8ab41e4b8da84fcf2"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R4_CANARY_SAAS_STATUS_AND_LPCL_CURRENTNESS_R1.md",
@@ -187,6 +191,10 @@
       "sha256": "26a5b2e31cc96dca90023c2e871ad950efd019174b50ea6fbbbb46c5e1dfdebe"
     },
     {
+      "path": "cyber_lion/enterprise/r11_canonical_pdp_evidence.py",
+      "sha256": "e4c048ad173db91943f86ce16906e933dfa167c87b449989ce799a6b0f8a8d0f"
+    },
+    {
       "path": "cyber_lion/enterprise/r11_runtime_admission_replay.py",
       "sha256": "9fa7bb1b3cc9ce8f7653fcbe60a4d4fabf1fac2a47492f18c7ab38973603f71c"
     },
@@ -320,7 +328,7 @@
     },
     {
       "path": "cyber_lion/tests/test_host_authority_separation.py",
-      "sha256": "d734f98bfbbfa8c62bd16465eff37f2fd8aff0ca60ae488ae0bf73bf98ee2304"
+      "sha256": "8c5f487478c2f5ee59a1aefd780cc56b85bd20661202dc7e8585b6032b62ab43"
     },
     {
       "path": "cyber_lion/tests/test_lpcl_panel_exact_source.py",
@@ -336,19 +344,23 @@
     },
     {
       "path": "cyber_lion/tests/test_mission_control_v3_restart_package.py",
-      "sha256": "a4f53b17b15e0403f04ad14fc0dc07d6a07602fc91e36d71f95623f53e7a772c"
+      "sha256": "dfdec88dd31374d9c6ee63dd2beb87a9740d81ebb0635aa9de5f752343e123f0"
     },
     {
       "path": "cyber_lion/tests/test_mission_control_v3_stage_dispatch.py",
-      "sha256": "207afe51f2bde1e8e41d77dce0d4f78b0d91d6f0120fe9080f04d7fbfe0bf57a"
+      "sha256": "36cb984e1fb6dd568c0de2d36e1bcbbada7262213b2fa0c97a9569984bebc26a"
     },
     {
       "path": "cyber_lion/tests/test_p0_current_candidate_inventory_delta.py",
-      "sha256": "4fe7616476e8c995d97d2971e45e1c2ebc4a548293f0cfbfb9ae34b4a66aa0a3"
+      "sha256": "7a66d103769002bffa41ea4b6d9e2d60b1ed00b3145ce9f19801ffd9e94d621b"
     },
     {
       "path": "cyber_lion/tests/test_r10_native_cognitive_phase_zero.py",
       "sha256": "e906cd0bc6d95335c73c516f6132ef5a3798c556452a86dda25e0cbd0f97e40c"
+    },
+    {
+      "path": "cyber_lion/tests/test_r11_canonical_pdp_evidence.py",
+      "sha256": "fd15794c404f6108db07e7443ef9001c84a43528e65794ee6c7fc8c880bdeb29"
     },
     {
       "path": "cyber_lion/tests/test_r11_current_owner_wiring.py",
@@ -452,7 +464,7 @@
     },
     {
       "path": "tools/lion_effect_admission_broker.py",
-      "sha256": "741171579cfafdab81016631b4cd05a9ff96987072a46714794b06dc6cef91b7"
+      "sha256": "592636d2e8bd84e7746e0e3772dcd7a8a0df21a25fd6b18d1df6bd65b0429c7a"
     },
     {
       "path": "tools/lion_firefox_broker_relay.py",
@@ -511,7 +523,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "382661826126cba74d99f82e62183af1be14c020deadfa38d096e5ee4359b409",
+  "package_digest": "6bb634ad8aa717e5a0300179683e0926996c39545c2511f150d322bcd44fc9ea",
   "purpose": "R10 exact Application Factory phase-zero native LOCAL model proposal with durable SEND_UNKNOWN, real request/response byte digest and shared-model ancestor; original single MC scheduler and 93-file deployment, no Docker or LPCL autoactivation. Requires separate source/authority review for new HTTP POST effect surface.",
   "schema": "lion.source-package-manifest/v1"
 }

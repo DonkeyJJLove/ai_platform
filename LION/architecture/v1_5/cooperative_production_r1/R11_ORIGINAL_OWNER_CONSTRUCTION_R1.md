@@ -117,3 +117,15 @@ through a separately approved, SHA-pinned production module.
 Synthetic test fixtures were reconciled to one FakeAdmission instance
 only in the isolated test harness, with negative substitution tests.
 authority_effect=NONE, runtime_effect=NONE, production=HOLD.
+
+
+## Original PDP evidence producer and independent read-only source
+
+The source-only r11_canonical_pdp_evidence.py adds one scoped original-PDP
+evidence publisher and separate read-only SQLite consumer. It uses the
+original CanonicalPolicyDecisionPoint and independently bound issuance
+observation; it cannot mint a PDP ALLOW, extend its original lifetime
+or infer current policy from a persisted record. Refer to
+R11_ORIGINAL_PDP_EVIDENCE_R1.md for exact external owners and effects.
+The original R11 source composition still requires a live, independently
+qualified build_current_owner_sources() and production governance.
