@@ -235,7 +235,7 @@ class BrowserlessSecureMcpRelay {
   async reconcile(rec) {
     const rid = rec.request_id;
     let brokerState;
-    try { brokerState = await jsonRequest(this.config.broker, `/api/v3/saas-broker/requests/${encodeURIComponent(rid)}`, { timeoutMs: 5000 }); }
+    try { brokerState = await this.broker(`/api/v3/saas-broker/requests/${encodeURIComponent(rid)}`, { timeoutMs: 5000 }); }
     catch { return; }
     rec.last_observed_at = now();
     if (['SUPERSEDED','CANCELLED','FAILED','REJECTED'].includes(brokerState.status)) {
@@ -279,18 +279,63 @@ class BrowserlessSecureMcpRelay {
     let claim = this.claims.get(rid);
     if (claim && !claimUsable(claim, brokerState)) {
       this.claims.delete(rid); claim = null;
-      rec.state = 'STALE_TURN_GENERATION'; rec.reconciliation_state = 'NEW_BROKER_REQUEST_REQUIRED'; this.save(rec); return;
     }
     if (!claim) {
-      if (brokerState.status === 'CLAIMED') { this.save(rec); return; }
-      if (WAITING.has(brokerState.status)) {
-        rec.state = 'STALE_TURN_GENERATION'; rec.reconciliation_state = 'NEW_BROKER_REQUEST_REQUIRED'; this.save(rec); return;
+      // An external model may finish AFTER the initial five-minute transport
+      // lease. Reclaim this SAME completed ingress turn for BROKER RESPONSE
+      // ONLY; never create another ingress turn or send another browser prompt.
+      // Unknown broker-response attempts and competing generations fail closed.
+      const safeReclaim = ['WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE'].includes(brokerState.status)
+        && Number.isSafeInteger(rec.claim_generation) && rec.claim_generation >= 1
+        && Number(brokerState.claim_generation) === rec.claim_generation
+        && brokerState.question_digest === rec.question_digest
+        && rec.turn_id === turn.turn_id && rec.turn_request_hash === turn.request_hash
+        && rec.turn_command_id === turn.command_id && rec.broker_transport === SECURE
+        && rec.browser_automation === 'DISABLED_BY_POLICY'
+        && !rec.broker_receipt_digest
+        && rec.reclaim_intent_generation == null
+        && rec.broker_respond_attempted_generation == null
+        && !['RECONCILE_BEFORE_RETRY','NO_BLIND_RECLAIM_RETRY'].includes(rec.reconciliation_state)
+        && !['RECLAIM_UNKNOWN_RECONCILE_REQUIRED','BROKER_RESPOND_UNKNOWN_RECONCILE_REQUIRED',
+             'RECLAIM_INTENT'].includes(rec.state);
+      if (!safeReclaim) {
+        if (!['RECONCILE_BEFORE_RETRY','NO_BLIND_RECLAIM_RETRY'].includes(rec.reconciliation_state)) {
+          rec.state = 'STALE_TURN_GENERATION';
+          rec.reconciliation_state = 'CURRENT_BROKER_CLAIM_REQUIRED';
+        }
+        this.save(rec); return;
       }
-      this.save(rec); return;
+      rec.reclaim_intent_generation = rec.claim_generation;
+      rec.state = 'RECLAIM_INTENT';
+      rec.reconciliation_state = 'COMPLETED_TURN_SAME_REQUEST_ONLY';
+      this.save(rec);
+      try {
+        claim = await this.broker(`/api/v3/saas-broker/requests/${encodeURIComponent(rid)}/claim`, {
+          method: 'POST', body: {}, timeoutMs: 8000
+        });
+      } catch (error) {
+        rec.state = 'RECLAIM_UNKNOWN_RECONCILE_REQUIRED';
+        rec.reconciliation_state = 'NO_BLIND_RECLAIM_RETRY';
+        rec.error_class = error.name; this.save(rec); return;
+      }
+      if (claim.request_id !== rid || claim.claim_generation !== rec.claim_generation + 1
+          || claim.question_digest !== rec.question_digest
+          || !claimUsable(claim,{status:'CLAIMED',claim_generation:claim.claim_generation,
+            claim_expires_at:claim.claim_expires_at})) {
+        rec.state = 'RECLAIM_IDENTITY_MISMATCH';
+        rec.reconciliation_state = 'FAIL_CLOSED_BROKER_RECLAIM';
+        this.save(rec); return;
+      }
+      this.claims.set(rid,claim);
+      rec.claim_generation = claim.claim_generation;
+      rec.claim_expires_at = claim.claim_expires_at;
+      rec.state = 'TURN_COMPLETED_RECLAIMED';
+      this.save(rec);
     }
     if (Number(rec.claim_generation) !== Number(claim.claim_generation)) {
       rec.state = 'STALE_TURN_GENERATION'; rec.reconciliation_state = 'CLAIM_GENERATION_MISMATCH'; this.save(rec); return;
     }
+    rec.broker_respond_attempted_generation = claim.claim_generation;
     rec.state = 'BROKER_RESPOND_ATTEMPT'; this.save(rec);
     try {
       const result = await this.broker(`/api/v3/saas-broker/requests/${encodeURIComponent(rid)}/respond`, {

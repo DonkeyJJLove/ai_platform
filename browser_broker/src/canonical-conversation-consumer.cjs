@@ -14,11 +14,31 @@ const receiptConfirmed=(broker,rid)=>
  broker?.request_id===rid&&broker.status==='RESPONDED'&&broker.authority_effect==='NONE'
  &&/^[a-f0-9]{64}$/.test(broker.response_digest||'')
  &&/^[a-f0-9]{64}$/.test(broker.receipt_digest||'');
-// Operator resume must not confuse a queued message with a confirmed external send.
-// Pending is admissible only when every row is fresh and never claimed.
-// A cancelled broker request with a prior SEND_COMMITTED still blocks until separately
-// adjudicated; CANCELLED is not a model response and cannot mint a receipt.
-function evaluateOperatorResume(snapshot){
+// The SentinelX Node relay claims a broker request BEFORE ingress turn creation.
+// That transport claim is not evidence of an external browser send. Only a
+// source-bound first claim with a still-live lease can start browser delivery.
+const CLAIM_SEND_MARGIN_MS=15000;
+function preparedTransportClaim(broker,turn,at=Date.now()){
+ const deadline=Date.parse(broker?.claim_expires_at||'');
+ return broker?.status==='CLAIMED'&&broker?.claim_generation===1
+  &&broker?.transport===TRANSPORT&&broker?.authority_effect==='NONE'
+  &&typeof broker.request_id==='string'&&/^saas-[A-Za-z0-9-]+$/.test(broker.request_id)
+  &&!broker.response_digest&&!broker.receipt_digest
+  &&Number.isFinite(deadline)&&deadline>at+CLAIM_SEND_MARGIN_MS
+  &&turn?.status==='PENDING'&&turn.command_id==='MC-'+broker.request_id
+  &&turn.parent_event_id==='saas_request:'+broker.request_id
+  &&turn.session_id==='CHATGPT-SAAS'&&turn.thread_id===null
+  &&turn.metadata?.source==='LION_MISSION_CONTROL'
+  &&turn.metadata?.transport===TRANSPORT
+  &&turn.metadata?.broker_request_id===broker.request_id
+  &&turn.metadata?.claim_generation===broker.claim_generation
+  &&turn.metadata?.browser_automation==='DISABLED_BY_POLICY'
+  &&turn.metadata?.authority_effect==='NONE'
+  &&/^[a-f0-9]{64}$/.test(turn.request_hash||'');
+}
+// A transport claim cannot be confused with a browser send, nor can a
+// previously attempted browser send be silently retried.
+function evaluateOperatorResume(snapshot,at=Date.now()){
  const blockers=[];
  if(!snapshot||snapshot.authority_effect!=='NONE')blockers.push('AUTHORITY_CLASS_UNKNOWN');
  if(snapshot?.consumer_state!=='STOPPED')blockers.push('CONSUMER_NOT_STOPPED');
@@ -37,9 +57,16 @@ function evaluateOperatorResume(snapshot){
   const rows=snapshot.pending_requests;
   if(!Array.isArray(rows)||rows.length!==snapshot.upstream_pending)
    blockers.push('PENDING_REQUEST_COVERAGE_UNKNOWN');
-  else if(rows.some(r=>!r||!/^saas-[a-zA-Z0-9-]+$/.test(r.request_id||'')
-   ||r.status!=='WAITING_SUPERVISOR'||r.claim_generation!==0
-   ||r.transport!==TRANSPORT||r.authority_effect!=='NONE'))
+  else if(rows.some(r=>{
+   if(!r||!/^saas-[a-zA-Z0-9-]+$/.test(r.request_id||'')
+    ||r.transport!==TRANSPORT||r.authority_effect!=='NONE')return true;
+   const pristine=r.status==='WAITING_SUPERVISOR'&&r.claim_generation===0;
+   const prepared=r.status==='CLAIMED'&&r.claim_generation===1
+    &&r.transport_claim_prepared===true
+    &&Number.isFinite(Date.parse(r.claim_expires_at||''))
+    &&Date.parse(r.claim_expires_at)>at+CLAIM_SEND_MARGIN_MS;
+   return !pristine&&!prepared;
+  }))
    blockers.push('PRIOR_CLAIM_OR_OVERDUE_REQUIRES_ADJUDICATION');
  }
  return {allowed:blockers.length===0,blockers,authority_effect:'NONE'};
@@ -76,13 +103,13 @@ function canonicalPrompt(turn,candidate){
  ];
  return [
   'Use the SentinelX connector only. Do not use LION-MCP-R2 or OpenAI Secure MCP Tunnel.',
-  'Target host: MOON.',
+  'Target host: moon.',
   'Canonical Model Chat identity is frozen for this request:',
   ...ids.map(([k,v])=>k+'='+v),
-  '1. Call SentinelX sentinel_exec on MOON with command exactly:',
+  '1. Call SentinelX sentinel_exec on moon with command exactly:',
   '/usr/local/bin/lion-sentinelx-turn get '+turn.turn_id,
   '2. Read the returned JSON input field and answer that cognitive request.',
-  '3. Call SentinelX sentinel_exec on MOON again with command:',
+  '3. Call SentinelX sentinel_exec on moon again with command:',
   '/usr/local/bin/lion-sentinelx-turn complete '+turn.turn_id+' chatgpt-saas-sentinelx \'{"text":"<your answer>"}\'',
   'The final argument must be one valid shell-quoted JSON object with exactly one key: text.',
   'Do not call any other write tool.',
@@ -234,6 +261,21 @@ class CanonicalConversationSaaSConsumer{
   if(!mapped)return null;
   return (await this.ingress('/v1/turns/'+encodeURIComponent(mapped.turn_id))).turn;
  }
+ // Non-sending, exact readback for the R4 operator gate. Ingress is the
+ // transport owner's durable claim; it is NOT proof of a browser send.
+ async provePreparedTransportClaim(broker){
+  if(!broker||this.dispatchMap[broker.request_id])return false;
+  try{
+   const turn=await this._turnFor(broker.request_id);
+   if(!preparedTransportClaim(broker,turn,this.now()))return false;
+   const pending=await this.panel('/api/conversations/saas/pending?limit=128');
+   if(!Array.isArray(pending.candidates))return false;
+   const candidate=pending.candidates.find(v=>v?.request_id===broker.request_id);
+   if(!candidate)return false;
+   this._validate(candidate,turn,broker);
+   return true;
+  }catch{return false}
+ }
  _validate(candidate,turn,broker){
   for(const key of ['request_id','conversation_id','lane_id','request_message_id','causation_id','correlation_id','context_digest','shared_context_digest','projection_digest'])requiredString(candidate[key],key);
   if(!/^[a-f0-9]{64}$/.test(candidate.shared_context_digest)||!/^[a-f0-9]{64}$/.test(candidate.projection_digest))throw Error('CANONICAL_DIGEST_REQUIRED');
@@ -360,14 +402,15 @@ class CanonicalConversationSaaSConsumer{
    const exact=this._validate(candidate,turn,broker);
    const prior=this.dispatchMap[rid];
    if(prior?.state==='RECONCILED')return;
-   // Resume admission is only a snapshot. Recheck this EXACT request immediately
-   // before touching the browser: an expired claim can leave status WAITING_SUPERVISOR
-   // while claim_generation proves an earlier, uncertain external attempt.
-   if(!prior&&(broker.status!=='WAITING_SUPERVISOR'||broker.claim_generation!==0||
-    broker.transport!==TRANSPORT||broker.authority_effect!=='NONE')){
-    // This request may already have been handed to another transport worker.
-    // Permanently pause this consumer; merely flagging state would let the
-    // fair-scan cursor attempt a different request in the next tick.
+   // The Node bridge already owns a transport claim when it creates ingress.
+   // Reacquire the exact broker before a browser send, never infer from UI.
+   const unclaimed=broker.status==='WAITING_SUPERVISOR'
+    &&broker.claim_generation===0&&broker.transport===TRANSPORT
+    &&broker.authority_effect==='NONE';
+   const prepared=preparedTransportClaim(broker,turn,this.now());
+   if(!prior&&!unclaimed&&!prepared){
+    // A claim without matching current ingress evidence, an expired lease
+    // or a second claim is not a fresh external send. Persistently HOLD.
     this.enabled=false;
     this.store.setSetting('canonical_consumer_enabled','false');
     this.state='OPERATOR_REQUIRED';
@@ -523,6 +566,7 @@ class CanonicalConversationSaaSConsumer{
 module.exports={
  CanonicalConversationSaaSConsumer,
  evaluateOperatorResume,
+ preparedTransportClaim,
  canonicalPrompt,
  parseCanonicalIdentity,
  EXTERNAL_SYSTEM,
