@@ -260,7 +260,7 @@
       "target": "cyber_lion/mission_control/cooperative_artifacts.py"
     },
     {
-      "sha256": "d25422ba952f9e9950fc974b201a5fe23ff44df5334c310a1605379c38e91d5e",
+      "sha256": "bf88464c8fd000400ab2ad55ea9d3d5974ea61df4f438eb75406e6d344c434ce",
       "source": "cyber_lion/mission_control/cooperative_current_owner_wiring.py",
       "target": "cyber_lion/mission_control/cooperative_current_owner_wiring.py"
     },

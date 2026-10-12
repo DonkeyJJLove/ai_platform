@@ -8,7 +8,7 @@
     },
     {
       "path": "LION/architecture/v1_5/application_factory_r1/DEPLOYMENT_PACKAGE_MANIFEST.json",
-      "sha256": "a967fd3e9de41f1db53be1b7caad0aa4b6c00da0bc625e79d5043e2ab4b5a90c"
+      "sha256": "842e03fd4acd134974af01b5203e4cf41edcb732542598bde0193fef765e3994"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R10_NATIVE_PHASE_ZERO_COGNITIVE_RECEIPTS_R1.md",
@@ -16,7 +16,7 @@
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R11_ORIGINAL_OWNER_CONSTRUCTION_R1.md",
-      "sha256": "892508721b61d6eb4b48c3552537a47e9935daf385c83de03a00a8cc5dbbef5b"
+      "sha256": "8f953c4d652c9a663399496369910e873b78a670ddf8c7f19bc6d828f333d669"
     },
     {
       "path": "LION/architecture/v1_5/cooperative_production_r1/R4_CANARY_SAAS_STATUS_AND_LPCL_CURRENTNESS_R1.md",
@@ -216,7 +216,7 @@
     },
     {
       "path": "cyber_lion/mission_control/cooperative_current_owner_wiring.py",
-      "sha256": "d25422ba952f9e9950fc974b201a5fe23ff44df5334c310a1605379c38e91d5e"
+      "sha256": "bf88464c8fd000400ab2ad55ea9d3d5974ea61df4f438eb75406e6d344c434ce"
     },
     {
       "path": "cyber_lion/mission_control/cooperative_materialization_registry.py",
@@ -352,7 +352,7 @@
     },
     {
       "path": "cyber_lion/tests/test_r11_current_owner_wiring.py",
-      "sha256": "3beea8d10a493f44c33d0033bbda6908eb9689b02ac5412e9d43140a092962c4"
+      "sha256": "59c152cd82131affbfdb0a20b5050c22a08f2275c9450f74611fb7b00b18a6ab"
     },
     {
       "path": "cyber_lion/tests/test_r11_external_current_owner_source.py",
@@ -452,7 +452,7 @@
     },
     {
       "path": "tools/lion_effect_admission_broker.py",
-      "sha256": "c3f39fce322eadb0233c311ab5c27766a5a4bf088e83f036e2c90eba6faf22b5"
+      "sha256": "741171579cfafdab81016631b4cd05a9ff96987072a46714794b06dc6cef91b7"
     },
     {
       "path": "tools/lion_firefox_broker_relay.py",
@@ -511,7 +511,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "d54918e12a769669a3cea4b80b6677d644545dbf92df6385677256bc794294ad",
+  "package_digest": "382661826126cba74d99f82e62183af1be14c020deadfa38d096e5ee4359b409",
   "purpose": "R10 exact Application Factory phase-zero native LOCAL model proposal with durable SEND_UNKNOWN, real request/response byte digest and shared-model ancestor; original single MC scheduler and 93-file deployment, no Docker or LPCL autoactivation. Requires separate source/authority review for new HTTP POST effect surface.",
   "schema": "lion.source-package-manifest/v1"
 }

@@ -33,6 +33,7 @@ from cyber_lion.enterprise.runtime_enforcement import (
 from cyber_lion.tests.test_r11_preactivation_production_binding import (
     R11SourceBoundProductionAcceptance,
 )
+from cyber_lion.tests.test_cooperative_runtime_preparer import FakeAdmission
 
 
 class R11OriginalCurrentOwnersTest(unittest.TestCase):
@@ -51,6 +52,10 @@ class R11OriginalCurrentOwnersTest(unittest.TestCase):
         )
         f.f.fixture.engine._replay=self.admission_replay
         export=f.r616.exporter
+        # R6.21's original fixture and R6.15's exporter each constructed
+        # a separate FakeAdmission. R11 production must bind one exact
+        # owner across issuer and downstream authority revalidation.
+        f.f.fixture.engine._authority=export.authority_admission
         self.inputs=CurrentOwnerSources(
             mission_db=f.f.mission_db,
             artifact_root=f.f.fixture.root,
@@ -136,6 +141,51 @@ class R11OriginalCurrentOwnersTest(unittest.TestCase):
         guard=self.fixture.f.fixture.engine._replay
         guard.path=self.inputs.admission_source.path  # substitution of checked path
         with self.assertRaisesRegex(Exception, "identity drift|replay SQLite"):
+            assemble_original_owners(self.inputs)
+        self.assertFalse(self.inputs.worker_materialization_db.exists())
+
+    def test_replay_engine_and_exporter_share_exact_live_authority_owner(self):
+        self.assertIs(
+            self.inputs.admission_engine._authority,
+            self.inputs.authority_admission,
+        )
+        prep,mat,root,worker=assemble_original_owners(self.inputs)
+        self.assertIs(prep.admission_engine._authority,mat.exporter.authority_admission)
+        self.assertIs(root.authority_admission,mat.exporter.authority_admission)
+        self.assertEqual(worker,"MD001")
+
+    def test_split_authority_owner_denied_before_any_new_private_db(self):
+        # Both objects satisfy the LiveAuthorityAdmission type; type-only
+        # acceptance must not allow divergence in their live revocation view.
+        self.fixture.f.fixture.engine._authority=FakeAdmission()
+        self.assertIsNot(
+            self.inputs.admission_engine._authority,self.inputs.authority_admission,
+        )
+        with self.assertRaisesRegex(R11CurrentOwnerWiringError,"authority owner split"):
+            assemble_original_owners(self.inputs)
+        self.assertFalse(self.inputs.worker_materialization_db.exists())
+
+    def test_post_construction_pdp_owner_substitution_denied_before_db(self):
+        self.fixture.f.fixture.engine._source=object()
+        with self.assertRaisesRegex(R11CurrentOwnerWiringError,
+                                    "canonical PDP source/trust mismatch"):
+            assemble_original_owners(self.inputs)
+        self.assertFalse(self.inputs.worker_materialization_db.exists())
+
+    def test_post_construction_pdp_trust_substitution_denied_before_db(self):
+        trust=self.fixture.f.fixture.engine._source_trust
+        self.fixture.f.fixture.engine._source_trust=replace(
+            trust,source_instance_id="substituted-PDP-source"
+        )
+        with self.assertRaisesRegex(R11CurrentOwnerWiringError,
+                                    "canonical PDP source/trust mismatch"):
+            assemble_original_owners(self.inputs)
+        self.assertFalse(self.inputs.worker_materialization_db.exists())
+
+    def test_missing_canonical_pdp_trust_denied_before_db(self):
+        self.fixture.f.fixture.engine._source_trust=None
+        with self.assertRaisesRegex(R11CurrentOwnerWiringError,
+                                    "canonical PDP trust binding required"):
             assemble_original_owners(self.inputs)
         self.assertFalse(self.inputs.worker_materialization_db.exists())
 

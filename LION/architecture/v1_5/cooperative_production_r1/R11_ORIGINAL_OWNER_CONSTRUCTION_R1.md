@@ -93,3 +93,27 @@ but uses synthetic canonical evidence only in disposable isolated tests.
 This is a persistence and replay boundary, NOT a second issuer of
 RuntimeAdmission and NOT an operator grant, approval, LPCL START, fleet
 activation or production deployment.
+
+
+## Original admission authority and PDP source unity
+
+R11 CurrentOwnerSources.validate() explicitly binds the issuer-side
+RuntimeAdmissionEngine._authority by Python object identity to the very
+same original LiveAuthorityAdmission used by the R6.15/R6.16
+evidence exporter and R6.17 qualification root. Two separately
+constructed revalidators are not accepted just because they both have the
+canonical class type; they could disagree about a revoked epoch,
+current authority lineage or trust source at the issuance boundary.
+
+Before opening any new R11 private journal, the composition also
+reacquires the original RuntimeAdmissionEngine canonical PDP source
+and its PDPSourceTrustBinding, checks exact source ID, instance,
+implementation and trust anchors, and requires the independent
+resolve / current_policy_binding consumers. These checks do not mint
+a PDP decision or create the authoritative upstream source. The
+independent original producer must furnish the same current objects
+through a separately approved, SHA-pinned production module.
+
+Synthetic test fixtures were reconciled to one FakeAdmission instance
+only in the isolated test harness, with negative substitution tests.
+authority_effect=NONE, runtime_effect=NONE, production=HOLD.

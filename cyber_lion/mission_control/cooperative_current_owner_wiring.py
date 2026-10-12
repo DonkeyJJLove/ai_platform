@@ -19,6 +19,7 @@ from typing import Any, Callable, Mapping
 
 from cyber_lion.contracts.runtime_currentness import CurrentnessSourceTrustBinding
 from cyber_lion.contracts.runtime_execution import RuntimeAdmissionSourceTrustBinding
+from cyber_lion.contracts.runtime_enforcement import PDPSourceTrustBinding
 from cyber_lion.enterprise.cooperative_context_resolver import PinnedCooperativeContextResolver
 from cyber_lion.enterprise.cooperative_runtime_preparation_provider import (
     CooperativeRuntimePreparationProvider,
@@ -163,6 +164,29 @@ class CurrentOwnerSources:
               "existing R6.21 SQLiteRuntimeAdmissionSource required")
         _need(type(self.admission_engine) is RuntimeAdmissionEngine,
               "existing canonical RuntimeAdmissionEngine required")
+        # The issuer (R6.21) and the downstream R6.15 evidence exporter
+        # must revalidate against the SAME live authority owner. Two
+        # independent instances could disagree about epoch/revocation
+        # even while both are individually well-typed.
+        _need(getattr(self.admission_engine, "_authority", None)
+              is self.authority_admission,
+              "RuntimeAdmission authority owner split denied")
+        # The original canonical engine validates its PDP trust at
+        # construction time. Reacquire it here immediately before
+        # initializing private R11 state to reject later source swapping.
+        pdp_source = getattr(self.admission_engine, "_source", None)
+        pdp_trust = getattr(self.admission_engine, "_source_trust", None)
+        _need(type(pdp_trust) is PDPSourceTrustBinding,
+              "original canonical PDP trust binding required")
+        pdp_trust.validate()
+        pdp_binding = tuple(getattr(pdp_source, name, None) for name in (
+            "source_id", "source_instance_id", "implementation_digest",
+            "trust_anchor_id", "trust_anchor_digest",
+        ))
+        _need(pdp_binding == pdp_trust.binding()
+              and callable(getattr(pdp_source, "resolve", None))
+              and callable(getattr(pdp_source, "current_policy_binding", None)),
+              "original canonical PDP source/trust mismatch")
         replay = getattr(self.admission_engine, "_replay", None)
         _need(type(replay) is SQLiteR11RuntimeAdmissionReplayGuard,
               "original durable RuntimeAdmission replay guard required")
