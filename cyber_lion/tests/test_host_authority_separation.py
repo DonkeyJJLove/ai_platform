@@ -430,9 +430,16 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         ))
         r11_added = {
             "cyber_lion/mission_control/source_bound_preactivation_factory.py",
+            "cyber_lion/mission_control/cooperative_current_owner_wiring.py",
         }
         self.assertTrue(r11_added.issubset(sources))
-        r11_source = sources[next(iter(r11_added))]
+        r11_source = sources["cyber_lion/mission_control/source_bound_preactivation_factory.py"]
+        r11_wiring = sources["cyber_lion/mission_control/cooperative_current_owner_wiring.py"]
+        self.assertIn("assemble_original_owners", r11_wiring)
+        self.assertIn("CurrentOwnerSources", r11_wiring)
+        self.assertIn("CooperativeRuntimePreparationProvider", r11_wiring)
+        self.assertIn("CooperativeControlPlaneMaterializer", r11_wiring)
+        self.assertIn("CooperativeRuntimeCompositionRoot", r11_wiring)
         r11_tree = ast.parse(r11_source)
         # R11 introduces a pinned, explicit source composition library, not a
         # new authority issuer, shell runner, scheduler or network dispatcher.

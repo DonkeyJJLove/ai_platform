@@ -2,7 +2,7 @@
   "authority_effect": "NONE",
   "candidate_source_parent": "34cdc8a17fcd235807bee6340762839bc8a71fb0",
   "execution_effect": "NONE",
-  "file_count": 94,
+  "file_count": 95,
   "files": [
     {
       "sha256": "ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8",
@@ -253,6 +253,11 @@
       "sha256": "bc84a9fe3cbd3892477c948101bc7c02b6126e7c04af1b918a28696f0de6fe6d",
       "source": "cyber_lion/mission_control/cooperative_artifacts.py",
       "target": "cyber_lion/mission_control/cooperative_artifacts.py"
+    },
+    {
+      "sha256": "5187b31c1fae083a5e4f869957fa2d3c86b55ff2c4b4cc700d57f64346f868f8",
+      "source": "cyber_lion/mission_control/cooperative_current_owner_wiring.py",
+      "target": "cyber_lion/mission_control/cooperative_current_owner_wiring.py"
     },
     {
       "sha256": "6f9093422b1a1fc6657d916ff6b31b9a497dd66dfca03df95b667c424ffdb1f6",
