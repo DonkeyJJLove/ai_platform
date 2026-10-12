@@ -27,6 +27,7 @@ ADDED_PROVIDER_PATHS = frozenset({
     "cyber_lion.mission_control.control_plane_reconnaissance.py",
     "cyber_lion.app_coordination.conversation_chat.py",
     "cyber_lion.mission_control.native_cognitive_phase_zero.py",
+    "cyber_lion.enterprise.r11_runtime_admission_replay.py",
 })
 # Historical source P0 is reconstructed from its Git object and checked
 # against the frozen tree/scan digest by pinned_p0_inventory. Compare old
@@ -112,14 +113,17 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
         # Historical P0 (567) is immutable. R10 has 23 relocations of
         # the *same* semantic callsites: 15 conversation-chat (+1 line)
         # and eight recon records at explicitly verified AST locations.
-        # Of 34 newly minted location IDs, only 11 are new effects:
-        # six cooperative writes, one native-recon journal write,
-        # and four native-model ledger/HTTP effects.
+        # Of the 36 newly minted location IDs, 23 replace historical
+        # callsite locations (15 conversation + 8 recon), while 13 are
+        # NEW effect sites: six cooperative writes, one native-recon
+        # journal write, four native-model ledger/HTTP effects, and
+        # two new durable R11 RuntimeAdmission replay SQLite writes.
+        # They are inventory, NOT inherited P0 mediation or approval.
         self.assertEqual(len(previous & current), 544)
-        self.assertEqual(len(current - previous), 34)
+        self.assertEqual(len(current - previous), 36)
         self.assertEqual(len(previous - current), 23)
-        self.assertEqual(len(current), 578)
-        self.assertEqual(len(current - previous) - len(previous - current), 11)
+        self.assertEqual(len(current), 580)
+        self.assertEqual(len(current - previous) - len(previous - current), 13)
         self.assertFalse(self.candidate.unclassified_refs)
         self.assertFalse(self.candidate_taxonomy.unresolved_refs)
         self.assertNotEqual(
@@ -153,6 +157,7 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
             "cyber_lion.mission_control.control_plane_reconnaissance.py": 9,
             "cyber_lion.app_coordination.conversation_chat.py": 15,
             "cyber_lion.mission_control.native_cognitive_phase_zero.py": 4,
+            "cyber_lion.enterprise.r11_runtime_admission_replay.py": 2,
         }))
         native = [
             s for s in new.values()
@@ -167,8 +172,42 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
              if s.effect_class == "external.network.post"},
             {("external_write", "external")},
         )
-        # Neither a new model HTTP POST nor its three durable writes
-        # inherits an old P0 admission or historical closure.
+        # R11's new replay DB genuinely writes to private persistent
+        # state; the P0 inventory must retain exact owner, type, site and
+        # AST statement identity instead of silently accepting +2 writes.
+        replay_provider = "cyber_lion.enterprise.r11_runtime_admission_replay.py"
+        replay = [s for s in new.values() if s.effect_provider == replay_provider]
+        self.assertEqual(len(replay), 2)
+        self.assertEqual({s.effect_class for s in replay}, {"persistent_state.write"})
+        self.assertEqual({s.authority_class for s in replay}, {"local_write"})
+        self.assertEqual({s.target_class for s in replay}, {"runtime"})
+        path = "cyber_lion/enterprise/r11_runtime_admission_replay.py"
+        self.assertEqual(
+            {s.entrypoints for s in replay},
+            {
+                (path + ":91:db.execute",),
+                (path + ":122:db.execute",),
+            },
+        )
+        source = (self.root / path).read_text(encoding="utf-8")
+        calls = [
+            node for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.Call)
+            and node.lineno in {91, 122}
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "db"
+            and node.func.attr == "execute"
+            and node.args
+        ]
+        self.assertEqual(
+            sorted((node.lineno, ast.literal_eval(node.args[0]).split()[0])
+                   for node in calls),
+            [(91, "CREATE"), (122, "INSERT")],
+        )
+        self.assertIn("BEGIN IMMEDIATE", source)
+        self.assertIn("mode=rw", source)
+        # No replay guard write can inherit P0 admission or closure.
         self.assertFalse(set(new) & set(self.historical_surfaces))
 
     def test_relocated_effects_keep_class_and_exact_callsite_identity(self):

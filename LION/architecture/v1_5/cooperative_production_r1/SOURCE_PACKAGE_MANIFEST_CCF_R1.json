@@ -344,7 +344,7 @@
     },
     {
       "path": "cyber_lion/tests/test_p0_current_candidate_inventory_delta.py",
-      "sha256": "cc56ba7b855f3e67033151d22fd213d50a3fc4c7b382f055d036bb7ea2323a54"
+      "sha256": "4fe7616476e8c995d97d2971e45e1c2ebc4a548293f0cfbfb9ae34b4a66aa0a3"
     },
     {
       "path": "cyber_lion/tests/test_r10_native_cognitive_phase_zero.py",
@@ -511,7 +511,7 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "3bcc8a654da998803db45bf837a880cc531e88e803cfbd4c5521dc81d039c17c",
+  "package_digest": "d54918e12a769669a3cea4b80b6677d644545dbf92df6385677256bc794294ad",
   "purpose": "R10 exact Application Factory phase-zero native LOCAL model proposal with durable SEND_UNKNOWN, real request/response byte digest and shared-model ancestor; original single MC scheduler and 93-file deployment, no Docker or LPCL autoactivation. Requires separate source/authority review for new HTTP POST effect surface.",
   "schema": "lion.source-package-manifest/v1"
 }
