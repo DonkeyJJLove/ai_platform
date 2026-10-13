@@ -59,3 +59,41 @@ NO_MERGE; NO_DEPLOY; NO_MD001_START; NO_LPCL_START.
 First missing live producer: independently attested original R6.20
 twelve-part source and current PDP decision/policy/authority issued
 under the exact original governance for Application Factory/MD001.
+
+
+## Original operator/driver fence before RuntimeAdmission
+
+A canonical HELD assignment is necessary but NOT proof that its
+original operator authority, driver generation or capability remains
+current. The original scheduler historically verifies these before
+HELD->READY release, but the R6.21 preparation provider can consume
+its admission replay key and journal a RuntimeAdmission earlier.
+
+The R11 read-only source now reacquires the original
+mission_operator_control, operator_capability_revocations and
+mission_execution_drivers tables, refusing absent control/schema
+rather than treating absence as no revocations. Before requesting any
+independently issued twelve-part preparation inputs, it calls the
+existing operator_control.assignment_allowed and
+operator_control.is_capability_revoked on canonical SQLite and checks
+the same assignment control_epoch, context_revision, plan_revision,
+driver generation and original allowed driver states (ACTIVE, WAITING,
+BLOCKED). It does not create an alternative authorization policy or
+change the original scheduler's release check.
+
+The entire fence is checked again after the original PDP, input source
+and current-policy readback; a PAUSE or operator epoch transition
+during R6.20 collection denies rather than continuing to admission.
+Original R6.21 still validates all of its own guards. This preflight
+reduces stale source acceptance but cannot eliminate every concurrent
+post-preflight operator change; effect-time and HELD->READY fences stay
+mandatory separate boundaries.
+
+Disposable negative tests cover PAUSE, STOP, owner/epoch changes,
+context/plan revision changes, revoked capability, missing revocation
+schema/control row, driver generation or terminal state, and a PAUSE
+arriving during original input-source collection. The original R6.21
+consumer regression observes zero newly consumed admission replay
+rows, no durable RuntimeAdmission and no PREPARING journal after
+operator PAUSE. Tests are synthetic isolation, not production
+operator/issuer attestation.

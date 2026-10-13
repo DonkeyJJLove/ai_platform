@@ -19,6 +19,7 @@ from hashlib import sha256
 from pathlib import Path
 import re
 import sqlite3
+import json
 from typing import Any, Callable
 
 from cyber_lion.contracts.action_proposal_context import ExplicitActionProposalContext
@@ -41,6 +42,7 @@ from cyber_lion.enterprise.live_authority_admission import LiveAdmittedAuthority
 from cyber_lion.enterprise.policy_gate import PDPResult
 from cyber_lion.enterprise.r11_original_current_owner_builder import OriginalPreparationEvidenceTrust
 from cyber_lion.enterprise.r11_canonical_pdp_evidence import SQLiteR11CanonicalPDPEvidenceReader
+from cyber_lion.mission_control import operator_control
 
 SCHEMA = "lion.r11.original-r620-evidence-source/v1"
 REPOSITORY = "DonkeyJJLove/ai_platform"
@@ -185,6 +187,68 @@ class ReadOnlyOriginalR620EvidenceSource:
         _need(type(content) is str
               and sha256(content.encode("utf-8")).hexdigest()==record.get("input_digest"),
               "original canonical assignment input digest mismatch")
+        # A HELD row by itself is NOT a current operator control binding.
+        # The original scheduler checks these fences only at HELD->READY.
+        # Reacquire them now, BEFORE any R6.21 admission/replay publication.
+        try:
+            with closing(self._sql.connect()) as db:
+                db.row_factory=sqlite3.Row
+                expected_tables={
+                    "mission_operator_control",
+                    "operator_capability_revocations",
+                    "mission_execution_drivers",
+                }
+                tables={
+                    row["name"] for row in db.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table' "
+                        "AND name IN ('mission_operator_control',"
+                        "'operator_capability_revocations','mission_execution_drivers')"
+                    ).fetchall()
+                }
+                _need(tables==expected_tables,
+                      "original operator/driver/revocation schema incomplete")
+                control=operator_control.control_state(db, self.mission_id, None)
+                _need(type(control) is dict,
+                      "original operator control state unavailable")
+                _need(operator_control.assignment_allowed(
+                          db,self.mission_id,record.get("dispatch_authority"),
+                          record.get("control_epoch")),
+                      "original operator control epoch/owner/pause/stop fence")
+                _need(
+                    (record.get("control_epoch"),
+                     record.get("context_revision"),
+                     record.get("plan_revision"))
+                    == (control.get("control_epoch"),
+                        control.get("context_revision"),
+                        control.get("plan_revision")),
+                    "original operator context/plan revision fence",
+                )
+                try:
+                    payload=json.loads(content)
+                except (ValueError, TypeError) as exc:
+                    raise R11OriginalR620EvidenceError(
+                        "canonical assignment capability payload invalid"
+                    ) from exc
+                _need(type(payload) is dict
+                      and type(payload.get("capability")) is str
+                      and bool(payload["capability"]),
+                      "canonical assignment capability absent")
+                _need(not operator_control.is_capability_revoked(
+                          db,self.mission_id,payload["capability"]),
+                      "original operator capability revoked")
+                driver=db.execute(
+                    "SELECT generation,state FROM mission_execution_drivers "
+                    "WHERE mission_id=?",(self.mission_id,)
+                ).fetchone()
+                _need(driver is not None
+                      and type(driver["generation"]) is int
+                      and driver["generation"]==record["lease_generation"]
+                      and driver["state"] in {"ACTIVE","WAITING","BLOCKED"},
+                      "original driver generation/state fence")
+        except sqlite3.Error as exc:
+            raise R11OriginalR620EvidenceError(
+                "original operator/driver fence unavailable"
+            ) from exc
         return record
 
     def resolve(self, assignment_id: str) -> CooperativeRuntimePreparationEvidence:

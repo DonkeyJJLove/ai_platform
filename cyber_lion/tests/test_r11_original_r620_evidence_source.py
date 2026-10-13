@@ -167,7 +167,7 @@ class R11OriginalR620EvidenceSourceTests(unittest.TestCase):
         with sqlite3.connect(self.src.mission_db) as db:
             db.execute("UPDATE mission_execution_assignments SET lease_generation=2 WHERE assignment_id=?",
                        (self.aid,))
-        with self.assertRaisesRegex(R11OriginalR620EvidenceError,"binding to canonical assignment denied"):
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,"driver generation/state fence"):
             self.producer().resolve(self.aid)
 
     def test_original_component_parts_cannot_be_presealed_evidence(self):
@@ -246,6 +246,172 @@ class R11OriginalR620EvidenceSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(R11OriginalR620EvidenceError,
                                     "issuance clock drift"):
             producer.resolve_at(self.aid,now)
+
+    def test_operator_pause_fence_denies_held_pre_admission(self):
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute(
+                "UPDATE mission_operator_control SET pause_latch=1 WHERE mission_id='M1'"
+            )
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "operator control epoch/owner/pause/stop fence"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,0)
+
+    def test_operator_stop_fence_denies_held_pre_admission(self):
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute(
+                "UPDATE mission_operator_control SET stop_latch=1 WHERE mission_id='M1'"
+            )
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "operator control epoch/owner/pause/stop fence"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,0)
+
+    def test_operator_control_epoch_advance_denies_old_held_assignment(self):
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute(
+                "UPDATE mission_operator_control "
+                "SET control_epoch=control_epoch+1 WHERE mission_id='M1'"
+            )
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "operator control epoch/owner/pause/stop fence"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,0)
+
+    def test_operator_control_ownership_transfer_denies_old_held_assignment(self):
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute(
+                "UPDATE mission_operator_control "
+                "SET control_owner='OPERATOR' WHERE mission_id='M1'"
+            )
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "operator control epoch/owner/pause/stop fence"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,0)
+
+    def test_context_revision_drift_denies_before_original_inputs(self):
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute(
+                "UPDATE mission_operator_control "
+                "SET context_revision=context_revision+1 WHERE mission_id='M1'"
+            )
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "operator context/plan revision fence"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,0)
+
+    def test_plan_revision_drift_denies_before_original_inputs(self):
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute(
+                "UPDATE mission_operator_control "
+                "SET plan_revision=plan_revision+1 WHERE mission_id='M1'"
+            )
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "operator context/plan revision fence"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,0)
+
+    def test_capability_revocation_denies_before_original_inputs(self):
+        # An original operator-control revocation is separate from the
+        # semantic phase effect ceiling and independent PDP result.
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute(
+                "INSERT INTO operator_capability_revocations VALUES(?,?,?,?,?,?)",
+                ("M1","COOPERATIVE_ARTIFACT_PRODUCTION","command:fixture",1,
+                 "2026-10-13T00:00:00+00:00",None),
+            )
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "operator capability revoked"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,0)
+
+    def test_original_driver_generation_drift_denies_old_held_assignment(self):
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute(
+                "UPDATE mission_execution_drivers SET generation=generation+1 "
+                "WHERE mission_id='M1'"
+            )
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "driver generation/state fence"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,0)
+
+    def test_original_driver_terminal_state_denies_old_held_assignment(self):
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute(
+                "UPDATE mission_execution_drivers SET state='COMPLETE' "
+                "WHERE mission_id='M1'"
+            )
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "driver generation/state fence"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,0)
+
+    def test_missing_capability_revocation_schema_denies_not_false_allow(self):
+        # The original operator_control.is_capability_revoked() has a
+        # historical compatibility fallback if its table is absent. R11
+        # must not infer zero revocations from a missing authority ledger.
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute("DROP TABLE operator_capability_revocations")
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "operator/driver/revocation schema incomplete"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,0)
+
+    def test_missing_original_operator_record_denies_without_fallback(self):
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute(
+                "DELETE FROM mission_operator_control WHERE mission_id='M1'"
+            )
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "operator control state unavailable"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,0)
+
+    def test_operator_pause_during_original_parts_read_denies_second_readback(self):
+        def pause(*_):
+            with sqlite3.connect(self.src.mission_db) as db:
+                db.execute(
+                    "UPDATE mission_operator_control SET pause_latch=1 "
+                    "WHERE mission_id='M1'"
+                )
+        self.independent.callback=pause
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "operator control epoch/owner/pause/stop fence"):
+            self.producer().resolve(self.aid)
+        self.assertEqual(self.independent.calls,1)
+
+    def test_operator_pause_cannot_consume_original_runtime_admission_replay(self):
+        # This is the ORIGINAL R6.21 consumer, not just a direct call
+        # to the new read-only source. The operator fence must deny before
+        # R6.21 journals PREPARING or consumes a single-use admission key.
+        source=self.producer()
+        with patch("cyber_lion.enterprise.r11_original_current_owner_builder.MISSION","M1"):
+            current=build_current_owner_sources(replace(
+                self.fixture.owners,
+                preparation_source=source,
+                preparation_trust=self.output_trust,
+            ))
+        prep,_,_,_=assemble_original_owners(current)
+        with sqlite3.connect(self.src.mission_db) as db:
+            db.execute(
+                "UPDATE mission_operator_control SET pause_latch=1 "
+                "WHERE mission_id='M1'"
+            )
+        with self.assertRaisesRegex(R11OriginalR620EvidenceError,
+                                    "operator control epoch/owner/pause/stop fence"):
+            prep(self.aid)
+        self.assertEqual(self.independent.calls,0)
+        self.assertEqual(prep.status(self.aid)["state"],"NOT_STARTED")
+        with sqlite3.connect(self.fixture.owners.admission_replay_guard.path) as db:
+            count=db.execute(
+                "SELECT COUNT(*) FROM r11_runtime_admission_replay"
+            ).fetchone()[0]
+        self.assertEqual(count,0)
+        with sqlite3.connect(self.fixture.owners.admission_source.path) as db:
+            count=db.execute("SELECT COUNT(*) FROM runtime_admissions").fetchone()[0]
+        self.assertEqual(count,0)
+        self.assertEqual(list(Path(self.src.artifact_root).iterdir()),[])
 
     def test_original_PDP_reader_is_exact_canonical_type(self):
         with self.assertRaisesRegex(R11OriginalR620EvidenceError,
