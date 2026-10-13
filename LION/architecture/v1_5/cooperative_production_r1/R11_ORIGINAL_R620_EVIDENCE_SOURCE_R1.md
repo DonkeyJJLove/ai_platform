@@ -97,3 +97,13 @@ consumer regression observes zero newly consumed admission replay
 rows, no durable RuntimeAdmission and no PREPARING journal after
 operator PAUSE. Tests are synthetic isolation, not production
 operator/issuer attestation.
+
+
+## Actual signed R6.20 input source consumer
+
+SQLiteSignedOriginalR620PartsSource supplies the missing concrete,
+read-only source of the twelve original R6.20 parts in a cryptographically
+authenticated format. See R11_SIGNED_ORIGINAL_R620_PARTS_R1.md.
+Its true production issuer, signing key's authorization provenance and
+already-issued signed records MUST be established independently.
+The test-only Ed25519 signer is NOT a canonical production source.

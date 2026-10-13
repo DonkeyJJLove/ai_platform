@@ -435,8 +435,15 @@ class HostAuthoritySeparationTests(unittest.TestCase):
             "cyber_lion/enterprise/r11_canonical_pdp_evidence.py",
             "cyber_lion/enterprise/r11_original_current_owner_builder.py",
             "cyber_lion/enterprise/r11_original_r620_evidence_source.py",
+            "cyber_lion/enterprise/r11_signed_original_r620_parts.py",
         }
         self.assertTrue(r11_added.issubset(sources))
+        original_signed_source = sources["cyber_lion/enterprise/r11_signed_original_r620_parts.py"]
+        self.assertIn("SQLiteSignedOriginalR620PartsSource",original_signed_source)
+        self.assertIn("Ed25519PublicKey",original_signed_source)
+        self.assertIn("independent Ed25519 verifier key",original_signed_source)
+        self.assertIn("mode=ro",sources["cyber_lion/enterprise/cooperative_dependency_provider.py"])
+        self.assertNotIn("Ed25519PrivateKey",original_signed_source)
         original_r620_source = sources["cyber_lion/enterprise/r11_original_r620_evidence_source.py"]
         self.assertIn("OriginalR620PreparationParts",original_r620_source)
         self.assertIn("ReadOnlyOriginalR620EvidenceSource",original_r620_source)
