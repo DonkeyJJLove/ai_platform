@@ -13,7 +13,8 @@ from contextlib import closing
 from dataclasses import fields
 from datetime import datetime, timezone
 from hashlib import sha256
-import importlib.util
+import sys
+from types import ModuleType
 import json
 import os
 from pathlib import Path
@@ -220,34 +221,77 @@ class ReadOnlyRootProvider:
 
 
 def _load_verifier():
+    """Execute ONLY the verified bytes of the protected original verifier.
+
+    SHA checking followed by SourceFileLoader was an executable TOCTOU:
+    the loader reopened an editable path after the previous hash read. The
+    verified module is compiled and executed from that SAME byte buffer,
+    and inode/digest are rechecked before accepting its signature adapter.
+    No new authority, trust anchor or verifier is manufactured here.
+    """
     path = _outside_repository(
         _direct_file(_required("LION_COOPERATIVE_VERIFIER_MODULE_PATH"), "cooperative verifier module"),
         _repository_root(),
         "cooperative verifier module",
     )
     expected = _required("LION_COOPERATIVE_VERIFIER_MODULE_SHA256", limit=64)
-    _require(_SHA.fullmatch(expected) is not None and sha256(path.read_bytes()).hexdigest() == expected,
-             "cooperative verifier module digest mismatch")
+    _require(_SHA.fullmatch(expected) is not None, "cooperative verifier module digest mismatch")
     name = _required("LION_COOPERATIVE_VERIFIER_CALLABLE", limit=128)
     _require(_CALLABLE.fullmatch(name) is not None, "cooperative verifier callable")
     ready_name = os.environ.get("LION_COOPERATIVE_VERIFIER_READY_CALLABLE")
     if ready_name is not None:
         _require(_CALLABLE.fullmatch(ready_name) is not None, "cooperative verifier ready callable")
+    parent = path.parent
+    parent_st = parent.stat()
+    original_st = path.stat()
+    _require(parent.resolve(strict=True) == parent
+             and stat.S_ISDIR(parent_st.st_mode)
+             and not (parent_st.st_mode & 0o022),
+             "cooperative verifier parent writable or indirect")
+    _require(stat.S_ISREG(original_st.st_mode)
+             and original_st.st_nlink == 1
+             and original_st.st_uid in {0, os.geteuid()}
+             and not (original_st.st_mode & 0o022),
+             "cooperative verifier file owner/mode untrusted")
+    raw = path.read_bytes()
+    _require(sha256(raw).hexdigest() == expected,
+             "cooperative verifier module digest mismatch")
+    module_name = "_lion_cooperative_verifier_" + expected[:20]
+    module = ModuleType(module_name)
+    module.__file__ = str(path)
+    module.__package__ = ""
     try:
-        spec = importlib.util.spec_from_file_location("_lion_cooperative_verifier_" + expected[:20], path)
-        _require(spec is not None and spec.loader is not None, "cooperative verifier module unavailable")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        verified_code = compile(raw, str(path), "exec", dont_inherit=True)
+        sys.modules[module_name] = module
+        exec(verified_code, module.__dict__)
+        # The source file may be swapped while the verified bytes execute.
+        # Such a change cannot influence the executed code, and must deny
+        # the binding rather than silently use the modified source path.
+        after = path.lstat()
+        _require(
+            not path.is_symlink()
+            and (after.st_dev, after.st_ino) == (original_st.st_dev, original_st.st_ino)
+            and sha256(path.read_bytes()).hexdigest() == expected,
+            "cooperative verifier module changed during import",
+        )
         verifier = getattr(module, name, None)
         ready = getattr(module, ready_name, None) if ready_name else None
         adapter = TrustedSignatureVerifierAdapter(verifier, ready=ready)
+        _require(adapter.ready() is True, "cooperative verifier not ready")
+        final = path.lstat()
+        _require(
+            not path.is_symlink()
+            and (final.st_dev, final.st_ino) == (original_st.st_dev, original_st.st_ino)
+            and sha256(path.read_bytes()).hexdigest() == expected,
+            "cooperative verifier module changed during ready",
+        )
+        return adapter.verify
     except CooperativeDependencyProviderError:
+        sys.modules.pop(module_name, None)
         raise
     except Exception as exc:
+        sys.modules.pop(module_name, None)
         raise CooperativeDependencyProviderError("cooperative verifier failed closed") from exc
-    _require(adapter.ready() is True, "cooperative verifier not ready")
-    return adapter.verify
-
 
 def _config():
     path = _outside_repository(

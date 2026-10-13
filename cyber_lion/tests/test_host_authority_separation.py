@@ -428,8 +428,113 @@ class HostAuthoritySeparationTests(unittest.TestCase):
                     for alias in node.names)
             for node in ast.walk(native_ast)
         ))
-        self.assertEqual(len(sources), 424 + len(r4_added) + len(r8_added) + len(r9_added) + len(r10_added))
-        self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (578, 6))
+        r11_added = {
+            "cyber_lion/mission_control/source_bound_preactivation_factory.py",
+            "cyber_lion/mission_control/cooperative_current_owner_wiring.py",
+            "cyber_lion/enterprise/r11_runtime_admission_replay.py",
+            "cyber_lion/enterprise/r11_canonical_pdp_evidence.py",
+            "cyber_lion/enterprise/r11_original_current_owner_builder.py",
+            "cyber_lion/enterprise/r11_original_r620_evidence_source.py",
+            "cyber_lion/enterprise/r11_signed_original_r620_parts.py",
+            "cyber_lion/enterprise/r11_original_r620_signed_publisher.py",
+        }
+        self.assertTrue(r11_added.issubset(sources))
+        publisher_path = "cyber_lion/enterprise/r11_original_r620_signed_publisher.py"
+        publisher_source = sources[publisher_path]
+        self.assertIn("CreateOnlyOriginalSignedR620Publisher",publisher_source)
+        self.assertIn("PUBLISH_ORIGINAL_R620_SIGNED_PARTS",publisher_source)
+        self.assertIn("BEGIN IMMEDIATE",publisher_source)
+        self.assertIn("original publication authority is not current",publisher_source)
+        self.assertNotIn("Ed25519PrivateKey",publisher_source)
+        self.assertNotIn("CREATE TABLE",publisher_source)
+        publisher_surfaces = [s for s in inv.surfaces
+                              if publisher_path in s.implementation_refs]
+        self.assertEqual(len(publisher_surfaces),1)
+        self.assertEqual({s.effect_class for s in publisher_surfaces},
+                         {"persistent_state.write"})
+        self.assertEqual(
+            {s.entrypoints for s in publisher_surfaces},
+            {(publisher_path+":287:db.execute",)}
+        )
+        original_signed_source = sources["cyber_lion/enterprise/r11_signed_original_r620_parts.py"]
+        self.assertIn("SQLiteSignedOriginalR620PartsSource",original_signed_source)
+        self.assertIn("Ed25519PublicKey",original_signed_source)
+        self.assertIn("independent Ed25519 verifier key",original_signed_source)
+        self.assertIn("mode=ro",sources["cyber_lion/enterprise/cooperative_dependency_provider.py"])
+        self.assertNotIn("Ed25519PrivateKey",original_signed_source)
+        original_r620_source = sources["cyber_lion/enterprise/r11_original_r620_evidence_source.py"]
+        self.assertIn("OriginalR620PreparationParts",original_r620_source)
+        self.assertIn("ReadOnlyOriginalR620EvidenceSource",original_r620_source)
+        self.assertIn("validate_cooperative_runtime_preparation_inputs",original_r620_source)
+        self.assertIn("bind_allowed_action_to_runtime_inputs",original_r620_source)
+        self.assertNotIn("LiveAuthorityAdmission.admit(",original_r620_source)
+        typed_original_source = sources["cyber_lion/enterprise/r11_original_current_owner_builder.py"]
+        self.assertIn("OriginalR11ServiceOwners",typed_original_source)
+        self.assertIn("OriginalPreparationEvidenceTrust",typed_original_source)
+        self.assertIn("build_current_owner_sources",typed_original_source)
+        self.assertNotIn("InMemoryRuntimeAdmissionReplayGuard",typed_original_source)
+        self.assertNotIn("PDPDecisionReceipt(",typed_original_source)
+        durable_source = sources["cyber_lion/enterprise/r11_runtime_admission_replay.py"]
+        self.assertIn("BEGIN IMMEDIATE",durable_source)
+        self.assertIn("SQLiteR11RuntimeAdmissionReplayGuard",durable_source)
+        self.assertIn("mode=rw",durable_source)
+        replay_surfaces = [
+            surface for surface in inv.surfaces
+            if "cyber_lion/enterprise/r11_runtime_admission_replay.py"
+               in surface.implementation_refs
+        ]
+        self.assertEqual(len(replay_surfaces),2)
+        self.assertEqual(
+            sorted(x.effect_class for x in replay_surfaces),
+            ["persistent_state.write", "persistent_state.write"],
+        )
+        # CREATE TABLE and INSERT are genuine persistent effects, explicitly
+        # inventoried; there must be no dynamic-SQL UNKNOWN added.
+        pdp_path = "cyber_lion/enterprise/r11_canonical_pdp_evidence.py"
+        pdp_source = sources[pdp_path]
+        self.assertIn("SQLiteR11CanonicalPDPEvidenceReader",pdp_source)
+        self.assertIn("SQLiteR11CanonicalPDPEvidencePublisher",pdp_source)
+        self.assertIn("OriginalPDPIssuanceObservation",pdp_source)
+        pdp_surface = [surf for surf in inv.surfaces
+                       if pdp_path in surf.implementation_refs]
+        self.assertEqual(len(pdp_surface),2)
+        self.assertEqual(
+            sorted(surf.effect_class for surf in pdp_surface),
+            ["persistent_state.write","persistent_state.write"]
+        )
+        self.assertEqual(
+            {surf.entrypoints for surf in pdp_surface},
+            {(pdp_path+":90:db.execute",),(pdp_path+":413:db.execute",)}
+        )
+        # query_only=ON is a connection-local read restriction conservatively
+        # identified as a state write by the scanner; the other is the
+        # genuine, separately gated persisted evidence INSERT.
+        self.assertIn("PRAGMA query_only=ON",pdp_source)
+        self.assertIn("INSERT INTO r11_original_pdp_evidence VALUES(?,?,?)",pdp_source)
+        r11_source = sources["cyber_lion/mission_control/source_bound_preactivation_factory.py"]
+        r11_wiring = sources["cyber_lion/mission_control/cooperative_current_owner_wiring.py"]
+        self.assertIn("assemble_original_owners", r11_wiring)
+        self.assertIn("CurrentOwnerSources", r11_wiring)
+        self.assertIn("CooperativeRuntimePreparationProvider", r11_wiring)
+        self.assertIn("CooperativeControlPlaneMaterializer", r11_wiring)
+        self.assertIn("CooperativeRuntimeCompositionRoot", r11_wiring)
+        r11_tree = ast.parse(r11_source)
+        # R11 introduces a pinned, explicit source composition library, not a
+        # new authority issuer, shell runner, scheduler or network dispatcher.
+        self.assertIn("compose_existing_owners", r11_source)
+        self.assertIn("source-bound owner module digest unavailable", r11_source)
+        self.assertFalse(any(
+            isinstance(node, (ast.Import, ast.ImportFrom))
+            and any(alias.name in {"subprocess", "socketserver"}
+                    for alias in node.names)
+            for node in ast.walk(r11_tree)
+        ))
+        self.assertEqual(
+            len(sources),
+            424 + len(r4_added) + len(r8_added) + len(r9_added)
+                + len(r10_added) + len(r11_added),
+        )
+        self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (583, 6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",

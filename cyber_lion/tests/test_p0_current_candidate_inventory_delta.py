@@ -27,6 +27,10 @@ ADDED_PROVIDER_PATHS = frozenset({
     "cyber_lion.mission_control.control_plane_reconnaissance.py",
     "cyber_lion.app_coordination.conversation_chat.py",
     "cyber_lion.mission_control.native_cognitive_phase_zero.py",
+    "cyber_lion.enterprise.r11_runtime_admission_replay.py",
+    "cyber_lion.enterprise.r11_canonical_pdp_evidence.py",
+    "cyber_lion.enterprise.cooperative_dependency_provider.py",
+    "cyber_lion.enterprise.r11_original_r620_signed_publisher.py",
 })
 # Historical source P0 is reconstructed from its Git object and checked
 # against the frozen tree/scan digest by pinned_p0_inventory. Compare old
@@ -112,14 +116,18 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
         # Historical P0 (567) is immutable. R10 has 23 relocations of
         # the *same* semantic callsites: 15 conversation-chat (+1 line)
         # and eight recon records at explicitly verified AST locations.
-        # Of 34 newly minted location IDs, only 11 are new effects:
-        # six cooperative writes, one native-recon journal write,
-        # and four native-model ledger/HTTP effects.
-        self.assertEqual(len(previous & current), 544)
-        self.assertEqual(len(current - previous), 34)
-        self.assertEqual(len(previous - current), 23)
-        self.assertEqual(len(current), 578)
-        self.assertEqual(len(current - previous) - len(previous - current), 11)
+        # Of 39 newly minted location IDs, 24 replace historical
+        # callsites: the original 15 conversation/8 recon relocations,
+        # plus the original worker-verifier source's connection-local
+        # PRAGMA query_only=ON shifted exactly 147 -> 148 by the added
+        # import. It is NOT a new database write or inherited admission.
+        # Prior 15 plus one NEW create-only R620 signer-record publication.
+        # Neither a signed row nor a Git digest is inherited P0 authority.
+        self.assertEqual(len(previous & current), 543)
+        self.assertEqual(len(current - previous), 40)
+        self.assertEqual(len(previous - current), 24)
+        self.assertEqual(len(current), 583)
+        self.assertEqual(len(current - previous) - len(previous - current), 16)
         self.assertFalse(self.candidate.unclassified_refs)
         self.assertFalse(self.candidate_taxonomy.unresolved_refs)
         self.assertNotEqual(
@@ -153,7 +161,34 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
             "cyber_lion.mission_control.control_plane_reconnaissance.py": 9,
             "cyber_lion.app_coordination.conversation_chat.py": 15,
             "cyber_lion.mission_control.native_cognitive_phase_zero.py": 4,
+            "cyber_lion.enterprise.r11_runtime_admission_replay.py": 2,
+            "cyber_lion.enterprise.r11_canonical_pdp_evidence.py": 2,
+            "cyber_lion.enterprise.cooperative_dependency_provider.py": 1,
+            "cyber_lion.enterprise.r11_original_r620_signed_publisher.py": 1,
         }))
+        signed_path="cyber_lion/enterprise/r11_original_r620_signed_publisher.py"
+        publisher=[s for s in new.values() if s.effect_provider==
+                   "cyber_lion.enterprise.r11_original_r620_signed_publisher.py"]
+        self.assertEqual(len(publisher),1)
+        self.assertEqual(
+            (publisher[0].effect_class,publisher[0].authority_class,
+             publisher[0].target_class,publisher[0].entrypoints),
+            ("persistent_state.write","local_write","runtime",
+             (signed_path+":287:db.execute",)),
+        )
+        src=(self.root/signed_path).read_text(encoding="utf-8")
+        calls=[n for n in ast.walk(ast.parse(src))
+               if isinstance(n,ast.Call) and n.lineno==287
+               and isinstance(n.func,ast.Attribute)
+               and isinstance(n.func.value,ast.Name)
+               and n.func.value.id=="db" and n.func.attr=="execute"
+               and n.args]
+        self.assertEqual(len(calls),1)
+        self.assertTrue(ast.literal_eval(calls[0].args[0]).startswith(
+            "INSERT INTO r11_original_r620_signed_parts "
+        ))
+        self.assertIn("BEGIN IMMEDIATE",src)
+        self.assertNotIn("INSERT OR REPLACE",src)
         native = [
             s for s in new.values()
             if s.effect_provider == "cyber_lion.mission_control.native_cognitive_phase_zero.py"
@@ -167,9 +202,138 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
              if s.effect_class == "external.network.post"},
             {("external_write", "external")},
         )
-        # Neither a new model HTTP POST nor its three durable writes
-        # inherits an old P0 admission or historical closure.
+        # R11's new replay DB genuinely writes to private persistent
+        # state; the P0 inventory must retain exact owner, type, site and
+        # AST statement identity instead of silently accepting +2 writes.
+        replay_provider = "cyber_lion.enterprise.r11_runtime_admission_replay.py"
+        replay = [s for s in new.values() if s.effect_provider == replay_provider]
+        self.assertEqual(len(replay), 2)
+        self.assertEqual({s.effect_class for s in replay}, {"persistent_state.write"})
+        self.assertEqual({s.authority_class for s in replay}, {"local_write"})
+        self.assertEqual({s.target_class for s in replay}, {"runtime"})
+        path = "cyber_lion/enterprise/r11_runtime_admission_replay.py"
+        self.assertEqual(
+            {s.entrypoints for s in replay},
+            {
+                (path + ":91:db.execute",),
+                (path + ":122:db.execute",),
+            },
+        )
+        source = (self.root / path).read_text(encoding="utf-8")
+        calls = [
+            node for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.Call)
+            and node.lineno in {91, 122}
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "db"
+            and node.func.attr == "execute"
+            and node.args
+        ]
+        self.assertEqual(
+            sorted((node.lineno, ast.literal_eval(node.args[0]).split()[0])
+                   for node in calls),
+            [(91, "CREATE"), (122, "INSERT")],
+        )
+        self.assertIn("BEGIN IMMEDIATE", source)
+        self.assertIn("mode=rw", source)
+        # The separate original PDP evidence read/write bridge has exactly
+        # two scanner-visible sites; this MUST NOT inherit a P0 admission.
+        pdp_owner = "cyber_lion.enterprise.r11_canonical_pdp_evidence.py"
+        pdp = [s for s in new.values() if s.effect_provider == pdp_owner]
+        self.assertEqual(len(pdp),2)
+        self.assertEqual({s.effect_class for s in pdp},{"persistent_state.write"})
+        self.assertEqual(
+            {s.entrypoints for s in pdp},
+            {
+                ("cyber_lion/enterprise/r11_canonical_pdp_evidence.py:90:db.execute",),
+                ("cyber_lion/enterprise/r11_canonical_pdp_evidence.py:413:db.execute",),
+            },
+        )
+        pdp_source = (self.root / "cyber_lion/enterprise/r11_canonical_pdp_evidence.py").read_text(
+            encoding="utf-8"
+        )
+        tree = ast.parse(pdp_source)
+        calls = [
+            node for node in ast.walk(tree)
+            if isinstance(node,ast.Call)
+            and node.lineno in {90,413}
+            and isinstance(node.func,ast.Attribute)
+            and isinstance(node.func.value,ast.Name)
+            and node.func.value.id == "db"
+            and node.func.attr == "execute"
+            and node.args
+        ]
+        self.assertEqual(
+            sorted((node.lineno,ast.literal_eval(node.args[0]))
+                   for node in calls),
+            [
+                (90,"PRAGMA query_only=ON"),
+                (413,"INSERT INTO r11_original_pdp_evidence VALUES(?,?,?)"),
+            ],
+        )
+        self.assertIn("OriginalPDPIssuanceObservation",pdp_source)
+        self.assertIn("source/trust mismatch",pdp_source)
         self.assertFalse(set(new) & set(self.historical_surfaces))
+
+    def test_original_worker_verifier_import_preserves_readonly_pragma_ast(self):
+        # SOURCE RELOCATION, not a newly introduced writable SQL site.
+        rel = "cyber_lion/enterprise/cooperative_dependency_provider.py"
+        current = (self.root / rel).read_text(encoding="utf-8")
+        old = subprocess.run(
+            ["git","show",f"{HISTORICAL_HEAD}:{rel}"],
+            cwd=self.root,check=True,stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,timeout=30,
+        ).stdout.decode("utf-8","strict")
+        source_owner = "cyber_lion.enterprise.cooperative_dependency_provider.py"
+        added = [
+            s for s in self.candidate_surfaces.values()
+            if s.digest() not in self.historical_surfaces
+            and s.effect_provider == source_owner
+        ]
+        removed = [
+            s for s in self.historical_surfaces.values()
+            if s.digest() not in self.candidate_surfaces
+            and s.effect_provider == source_owner
+        ]
+        self.assertEqual(
+            [(len(removed),len(added))],
+            [(1,1)],
+        )
+        self.assertEqual(
+            (removed[0].entrypoints,added[0].entrypoints),
+            (
+                (rel+":147:db.execute",),
+                (rel+":148:db.execute",),
+            ),
+        )
+        self.assertEqual(
+            (removed[0].effect_class,added[0].effect_class),
+            ("persistent_state.write","persistent_state.write"),
+        )
+        def exact_readonly_sql(source,location):
+            candidates=[
+                node for node in ast.walk(ast.parse(source))
+                if isinstance(node,ast.Call) and node.lineno==location
+                and isinstance(node.func,ast.Attribute)
+                and isinstance(node.func.value,ast.Name)
+                and node.func.value.id=="db" and node.func.attr=="execute"
+                and node.args and isinstance(node.args[0],ast.Constant)
+            ]
+            self.assertEqual(len(candidates),1)
+            self.assertEqual(ast.literal_eval(candidates[0].args[0]),
+                             "PRAGMA query_only=ON")
+            return ast.dump(candidates[0],include_attributes=False)
+        self.assertEqual(
+            exact_readonly_sql(old,147),
+            exact_readonly_sql(current,148),
+        )
+        # The actual changed boundary is the SHA-256-pinned verifier
+        # import. It executes compiled checked bytes instead of calling
+        # a second potentially drifted SourceFileLoader.
+        self.assertIn('verified_code = compile(raw, str(path), "exec"',current)
+        self.assertIn("exec(verified_code, module.__dict__)",current)
+        self.assertNotIn("spec.loader.exec_module(module)",current)
 
     def test_relocated_effects_keep_class_and_exact_callsite_identity(self):
         old = self.historical_surfaces

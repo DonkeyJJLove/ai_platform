@@ -5,6 +5,7 @@ from hashlib import sha256
 import json
 from pathlib import Path
 import sqlite3
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -18,6 +19,7 @@ from cyber_lion.enterprise.cooperative_dependency_provider import (
     PROVIDER_FACTORY_VERSION,
     CooperativeDependencyProviderError,
     build_dependencies_from_environment,
+    _load_verifier,
 )
 from cyber_lion.enterprise.cooperative_runtime_evidence_sources import (
     SQLiteCooperativeRuntimeEvidencePublisher,
@@ -152,6 +154,65 @@ class CooperativeDependencyProviderTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(CooperativeDependencyProviderError, "digest mismatch"):
                 build_dependencies_from_environment()
+
+    def test_original_verifier_executes_only_sha_pinned_bytes_no_loader_reopen(self):
+        # Once the original verifier source was checked, no second
+        # SourceFileLoader read is permitted to select executable bytes.
+        env=self.env()
+        with patch.dict("os.environ",env,clear=True), patch(
+            "importlib.util.spec_from_file_location",
+            side_effect=AssertionError("unverified loader reopen denied"),
+        ):
+            fn=_load_verifier()
+            self.assertTrue(callable(fn))
+
+    def test_original_verifier_source_swap_between_hash_and_exec_fails_closed(self):
+        env=self.env()
+        marker=self.external/"unverified-source-executed.txt"
+        verified=self.verifier.read_bytes()
+        # The attacker's replacement is syntactically valid and harmless,
+        # but would leave a marker in this disposable test directory if the
+        # old importlib loader actually executed the changed source bytes.
+        injected=(
+            "from pathlib import Path\\n"
+            + "Path("+repr(str(marker))+").write_text('executed',encoding='utf-8')\\n"
+            + "def verify(payload, signature, key_id, algorithm): return True\\n"
+            + "def ready(): return True\\n"
+        ).replace("\\\\n","\\n")
+        original=Path.read_bytes
+        swaps=[0]
+
+        def mutate_after_verified_read(path):
+            content=original(path)
+            if Path(path)==self.verifier and swaps[0]==0:
+                self.assertEqual(content,verified)
+                self.verifier.write_text(injected,encoding="utf-8")
+                swaps[0]=1
+            return content
+
+        with patch.dict("os.environ",env,clear=True), patch.object(
+            Path,"read_bytes",new=mutate_after_verified_read,
+        ):
+            with self.assertRaisesRegex(
+                CooperativeDependencyProviderError,
+                "module changed during import",
+            ):
+                _load_verifier()
+        self.assertEqual(swaps,[1])
+        self.assertFalse(marker.exists(),"unchecked source must never execute")
+        self.assertNotIn(
+            "_lion_cooperative_verifier_"+env["LION_COOPERATIVE_VERIFIER_MODULE_SHA256"][:20],
+            sys.modules,
+        )
+
+    def test_original_verifier_group_world_writable_denied_before_execution(self):
+        self.verifier.chmod(0o666)
+        with patch.dict("os.environ",self.env(),clear=True):
+            with self.assertRaisesRegex(
+                CooperativeDependencyProviderError,
+                "owner/mode untrusted",
+            ):
+                _load_verifier()
 
     def test_config_inside_repository_is_denied(self):
         inside = self.repo / "provider-config.json"

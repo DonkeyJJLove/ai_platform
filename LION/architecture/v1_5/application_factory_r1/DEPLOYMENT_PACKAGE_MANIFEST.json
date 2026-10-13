@@ -2,7 +2,7 @@
   "authority_effect": "NONE",
   "candidate_source_parent": "34cdc8a17fcd235807bee6340762839bc8a71fb0",
   "execution_effect": "NONE",
-  "file_count": 93,
+  "file_count": 101,
   "files": [
     {
       "sha256": "ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8",
@@ -135,7 +135,7 @@
       "target": "cyber_lion/enterprise/cooperative_control_plane_materializer.py"
     },
     {
-      "sha256": "35d7609382682a6ccf6323fe0f5468987060afe89f4203ee7b5986f70c946abb",
+      "sha256": "413d4dcb355923453b63951275fd84fbaa75fef6f467c50c6508cde7586adca2",
       "source": "cyber_lion/enterprise/cooperative_dependency_provider.py",
       "target": "cyber_lion/enterprise/cooperative_dependency_provider.py"
     },
@@ -160,7 +160,7 @@
       "target": "cyber_lion/enterprise/cooperative_runtime_evidence_sources.py"
     },
     {
-      "sha256": "7cd30cec01a01b7da1fa912828ac109fe07d4301dc4b50c8a17c56de21695a89",
+      "sha256": "3f56a2133f7cfcbdaf1ec006448da1bf7fd6c18d0090c904c451a8b44b55e725",
       "source": "cyber_lion/enterprise/cooperative_runtime_preparation_provider.py",
       "target": "cyber_lion/enterprise/cooperative_runtime_preparation_provider.py"
     },
@@ -203,6 +203,36 @@
       "sha256": "4c5acc3573a6043b8202ff207a3155713ce1a5faa54af454129ddbd4045dc4d2",
       "source": "cyber_lion/enterprise/policy_gate.py",
       "target": "cyber_lion/enterprise/policy_gate.py"
+    },
+    {
+      "source": "cyber_lion/enterprise/r11_canonical_pdp_evidence.py",
+      "target": "cyber_lion/enterprise/r11_canonical_pdp_evidence.py",
+      "sha256": "01514bdd1bdebca6812997ff45a8a10626b19c7a8d9c65794dd37f5fb75bc63b"
+    },
+    {
+      "source": "cyber_lion/enterprise/r11_original_current_owner_builder.py",
+      "target": "cyber_lion/enterprise/r11_original_current_owner_builder.py",
+      "sha256": "5ddc38681759ec42d9ac75dcda7be0f124417a86e724e762e086bab2736e865d"
+    },
+    {
+      "source": "cyber_lion/enterprise/r11_original_r620_evidence_source.py",
+      "target": "cyber_lion/enterprise/r11_original_r620_evidence_source.py",
+      "sha256": "c09091c52b86f44639cd97b9e52654e4ee1c27da05e165ad84e459959aac5063"
+    },
+    {
+      "source": "cyber_lion/enterprise/r11_original_r620_signed_publisher.py",
+      "target": "cyber_lion/enterprise/r11_original_r620_signed_publisher.py",
+      "sha256": "f06e18f42aec21b5e813d1705258ef0d7cc34ac4630ca4a6282f11a18b493ac4"
+    },
+    {
+      "source": "cyber_lion/enterprise/r11_runtime_admission_replay.py",
+      "target": "cyber_lion/enterprise/r11_runtime_admission_replay.py",
+      "sha256": "9fa7bb1b3cc9ce8f7653fcbe60a4d4fabf1fac2a47492f18c7ab38973603f71c"
+    },
+    {
+      "source": "cyber_lion/enterprise/r11_signed_original_r620_parts.py",
+      "target": "cyber_lion/enterprise/r11_signed_original_r620_parts.py",
+      "sha256": "1eff3b5167cd62376a90570e8cc163b1cfeb5000c4447e4496f3682fc7ba25db"
     },
     {
       "sha256": "69c5c2a8f4ce620ce1a6f8c89d85afd2e19104d12afa8b6514900e7e92271a36",
@@ -255,6 +285,11 @@
       "target": "cyber_lion/mission_control/cooperative_artifacts.py"
     },
     {
+      "sha256": "bf88464c8fd000400ab2ad55ea9d3d5974ea61df4f438eb75406e6d344c434ce",
+      "source": "cyber_lion/mission_control/cooperative_current_owner_wiring.py",
+      "target": "cyber_lion/mission_control/cooperative_current_owner_wiring.py"
+    },
+    {
       "sha256": "6f9093422b1a1fc6657d916ff6b31b9a497dd66dfca03df95b667c424ffdb1f6",
       "source": "cyber_lion/mission_control/cooperative_materialization_registry.py",
       "target": "cyber_lion/mission_control/cooperative_materialization_registry.py"
@@ -265,7 +300,7 @@
       "target": "cyber_lion/mission_control/cooperative_preactivation.py"
     },
     {
-      "sha256": "7f702e7122527a92da621cc483d3b1fe1f8e0c0d9ded52a9e6ee1b17c40e0502",
+      "sha256": "f971132aceecbe88670968a4ef8851bbdee421e382af7022f29cbae09511ee51",
       "source": "cyber_lion/mission_control/cooperative_preactivation_bootstrap.py",
       "target": "cyber_lion/mission_control/cooperative_preactivation_bootstrap.py"
     },
@@ -358,6 +393,11 @@
       "sha256": "9a6d9d62c25bbc4a3c15aeb1731223fc7c08e62bf8099717a9c58e85aab0ed24",
       "source": "cyber_lion/mission_control/runtime_projection.py",
       "target": "cyber_lion/mission_control/runtime_projection.py"
+    },
+    {
+      "source": "cyber_lion/mission_control/source_bound_preactivation_factory.py",
+      "target": "cyber_lion/mission_control/source_bound_preactivation_factory.py",
+      "sha256": "b95f680b04a963516d8b1fa1a5b0b2fbc20b52d2289dcbf50e236e1db7a3eaba"
     },
     {
       "sha256": "d6ffc5c07caf5db6e4040c38962987c3c0c6effb2bfb022e88373c71e773fb80",
