@@ -436,8 +436,26 @@ class HostAuthoritySeparationTests(unittest.TestCase):
             "cyber_lion/enterprise/r11_original_current_owner_builder.py",
             "cyber_lion/enterprise/r11_original_r620_evidence_source.py",
             "cyber_lion/enterprise/r11_signed_original_r620_parts.py",
+            "cyber_lion/enterprise/r11_original_r620_signed_publisher.py",
         }
         self.assertTrue(r11_added.issubset(sources))
+        publisher_path = "cyber_lion/enterprise/r11_original_r620_signed_publisher.py"
+        publisher_source = sources[publisher_path]
+        self.assertIn("CreateOnlyOriginalSignedR620Publisher",publisher_source)
+        self.assertIn("PUBLISH_ORIGINAL_R620_SIGNED_PARTS",publisher_source)
+        self.assertIn("BEGIN IMMEDIATE",publisher_source)
+        self.assertIn("original publication authority is not current",publisher_source)
+        self.assertNotIn("Ed25519PrivateKey",publisher_source)
+        self.assertNotIn("CREATE TABLE",publisher_source)
+        publisher_surfaces = [s for s in inv.surfaces
+                              if publisher_path in s.implementation_refs]
+        self.assertEqual(len(publisher_surfaces),1)
+        self.assertEqual({s.effect_class for s in publisher_surfaces},
+                         {"persistent_state.write"})
+        self.assertEqual(
+            {s.entrypoints for s in publisher_surfaces},
+            {(publisher_path+":287:db.execute",)}
+        )
         original_signed_source = sources["cyber_lion/enterprise/r11_signed_original_r620_parts.py"]
         self.assertIn("SQLiteSignedOriginalR620PartsSource",original_signed_source)
         self.assertIn("Ed25519PublicKey",original_signed_source)
@@ -516,7 +534,7 @@ class HostAuthoritySeparationTests(unittest.TestCase):
             424 + len(r4_added) + len(r8_added) + len(r9_added)
                 + len(r10_added) + len(r11_added),
         )
-        self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (582, 6))
+        self.assertEqual((len(inv.surfaces), len(inv.unclassified_refs)), (583, 6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",

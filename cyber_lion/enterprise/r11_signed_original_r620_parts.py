@@ -277,6 +277,33 @@ class SQLiteSignedOriginalR620PartsSource:
             raise R11OriginalSignedPartsError("original signed R6.20 lookup unavailable") from exc
         _need(len(rows)==1,"signed R6.20 record missing or ambiguous")
         raw,signature,key_id=rows[0]
+        return self.verify_preissued(
+            assignment_id=assignment_id, mission_id=mission_id,
+            generation=generation, input_digest=input_digest,
+            trusted_now=trusted_now, raw=raw,
+            signature=signature, key_id=key_id,
+        )
+
+    def verify_preissued(
+        self, *, assignment_id: str, mission_id: str, generation: int,
+        input_digest: str, trusted_now: datetime,
+        raw: str, signature: str, key_id: str,
+    ) -> OriginalR620PreparationParts:
+        """Verify an externally signed exact record BEFORE any publication.
+
+        Does not store, sign, grant or authorize. The caller must bind
+        independent original authority and separately admitted write.
+        """
+        _need(type(assignment_id) is str and _ID.fullmatch(assignment_id) is not None
+              and type(mission_id) is str and mission_id==self.mission_id
+              and type(generation) is int and 1<=generation<=2147483647
+              and type(input_digest) is str and _SHA.fullmatch(input_digest) is not None,
+              "original signed R6.20 request coordinates invalid")
+        observed=_zoned(trusted_now,"original R6.21 signed input request")
+        local=_zoned(self._now(),"original signed source")
+        _need(0 <= (local-observed).total_seconds() <= 5,
+              "signed source clock not current with original R6.21")
+        self._check_private_origins()
         _need(type(raw) is str and 0 < len(raw.encode("utf-8")) <= MAX_BYTES
               and type(signature) is str and len(signature)==128
               and type(key_id) is str and key_id==self.issuer_key_id,

@@ -30,6 +30,7 @@ ADDED_PROVIDER_PATHS = frozenset({
     "cyber_lion.enterprise.r11_runtime_admission_replay.py",
     "cyber_lion.enterprise.r11_canonical_pdp_evidence.py",
     "cyber_lion.enterprise.cooperative_dependency_provider.py",
+    "cyber_lion.enterprise.r11_original_r620_signed_publisher.py",
 })
 # Historical source P0 is reconstructed from its Git object and checked
 # against the frozen tree/scan digest by pinned_p0_inventory. Compare old
@@ -120,12 +121,13 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
         # plus the original worker-verifier source's connection-local
         # PRAGMA query_only=ON shifted exactly 147 -> 148 by the added
         # import. It is NOT a new database write or inherited admission.
-        # The remaining 15 are previously enumerated net-new effects.
+        # Prior 15 plus one NEW create-only R620 signer-record publication.
+        # Neither a signed row nor a Git digest is inherited P0 authority.
         self.assertEqual(len(previous & current), 543)
-        self.assertEqual(len(current - previous), 39)
+        self.assertEqual(len(current - previous), 40)
         self.assertEqual(len(previous - current), 24)
-        self.assertEqual(len(current), 582)
-        self.assertEqual(len(current - previous) - len(previous - current), 15)
+        self.assertEqual(len(current), 583)
+        self.assertEqual(len(current - previous) - len(previous - current), 16)
         self.assertFalse(self.candidate.unclassified_refs)
         self.assertFalse(self.candidate_taxonomy.unresolved_refs)
         self.assertNotEqual(
@@ -162,7 +164,31 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
             "cyber_lion.enterprise.r11_runtime_admission_replay.py": 2,
             "cyber_lion.enterprise.r11_canonical_pdp_evidence.py": 2,
             "cyber_lion.enterprise.cooperative_dependency_provider.py": 1,
+            "cyber_lion.enterprise.r11_original_r620_signed_publisher.py": 1,
         }))
+        signed_path="cyber_lion/enterprise/r11_original_r620_signed_publisher.py"
+        publisher=[s for s in new.values() if s.effect_provider==
+                   "cyber_lion.enterprise.r11_original_r620_signed_publisher.py"]
+        self.assertEqual(len(publisher),1)
+        self.assertEqual(
+            (publisher[0].effect_class,publisher[0].authority_class,
+             publisher[0].target_class,publisher[0].entrypoints),
+            ("persistent_state.write","local_write","runtime",
+             (signed_path+":287:db.execute",)),
+        )
+        src=(self.root/signed_path).read_text(encoding="utf-8")
+        calls=[n for n in ast.walk(ast.parse(src))
+               if isinstance(n,ast.Call) and n.lineno==287
+               and isinstance(n.func,ast.Attribute)
+               and isinstance(n.func.value,ast.Name)
+               and n.func.value.id=="db" and n.func.attr=="execute"
+               and n.args]
+        self.assertEqual(len(calls),1)
+        self.assertTrue(ast.literal_eval(calls[0].args[0]).startswith(
+            "INSERT INTO r11_original_r620_signed_parts "
+        ))
+        self.assertIn("BEGIN IMMEDIATE",src)
+        self.assertNotIn("INSERT OR REPLACE",src)
         native = [
             s for s in new.values()
             if s.effect_provider == "cyber_lion.mission_control.native_cognitive_phase_zero.py"

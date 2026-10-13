@@ -63,6 +63,7 @@ SOURCE_MAP = {
     'cyber_lion/enterprise/r11_original_current_owner_builder.py': ROOT / 'cyber_lion/enterprise/r11_original_current_owner_builder.py',
     'cyber_lion/enterprise/r11_original_r620_evidence_source.py': ROOT / 'cyber_lion/enterprise/r11_original_r620_evidence_source.py',
     'cyber_lion/enterprise/r11_signed_original_r620_parts.py': ROOT / 'cyber_lion/enterprise/r11_signed_original_r620_parts.py',
+    'cyber_lion/enterprise/r11_original_r620_signed_publisher.py': ROOT / 'cyber_lion/enterprise/r11_original_r620_signed_publisher.py',
     'cyber_lion/enterprise/swarm_status_projection.py': ROOT / 'cyber_lion/enterprise/swarm_status_projection.py',
     'cyber_lion/enterprise/trusted_control_plane_providers.py': ROOT / 'cyber_lion/enterprise/trusted_control_plane_providers.py',
     'cyber_lion/enterprise/trusted_control_plane_service.py': ROOT / 'cyber_lion/enterprise/trusted_control_plane_service.py',
@@ -160,6 +161,7 @@ class MissionControlV3RestartPackageTests(unittest.TestCase):
             "cyber_lion/enterprise/r11_original_current_owner_builder.py",
             "cyber_lion/enterprise/r11_original_r620_evidence_source.py",
             "cyber_lion/enterprise/r11_signed_original_r620_parts.py",
+            "cyber_lion/enterprise/r11_original_r620_signed_publisher.py",
             "tools/lion_cooperative_worker_adapter.py",
         ):
             self.assertIn(path,SOURCE_MAP)

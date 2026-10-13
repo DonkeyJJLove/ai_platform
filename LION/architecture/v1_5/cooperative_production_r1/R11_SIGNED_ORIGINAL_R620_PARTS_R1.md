@@ -58,3 +58,11 @@ writer, MD001 canary or LPCL START. Code/CI/PR green are not authority.
 
 SOURCE_ONLY; SIGNED_INPUT_CONSUMER_NOT_ISSUER;
 PRODUCTION_GRANT=UNKNOWN; MD001=NOT_STARTED.
+
+
+## Create-only original publication candidate
+
+See R11_ORIGINAL_R620_SIGNED_PUBLICATION_R1.md for the separately
+admitted one-row INSERT consumer of externally PREISSUED signed inputs.
+It is not a production signer, grant issuer or automatic deployment.
+The original signed reader remains read-only and exact.
