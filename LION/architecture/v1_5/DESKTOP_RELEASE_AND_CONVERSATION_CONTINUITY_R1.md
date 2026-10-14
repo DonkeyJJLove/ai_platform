@@ -51,3 +51,28 @@ tools/lion_desktop_staging_inventory.py is the sole new bounded inventory utilit
 Source candidate and exact-head tests are not integration. Before runtime release: check original owners, reconcile source/truth carriers, review exact source and CI, obtain bounded operator activation, install beside the prior release, read back shortcut and selector, test one fresh manual bind without prior SaaS history, reconcile historical pending claims without blind retry, and verify a new complete SaaS response, broker response/receipt hashes and canonical delivered event.
 
 No PR merge, LPCL start, broker replay, worker launch, credential extraction, historical deletion or SaaS deliverability claim is authorized by this documentation.
+
+## Legacy conversation disposition without destructive migration
+
+The companion `tools/lion_legacy_conversation_inventory.py` works against the
+original canonical SQLite using URI `mode=ro`, `PRAGMA query_only=ON` and a
+single consistent read transaction. It reports no user text, browser secrets
+or complete external-thread URLs, and it cannot create a bridge.
+
+An exact scoped historical readback on 2026-10-14 (not a self-refreshing live
+assertion) classified **82** source conversations:
+- **34** `NEW_EXPLICIT_OPERATOR_LINK_CANDIDATE`: no previous SAAS lane or
+  stored external bridge; still requires operator choice, exact project-thread
+  proof and admission
+- **29** `LEGACY_SAAS_CLAIM_RECONCILIATION_REQUIRED`: at least one previous
+  SaaS lane/event; no retrospective automatic adoption
+- **11** `BRIDGE_RECORD_REVALIDATION_REQUIRED`: stored bridge records whose
+  live ChatGPT delivery/session has not been proven
+- **8** `FROZEN_HISTORICAL_PRESERVE`: never mutate frozen predecessor
+
+The readback report is stored outside staging at
+`C:\ProgramData\SentinelX\workspace\LION_R11_R4_OPERATOR_STAGING_AUDIT_20261014\CANONICAL_CONVERSATION_LEGACY_READONLY_CENSUS.json`,
+SHA-256 `7ef7f26ed53be6543c2315ae74844928fd8f7cf693ba829744c51488d2bda65f`.
+These numbers belong to that observation, not to a new architectural invariant.
+All categories hold `authorized_to_bind=false`, `ready_to_send=false`
+and `authorized_to_delete=false` until the original owner revalidates.

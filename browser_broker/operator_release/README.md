@@ -11,3 +11,5 @@ The installed browser profile, broker.db, panel threads.db, historic versions an
 The original composition and source of SaaS responses/receipts are unchanged. Read the architecture owner document at LION/architecture/v1_5/DESKTOP_RELEASE_AND_CONVERSATION_CONTINUITY_R1.md.
 
 Manual bridge note: opening the ChatGPT project landing does not create a durable external_thread_ref. The operator must select an existing concrete project conversation (or create one in ChatGPT itself) before accepting a native exact-thread binding. A bridge record still does not prove a SaaS response/receipt.
+
+The source-only legacy canonical conversation scanner is at `tools/lion_legacy_conversation_inventory.py`. Classification is not authority or permission for bulk binding/retirement. Its 2026-10-14 scoped readback identified 34 candidates, 29 legacy SaaS histories needing reconciliation, 11 recorded bridges needing independent revalidation and 8 frozen predecessors.
