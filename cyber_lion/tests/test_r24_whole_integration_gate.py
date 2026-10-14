@@ -56,7 +56,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertEqual(result["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(result["authority_effect"], "NONE")
         self.assertEqual(result["source_bytes"], "GIT_INDEX_BLOB")
-        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R6.json"))
+        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R7.json"))
 
     def test_source_successor_retains_historical_ccf_manifest_immutably(self):
         import subprocess
@@ -72,7 +72,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         ).stdout
         self.assertEqual(original.read_bytes(), tracked)
         source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R5.json")
+        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R6.json")
         self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(source["authority_effect"], "NONE")
 
@@ -85,13 +85,35 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
             "a6ff9c0c3680c5e8400c7251f8b130939d52774b9c61e3e89df564411b073d36",
         )
 
-    def test_r6_package_includes_model_chat_filter_fixes_without_rewriting_r5(self):
+    def test_r7_package_retains_model_chat_filter_fixes_and_source_proof(self):
         source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R5.json")
+        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R6.json")
         paths = {p["path"] for p in source["files"]}
         self.assertIn("cyber_lion/tests/test_r24_model_chat_list_filter_ui.py", paths)
         self.assertIn("cyber_lion/app_coordination/local_intelligence_gateway.py", paths)
         self.assertIn("LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_MANIFEST_CCF_R5.json", paths)
+        self.assertIn("LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_MANIFEST_CCF_R6.json", paths)
+        self.assertIn("cyber_lion/tests/test_p0_current_candidate_inventory_delta.py", paths)
+
+    def test_r6_source_manifest_retains_exact_predecessor_git_identity(self):
+        import hashlib
+        import subprocess
+
+        root = SOURCE_PACKAGE_MANIFEST_PATH.parents[4]
+        old_path = (
+            "LION/architecture/v1_5/cooperative_production_r1/"
+            "SOURCE_PACKAGE_MANIFEST_CCF_R6.json"
+        )
+        expected = "b5110764379b5b70d061ac053c30a234ccd5726f2b019be8aecf65724049ea79"
+        current_blob = subprocess.run(
+            ["git", "-C", str(root), "show", "HEAD:" + old_path],
+            capture_output=True, check=True,
+        ).stdout
+        self.assertEqual(hashlib.sha256(current_blob).hexdigest(), expected)
+        self.assertEqual(
+            json.loads((root / old_path).read_text(encoding="utf-8")),
+            json.loads(current_blob),
+        )
 
     def test_r4_source_package_remains_immutable_historical_predecessor(self):
         import subprocess
@@ -107,7 +129,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         ).stdout
         self.assertEqual(previous.read_bytes(), historical)
 
-    def test_r5_package_explicitly_pins_release_router_and_legacy_bindings(self):
+    def test_current_package_explicitly_pins_release_router_and_legacy_bindings(self):
         source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
         paths = [r["path"] for r in source["files"]]
         self.assertEqual(len(paths), len(set(paths)), "duplicate source paths")

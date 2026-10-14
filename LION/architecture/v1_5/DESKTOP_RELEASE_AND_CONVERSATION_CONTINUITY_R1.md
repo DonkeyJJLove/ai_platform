@@ -102,3 +102,29 @@ The source package for this extended increment is
 cooperative_production_r1/SOURCE_PACKAGE_MANIFEST_CCF_R6.json. R5 remains immutable
 historical input; both source-only package currentness and truth carriers are
 recomputed after the final non-carrier delta. Runtime adoption is separate.
+
+## P0 historical effect-surface relocation ledger
+
+The exact PR #456 CI core failure (GitHub Actions run 38535489639, job
+115757247033) is from the historical effect scanner's source-line-encoded
+identity, not an additional database mutation. The original existing
+conn.execute INSERT INTO conversation_external_bridges call in
+cyber_lion/app_coordination/conversation_domain.py shifted from line 553
+(P0 historic b6cc132095deb268b2754d2afc0634aeac5a7ac4) to line 561
+(PR #456 head 5ba4d9165c6eb1ce0eeaca1484407139f7c40979).
+The intervening source change is an 8-line fail-closed current
+canonical binding/epoch/context fence before the original INSERT.
+
+A target-specific regression in
+cyber_lion/tests/test_p0_current_candidate_inventory_delta.py verifies
+the historical and current complete AST of that exact INSERT are identical,
+that its owner and write/taxonomy/authority class match, and that the
+exact before/after surface digests remain pinned. The semantic P0 census
+still requires 562 retained (561 literally identical + 1 AST-proven
+relocated), 11 truly added, 5 truly removed, and 573 current observed
+surface identifiers. Unclassified/taxonomy-unknown results still fail.
+No scanner, historical receipt or inventory baseline is rewritten.
+
+A successor source-package CCF R7 includes this new regression test
+and references immutable R6 (and its predecessors). Carrier digest must
+be recomputed last; no runtime or GitHub publication is implied.
