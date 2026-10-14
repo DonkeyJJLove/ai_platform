@@ -1,0 +1,14 @@
+{
+  "schema": "lion.desktop.operator-current-release/v1",
+  "generation": 1,
+  "repository": "DonkeyJJLove/ai_platform",
+  "release_id": "PR454_00be49a1_R11",
+  "source_head": "00be49a1f72c696b756435396e1915c4a85c53ba",
+  "source_tree": "76c3f0ce2239bee147994724fd8016eee855ec58",
+  "launcher_relative_path": "staging/Start-LION-Desktop-PR454-R11.ps1",
+  "launcher_sha256": "a2b811eb4ce3c0d05cb4269a7b0853fc655711b1ae6bc4e1cc767902d8f32e08",
+  "manifest_relative_path": "staging/Desktop-PR454-00be49a1-SOURCE_ATTESTATION.json",
+  "manifest_sha256": "36e9eecc604e61fb8e0eb545e2323545152ce646975f2365c01e92e43804498a",
+  "entrypoint_relative_path": "desktop/release-pr454-00be49a-r1/browser_broker/src/main.cjs",
+  "entrypoint_sha256": "5c41fa27d0dd74762fc627ed9cab2272474160b8c810f3c36164e1dafdf30b50"
+}

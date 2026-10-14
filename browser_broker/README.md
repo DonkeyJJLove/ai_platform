@@ -223,3 +223,11 @@ panel with the simplified R18 candidate without checking feature/data parity.
 ## R4 operator desktop source candidate
 
 The source-bound successor is described in [DESKTOP_R4_RELEASE_NOTES.md](DESKTOP_R4_RELEASE_NOTES.md). Only canonical Model Chat/LPCL may bind local/SaaS model output to a mission; interactive Local GPT is unbound advisory. The WebContentsView sender-validated IPC permits limited read-only observation and one bounded operator-initiated local inference, never authority to execute workers or access raw mission SQLite. Startup leaves the canonical SaaS consumer STOPPED until exact prior sends/receipts are reconciled. Cluster now consumes a bounded read-only, digest-verified MOON fleet carrier with worker-level freshness; even a FRESH carrier does not grant mission authority or material readiness.
+
+## Desktop source-bound release selector (candidate)
+
+The R4/R11 Windows shortcut and staging ownership issue has a dedicated, isolated source candidate in [operator_release](operator_release/README.md). A stable operator-owned release pointer replaces hardcoded PR-specific shortcut targets only after a separate approved installation. The manual, user-confirmed bridge path links a NEW canonical conversation to an EXISTING exact project SaaS thread without a send; it never migrates historical broker claims. Current source candidate is not live deployment or SaaS E2E acceptance.
+
+Model Chat list filter behavior reuses the exact PR #449 UI source change; the
+R11 candidate must preserve scope/current conversation when the list refreshes.
+See the source-only architecture continuity record for dependency provenance.

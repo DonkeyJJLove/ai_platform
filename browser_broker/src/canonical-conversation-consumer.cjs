@@ -320,6 +320,92 @@ class CanonicalConversationSaaSConsumer{
   let provenance={};try{provenance=JSON.parse(active.provenance_json||'{}').supplied||{}}catch{}
   return {...active,provenance};
  }
+ // Explicit operator recovery for an EXISTING project-scoped ChatGPT thread.
+ // Never sends a message, never infers identity from the panel's active tab,
+ // and never binds an already-pending historical SaaS lane.
+ async bindExistingProjectThread(conversationId,operatorConfirm){
+  if(typeof conversationId!=='string'||!/^conv-[A-Za-z0-9-]+$/.test(conversationId))
+   throw Error('CANONICAL_BIND_CONVERSATION_ID_REQUIRED');
+  if(typeof operatorConfirm!=='function')throw Error('CANONICAL_OPERATOR_CONFIRM_REQUIRED');
+  if(this.enabled||this.running)throw Error('CANONICAL_BIND_REQUIRES_PAUSED_CONSUMER');
+  if(this.manualBindInFlight)throw Error('CANONICAL_BIND_ALREADY_IN_FLIGHT');
+  this.manualBindInFlight=true;
+  const path='/api/conversations/'+encodeURIComponent(conversationId);
+  const check=async(ref,epoch,contextDigest)=>{
+   const current=await this.panel(path);
+   if(current?.conversation_id!==conversationId||current.state==='FROZEN'
+    ||!['UNBOUND','BOUND'].includes(current?.state)
+    ||!Number.isSafeInteger(current?.current_binding?.binding_epoch)
+    ||current.current_binding.binding_epoch<1
+    ||!/^[a-f0-9]{64}$/.test(current?.current_binding?.context_digest||'')){
+    throw Error('CANONICAL_BIND_SOURCE_NOT_CURRENT');
+   }
+   if(epoch!==undefined&&(current.current_binding.binding_epoch!==epoch
+    ||current.current_binding.context_digest!==contextDigest))
+    throw Error('CANONICAL_BIND_EPOCH_OR_CONTEXT_DRIFT');
+   if(this._bridgeFor(current))throw Error('CANONICAL_BIND_EXISTING_BRIDGE_REQUIRES_RECONCILIATION');
+   // A previously queued SaaS lane is NOT automatically transferred to
+   // another browser conversation; preserve its distinct broker identity.
+   if((current.lanes||[]).some(l=>l.provider==='SAAS'))
+    throw Error('CANONICAL_BIND_PRIOR_SAAS_LANE_REQUIRES_RECONCILIATION');
+   const proof=this.browser.bindingReport();
+   if(proof?.error!==null||proof?.route!=='PROJECT_CONVERSATION'
+    ||proof?.project_membership!=='URL_PROJECT_ID_MATCH'
+    ||typeof proof.url!=='string'||!/^https:\/\/chatgpt\.com\/g\/g-p-/.test(proof.url)
+    ||!/^[-A-Za-z0-9]{1,160}$/.test(proof.id||''))
+    throw Error('CANONICAL_BIND_PROJECT_THREAD_NOT_OBSERVED');
+   if(ref&&(proof.url!==ref.url||proof.id!==ref.id))
+    throw Error('CANONICAL_BIND_BROWSER_NAVIGATED_DURING_CONFIRMATION');
+   return {current,proof};
+  };
+  try{
+   const before=await check();
+   const epoch=before.current.current_binding.binding_epoch;
+   const contextDigest=before.current.current_binding.context_digest;
+   const confirmed=await operatorConfirm({
+    conversation_id:conversationId,mission_id:before.current.current_binding.mission_id,
+    binding_epoch:epoch,external_thread_ref:before.proof.id,
+    conversation_url:before.proof.url,project_membership:before.proof.project_membership,
+    authority_effect:'NONE',
+   });
+   if(confirmed!==true)return {state:'OPERATOR_DECLINED',external_send_count:0,authority_effect:'NONE'};
+   if(this.enabled||this.running)throw Error('CANONICAL_BIND_CONSUMER_ACTIVATED');
+   await check(before.proof,epoch,contextDigest);
+   // Source-bound operator-created linkage is NOT ChatGPT E2E attestation.
+   const created=await this.panel(path+'/bridges','POST',{
+    external_thread_ref:before.proof.id,
+    external_system:EXTERNAL_SYSTEM,
+    context_snapshot_digest:contextDigest,
+    provenance:{
+     surface:'CANONICAL_CONVERSATION_SAAS_CONSUMER',
+     creation_mode:'EXPLICIT_NATIVE_OPERATOR_EXISTING_THREAD',
+     bridge_state:'RECORDED_UNVERIFIED_E2E',
+     conversation_url:before.proof.url,
+     binding_epoch:epoch,
+     project_membership:'URL_PROJECT_ID_MATCH',
+     external_send_count:0,
+     authority_effect:'NONE',
+    },
+   });
+   // The write may have committed even if this readback fails. Never retry.
+   let readback;
+   try{readback=await this.panel(path)}catch{
+    throw Error('CANONICAL_BIND_EFFECT_UNKNOWN_READBACK_REQUIRED');
+   }
+   const confirmedRows=(readback.external_bridges||[]).filter(row=>
+    row.bridge_id===created?.bridge_id
+    &&row.external_system===EXTERNAL_SYSTEM
+    &&row.external_thread_ref===before.proof.id
+    &&row.context_snapshot_digest===contextDigest
+    &&row.authority_effect==='NONE');
+   if(confirmedRows.length!==1)
+    throw Error('CANONICAL_BIND_EFFECT_UNKNOWN_READBACK_REQUIRED');
+   return {state:'BRIDGE_RECORDED_SAAS_E2E_UNVERIFIED',
+    conversation_id:conversationId,bridge_id:created.bridge_id,
+    external_thread_ref:before.proof.id,external_send_count:0,
+    authority_effect:'NONE'};
+  }finally{this.manualBindInFlight=false}
+ }
  _conversationUrl(bridge){
   const stored=bridge?.provenance?.conversation_url;
   if(typeof stored==='string'){

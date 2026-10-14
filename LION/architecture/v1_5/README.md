@@ -141,3 +141,7 @@ The package is source-only. Its `REGISTRATION_PREVIEW.json` is intentionally not
 ## Mission evidence and reasoning lineage (R1 source candidate)
 
 [MISSION_EVIDENCE_ARCHIVE_R1.md](MISSION_EVIDENCE_ARCHIVE_R1.md) describes the tested immutable terminal-mission archive and the append-only evidence-classified reasoning journal. It does not change the canonical Mission Control owner, RAG preferred release, LPCL activation, or provide authority to delete older missions/functions.
+
+## Desktop release and canonical SaaS continuity (source candidate)
+
+[Desktop release selector, staging ownership and exact external-thread binding](DESKTOP_RELEASE_AND_CONVERSATION_CONTINUITY_R1.md) describes a stable operator entrypoint, source-bound release selection, non-destructive historical staging review, and the distinction between mission binding, a stored ChatGPT bridge and actual SaaS delivery/receipt. This is not integrated/current runtime until exact-ref validation, operator deployment and readback.

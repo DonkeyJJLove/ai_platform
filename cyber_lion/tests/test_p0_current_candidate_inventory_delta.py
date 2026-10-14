@@ -7,6 +7,7 @@ inherited historical mediation/authorization evidence.
 """
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 import subprocess
 import unittest
@@ -24,6 +25,33 @@ ADDED_PROVIDER_PATHS = frozenset({
     "cyber_lion.enterprise.cooperative_runtime_preparation_provider.py",
     "cyber_lion.mission_control.control_plane_reconnaissance.py",
 })
+
+
+# The pre-write canonical epoch/context fence moves the *existing* bridge
+# INSERT by eight lines. Scanner identity includes source line, even when
+# the mutation AST itself is byte-for-byte unchanged. These exact digests
+# are treated as a one-to-one relabeling, never as a new authority surface.
+BRIDGE_WRITE_PATH = "cyber_lion/app_coordination/conversation_domain.py"
+BRIDGE_WRITE_OLD_LINE = 553
+BRIDGE_WRITE_NEW_LINE = 561
+BRIDGE_WRITE_OLD_DIGEST = "51e1311c247ac2d7e4f6afdb602d6171d0ad4b40b46201f402fdf364c0ea0c5e"
+BRIDGE_WRITE_NEW_DIGEST = "a7e21632dd62143c2770cb1dd446be1c632ecac52f247930c90b15e5c08c6422"
+BRIDGE_WRITE_SQL = "INSERT INTO conversation_external_bridges VALUES(?,?,?,?,?,?,?,?)"
+
+
+def _exact_existing_bridge_insert_ast(source: str, line: int) -> str:
+    tree = ast.parse(source, filename=BRIDGE_WRITE_PATH)
+    matches = [
+        node for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and getattr(node, "lineno", None) == line
+        and isinstance(node.func, ast.Attribute) and node.func.attr == "execute"
+        and isinstance(node.func.value, ast.Name) and node.func.value.id == "conn"
+        and node.args and isinstance(node.args[0], ast.Constant)
+        and node.args[0].value == BRIDGE_WRITE_SQL
+    ]
+    if len(matches) != 1:
+        raise AssertionError("exact historic/current bridge write AST identity not observed")
+    return ast.dump(matches[0], include_attributes=False)
 
 
 def _production_path(path: str) -> bool:
@@ -84,12 +112,59 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
         self.assertFalse(self.historical.unclassified_refs)
         self.assertFalse(self.historical_taxonomy.unresolved_refs)
 
+    def _verified_bridge_relocation(self):
+        previous = self.historical_surfaces.get(BRIDGE_WRITE_OLD_DIGEST)
+        current = self.candidate_surfaces.get(BRIDGE_WRITE_NEW_DIGEST)
+        self.assertIsNotNone(previous, "pinned historical bridge INSERT absent")
+        self.assertIsNotNone(current, "exact candidate bridge INSERT absent")
+        self.assertEqual(previous.entrypoints, (
+            f"{BRIDGE_WRITE_PATH}:{BRIDGE_WRITE_OLD_LINE}:conn.execute",
+        ))
+        self.assertEqual(current.entrypoints, (
+            f"{BRIDGE_WRITE_PATH}:{BRIDGE_WRITE_NEW_LINE}:conn.execute",
+        ))
+        for attribute in (
+            "effect_provider", "implementation_refs", "effect_class",
+            "target_class", "mutation_kind", "authority_class",
+            "currentness_requirement", "pep_required",
+            "observer_required", "reconciliation_required",
+            "epistemic_state",
+        ):
+            self.assertEqual(
+                getattr(previous, attribute), getattr(current, attribute),
+                f"bridge relocated effect changed {attribute}",
+            )
+        self.assertEqual(previous.effect_class, "persistent_state.write")
+        self.assertEqual(previous.authority_class, "local_write")
+        original_blob = subprocess.run(
+            ["git", "show", f"{HISTORICAL_HEAD}:{BRIDGE_WRITE_PATH}"],
+            cwd=self.root, check=True, stdout=subprocess.PIPE,
+        ).stdout.decode("utf-8", "strict")
+        candidate_blob = subprocess.run(
+            ["git", "show", f"HEAD:{BRIDGE_WRITE_PATH}"],
+            cwd=self.root, check=True, stdout=subprocess.PIPE,
+        ).stdout.decode("utf-8", "strict")
+        self.assertEqual(
+            _exact_existing_bridge_insert_ast(original_blob, BRIDGE_WRITE_OLD_LINE),
+            _exact_existing_bridge_insert_ast(candidate_blob, BRIDGE_WRITE_NEW_LINE),
+            "the source-level SQL write must be AST identical after relocation",
+        )
+        return previous, current
+
+    def test_existing_bridge_write_relocation_has_exact_ast_and_provenance(self):
+        self._verified_bridge_relocation()
+
     def test_candidate_has_exactly_accounted_delta_and_resolved_taxonomy(self):
         previous = set(self.historical_surfaces)
         current = set(self.candidate_surfaces)
-        self.assertEqual(len(previous & current), 562)
-        self.assertEqual(len(current - previous), 11)
-        self.assertEqual(len(previous - current), 5)
+        self._verified_bridge_relocation()
+        # Surface IDs hash the source location. Preserve the original
+        # semantic 562/11/5 census with exactly one proven AST-identical
+        # relocated bridge write (553 -> 561), rather than hiding a new
+        # producer or weakening taxonomy/currentness checks.
+        self.assertEqual(len(previous & current) + 1, 562)
+        self.assertEqual(len((current - previous) - {BRIDGE_WRITE_NEW_DIGEST}), 11)
+        self.assertEqual(len((previous - current) - {BRIDGE_WRITE_OLD_DIGEST}), 5)
         self.assertEqual(len(current), 573)
         self.assertFalse(self.candidate.unclassified_refs)
         self.assertFalse(self.candidate_taxonomy.unresolved_refs)
@@ -99,10 +174,13 @@ class P0CurrentCandidateInventoryDeltaTests(unittest.TestCase):
         )
 
     def test_all_new_surface_classes_and_owners_are_explicit(self):
+        self._verified_bridge_relocation()
         new = {
             digest: self.candidate_surfaces[digest]
             for digest in set(self.candidate_surfaces) - set(self.historical_surfaces)
+            if digest != BRIDGE_WRITE_NEW_DIGEST
         }
+        self.assertEqual(len(new), 11)
         self.assertEqual(
             {s.effect_provider for s in new.values()}, ADDED_PROVIDER_PATHS
         )

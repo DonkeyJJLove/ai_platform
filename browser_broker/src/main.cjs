@@ -99,8 +99,32 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
      if(v===panel&&u.protocol==='lion-saas:'){
       event.preventDefault();
       const conversationId=decodeURIComponent(u.pathname.replace(/^\/+/,''));if(!conversationId)return;
-      if(u.hostname==='open')canonicalConsumer?.openBridgeForConversation(conversationId).then(()=>selectRightTab('saas')).catch(()=>{});
-      else if(u.hostname==='rotate')canonicalConsumer?.requestRotate(conversationId);
+      if(u.hostname==='open')canonicalConsumer?.openBridgeForConversation(conversationId)
+       .then(()=>selectRightTab('saas')).catch(error=>dialog.showMessageBox(win,{
+        type:'warning',message:'Nie można otworzyć dokładnego wątku SaaS',
+        detail:String(error?.message||error).slice(0,180)}));
+      else if(u.hostname==='project'){
+       // Navigation only. The operator creates a chat using ChatGPT's own UI.
+       saas.webContents.loadURL(PROJECT).then(()=>selectRightTab('saas')).catch(()=>{});
+      }else if(u.hostname==='bind'){
+       canonicalConsumer?.bindExistingProjectThread(conversationId,async binding=>{
+        const selected=await dialog.showMessageBox(win,{
+         type:'question',buttons:['Powiąż dokładny wątek','Anuluj'],defaultId:1,cancelId:1,
+         message:'Powiązać otwarty wątek ChatGPT z tą rozmową LION?',
+         detail:'LION: '+binding.conversation_id+' (epoch '+binding.binding_epoch+')'+
+           '\nMisja: '+(binding.mission_id||'UNBOUND')+
+           '\nProjektowy wątek SaaS: '+binding.external_thread_ref+
+           '\nNie wysyła wiadomości. Nie rozlicza starych tur i nie potwierdza E2E.',
+        });
+        return selected.response===0;
+       }).then(result=>{
+        // Panel consumes current canonical state, not an inferred tab state.
+        if(result?.state==='BRIDGE_RECORDED_SAAS_E2E_UNVERIFIED')
+         panel.webContents.executeJavaScript('typeof cmcOpen==="function" && cmcActiveId && cmcOpen(cmcActiveId)').catch(()=>{});
+       }).catch(error=>dialog.showMessageBox(win,{
+        type:'warning',message:'Powiązanie SaaS zatrzymane (bez wysłania)',
+        detail:String(error?.message||error).slice(0,200)}));
+      }else if(u.hostname==='rotate')canonicalConsumer?.requestRotate(conversationId);
       return;
      }
     }catch{}
