@@ -227,3 +227,7 @@ The source-bound successor is described in [DESKTOP_R4_RELEASE_NOTES.md](DESKTOP
 ## Desktop source-bound release selector (candidate)
 
 The R4/R11 Windows shortcut and staging ownership issue has a dedicated, isolated source candidate in [operator_release](operator_release/README.md). A stable operator-owned release pointer replaces hardcoded PR-specific shortcut targets only after a separate approved installation. The manual, user-confirmed bridge path links a NEW canonical conversation to an EXISTING exact project SaaS thread without a send; it never migrates historical broker claims. Current source candidate is not live deployment or SaaS E2E acceptance.
+
+Model Chat list filter behavior reuses the exact PR #449 UI source change; the
+R11 candidate must preserve scope/current conversation when the list refreshes.
+See the source-only architecture continuity record for dependency provenance.

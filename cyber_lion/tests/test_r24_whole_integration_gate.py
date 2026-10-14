@@ -56,7 +56,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertEqual(result["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(result["authority_effect"], "NONE")
         self.assertEqual(result["source_bytes"], "GIT_INDEX_BLOB")
-        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R5.json"))
+        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R6.json"))
 
     def test_source_successor_retains_historical_ccf_manifest_immutably(self):
         import subprocess
@@ -72,9 +72,26 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         ).stdout
         self.assertEqual(original.read_bytes(), tracked)
         source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R4.json")
+        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R5.json")
         self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(source["authority_effect"], "NONE")
+
+    def test_r5_source_package_is_immutable_historical_successor(self):
+        import hashlib
+        previous = SOURCE_PACKAGE_MANIFEST_PATH.parent / "SOURCE_PACKAGE_MANIFEST_CCF_R5.json"
+        self.assertTrue(previous.is_file())
+        self.assertEqual(
+            hashlib.sha256(previous.read_bytes()).hexdigest(),
+            "a6ff9c0c3680c5e8400c7251f8b130939d52774b9c61e3e89df564411b073d36",
+        )
+
+    def test_r6_package_includes_model_chat_filter_fixes_without_rewriting_r5(self):
+        source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R5.json")
+        paths = {p["path"] for p in source["files"]}
+        self.assertIn("cyber_lion/tests/test_r24_model_chat_list_filter_ui.py", paths)
+        self.assertIn("cyber_lion/app_coordination/local_intelligence_gateway.py", paths)
+        self.assertIn("LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_MANIFEST_CCF_R5.json", paths)
 
     def test_r4_source_package_remains_immutable_historical_predecessor(self):
         import subprocess

@@ -138,6 +138,7 @@ html,body{height:100%;overflow:hidden}.layout{height:100vh;min-height:0}.app{hei
   <button type="button" id="cmcShowAll">Pokaż wszystkie</button>
   <select id="cmcConversationSelect"><option value="">— brak rozmowy —</option></select>
  </div>
+ <div id="cmcListStatus" class="status" role="status" aria-live="polite">LISTA ROZMÓW · ładowanie</div>
  <div class="cmc-grid">
   <div class="cmc-card"><div class="k">STATE</div><div class="v" id="cmcState">—</div></div>
   <div class="cmc-card"><div class="k">BINDING EPOCH</div><div class="v" id="cmcEpoch">—</div></div>
@@ -297,21 +298,55 @@ const CMC_CONSUMER_KEY='lion-r24-complementary-consumer';
 const CMC_ACTIVE_KEY='lion-r24-active-conversation';
 let cmcConsumerId=localStorage.getItem(CMC_CONSUMER_KEY);
 if(!cmcConsumerId){cmcConsumerId='browser-'+crypto.randomUUID().replaceAll('-','');localStorage.setItem(CMC_CONSUMER_KEY,cmcConsumerId)}
-let cmcConversations=[],cmcActiveId=null,cmcActive=null,cmcGeneration=0,cmcFilterMission=null,cmcPollBusy=false,cmcCursorBy={},cmcPendingBy={};
+let cmcConversations=[],cmcActiveId=null,cmcActive=null,cmcGeneration=0,cmcFilterMission=null,cmcListGeneration=0,cmcPollBusy=false,cmcCursorBy={},cmcPendingBy={};
 async function cmcApi(path,opts={}){const r=await fetch(path,{cache:'no-store',...opts});let x={};try{x=await r.json()}catch(_){ }if(!r.ok)throw new Error(x.error||('HTTP '+r.status));return x}
 const cmcPost=(path,body)=>cmcApi(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
 const cmcOpId=p=>p+'-'+crypto.randomUUID().replaceAll('-','');
 function cmcRenderList(){
  const sel=$('cmcConversationSelect');if(!sel)return;
  const current=cmcActiveId||sel.value;
- sel.innerHTML='<option value="">— wybierz rozmowę —</option>'+cmcConversations.map(c=>{const mid=c.current_binding?.mission_id||'UNBOUND';return '<option value="'+esc(c.conversation_id)+'">'+esc((c.title||'Rozmowa')+' · '+c.state+' · e'+(c.current_binding?.binding_epoch??'—')+' · '+mid)+'</option>'}).join('');
- if(current&&cmcConversations.some(c=>c.conversation_id===current))sel.value=current;
+ const shown=!!current&&cmcConversations.some(c=>c.conversation_id===current);
+ sel.innerHTML='<option value="">— wybierz rozmowę —</option>'+cmcConversations.map(c=>{
+  const mid=c.current_binding?.mission_id;
+  const label='ROZMOWA · '+(c.title||'Rozmowa')+' · '+c.state+' · e'+(c.current_binding?.binding_epoch??'—')+' · MISJA '+(mid||'BRAK');
+  return '<option value="'+esc(c.conversation_id)+'">'+esc(label)+'</option>';
+ }).join('');
+ // Filter changes the list only, never the current canonical conversation.
+ sel.value=shown?current:'';
+ const scope=cmcFilterMission?'MISJA '+cmcFilterMission:'WSZYSTKIE ROZMOWY';
+ $('cmcListStatus').textContent='LISTA · '+scope+' · '+cmcConversations.length+' rozmów'+
+  (current&&!shown?' · OTWARTA ROZMOWA POZA FILTREM':'');
 }
 async function cmcRefreshList(){
- const qs=new URLSearchParams({limit:'500'});if(cmcFilterMission)qs.set('mission_id',cmcFilterMission);
- const x=await cmcApi('/api/conversations?'+qs.toString());cmcConversations=x.conversations||[];cmcRenderList();
- if(cmcActiveId){const c=cmcConversations.find(x=>x.conversation_id===cmcActiveId);if(c)cmcRenderConversation(c)}
- return cmcConversations;
+ const generation=++cmcListGeneration,filter=cmcFilterMission;
+ const qs=new URLSearchParams({limit:'500'});if(filter)qs.set('mission_id',filter);
+ try{
+  const x=await cmcApi('/api/conversations?'+qs.toString());
+  // An earlier in-flight filter cannot overwrite the latest selection.
+  if(generation!==cmcListGeneration||filter!==cmcFilterMission)return cmcConversations;
+  if((x.mission_id??null)!==filter)throw new Error('LIST_FILTER_SCOPE_DRIFT');
+  if(!Array.isArray(x.conversations))throw new Error('LIST_FILTER_MALFORMED');
+  cmcConversations=x.conversations;cmcRenderList();
+  if(cmcActiveId){const c=cmcConversations.find(x=>x.conversation_id===cmcActiveId);if(c)cmcRenderConversation(c)}
+  return cmcConversations;
+ }catch(e){
+  if(generation===cmcListGeneration)$('cmcListStatus').textContent='LISTA · BŁĄD ODCZYTU · '+String(e.message||e).slice(0,150);
+  throw e;
+ }
+}
+async function cmcApplyListFilter(scope){
+ if(scope==='MISSION'){
+  const mission=selectedMissionId||missionFocusId;
+  if(!mission){
+   $('cmcListStatus').textContent='LISTA · WYBIERZ MISJĘ W MISSION CONTROL · poprzedni filtr zachowany';
+   return;
+  }
+  cmcFilterMission=mission;
+ }else if(scope==='ALL'){
+  cmcFilterMission=null;
+ }else throw new Error('LIST_FILTER_INVALID_SCOPE');
+ try{await cmcRefreshList()}
+ catch(e){ /* Readback failure is visible in cmcListStatus; no silent fallback. */ }
 }
 function cmcRenderBridge(c){
  const rows=c.external_bridges||[],state=$('cmcBridgeState'),input=$('cmcExternalThreadRef');
@@ -407,8 +442,8 @@ async function cmcPoll(force=false){
 function cmcWire(){
  $('cmcNew').onclick=()=>cmcCreate(null).catch(e=>$('cmcHealth').textContent='CREATE ERROR · '+e.message);
  $('cmcNewMission').onclick=()=>{const m=selectedMissionId||missionFocusId;if(m)cmcCreate(m).catch(e=>$('cmcHealth').textContent='CREATE ERROR · '+e.message)};
- $('cmcFilterMission').onclick=async()=>{cmcFilterMission=selectedMissionId||missionFocusId||null;await cmcRefreshList()};
- $('cmcShowAll').onclick=async()=>{cmcFilterMission=null;await cmcRefreshList()};
+ $('cmcFilterMission').onclick=()=>cmcApplyListFilter('MISSION');
+ $('cmcShowAll').onclick=()=>cmcApplyListFilter('ALL');
  $('cmcConversationSelect').onchange=e=>cmcOpen(e.target.value).catch(err=>$('cmcHealth').textContent='OPEN ERROR · '+err.message);
  $('cmcBind').onclick=()=>cmcBind().catch(e=>$('cmcHealth').textContent='BIND ERROR · '+e.message);
  $('cmcDetach').onclick=()=>cmcDetach().catch(e=>$('cmcHealth').textContent='DETACH ERROR · '+e.message);

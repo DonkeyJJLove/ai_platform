@@ -80,3 +80,25 @@ SHA-256 `7ef7f26ed53be6543c2315ae74844928fd8f7cf693ba829744c51488d2bda65f`.
 These numbers belong to that observation, not to a new architectural invariant.
 All categories hold `authorized_to_bind=false`, `ready_to_send=false`
 and `authorized_to_delete=false` until the original owner revalidates.
+
+## PR #449 complementary list-scope integration (source candidate)
+
+The operator-reported failure to refresh visible Model Chat conversations has an
+existing primary UI owner in PR #449, exact historical source commit
+7b563730a0a13b11c30be7bdb6357b2e33d952d1. This R11 successor integrates
+only PR #449's source-only filter UI behavior and original scoped test,
+without replaying its unrelated master source-package or truth carriers.
+The existing cmcListStatus now distinguishes ALL vs exact MISSION scope, missing
+mission selection, and an open conversation outside its current filter.
+It prevents stale asynchronous list responses from replacing later user choice.
+This does not automatically bind an external ChatGPT project conversation.
+
+Existing parallel PR #450 concerns a separate, older four-view source and is not
+substituted for the active six-view R4/R11 desktop or original operator shortcut.
+The exact PR #449 and #450 lineages must be explicitly reconciled at integration
+time to avoid overwriting an independently merged UI fix.
+
+The source package for this extended increment is
+cooperative_production_r1/SOURCE_PACKAGE_MANIFEST_CCF_R6.json. R5 remains immutable
+historical input; both source-only package currentness and truth carriers are
+recomputed after the final non-carrier delta. Runtime adoption is separate.
