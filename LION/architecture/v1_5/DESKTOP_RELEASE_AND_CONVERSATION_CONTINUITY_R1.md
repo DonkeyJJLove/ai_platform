@@ -46,6 +46,10 @@ A recorded bridge is labelled BRIDGE RECORD / SaaS E2E NOT PROVEN, not a current
 
 tools/lion_desktop_staging_inventory.py is the sole new bounded inventory utility: top-level filesystem read-only, explicit active names, SHA-256 of modest-sized files, no recursion, no rename/move/delete, and no output inside the monitored staging tree. UNKNOWN and symlink entries are held, not automatically cleaned. Other historical staging files may be archived only after confirming all live consumers, exact backup and original operator permission.
 
+## Exact successor source-package identity
+
+The R11/desktop continuity sources are included in the successor R5 exact Git-index source package (cooperative_production_r1/SOURCE_PACKAGE_CURRENTNESS_CCF_R5.md). R4 remains immutable historical source evidence; only R5 is the current source-validation owner after this candidate integration. R5 validation is neither desktop deployment nor verified SaaS E2E.
+
 ## Release and runtime gates
 
 Source candidate and exact-head tests are not integration. Before runtime release: check original owners, reconcile source/truth carriers, review exact source and CI, obtain bounded operator activation, install beside the prior release, read back shortcut and selector, test one fresh manual bind without prior SaaS history, reconcile historical pending claims without blind retry, and verify a new complete SaaS response, broker response/receipt hashes and canonical delivered event.

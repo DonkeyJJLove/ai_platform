@@ -56,7 +56,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertEqual(result["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(result["authority_effect"], "NONE")
         self.assertEqual(result["source_bytes"], "GIT_INDEX_BLOB")
-        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R4.json"))
+        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R5.json"))
 
     def test_source_successor_retains_historical_ccf_manifest_immutably(self):
         import subprocess
@@ -72,9 +72,43 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         ).stdout
         self.assertEqual(original.read_bytes(), tracked)
         source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R3.json")
+        self.assertEqual(source["supersedes"], "SOURCE_PACKAGE_MANIFEST_CCF_R4.json")
         self.assertEqual(source["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(source["authority_effect"], "NONE")
+
+    def test_r4_source_package_remains_immutable_historical_predecessor(self):
+        import subprocess
+        previous = SOURCE_PACKAGE_MANIFEST_PATH.parent / "SOURCE_PACKAGE_MANIFEST_CCF_R4.json"
+        self.assertTrue(previous.is_file())
+        root = SOURCE_PACKAGE_MANIFEST_PATH.parents[4]
+        historical = subprocess.run(
+            ["git", "-C", str(root), "show",
+             "00be49a1f72c696b756435396e1915c4a85c53ba:"
+             "LION/architecture/v1_5/cooperative_production_r1/"
+             "SOURCE_PACKAGE_MANIFEST_CCF_R4.json"],
+            capture_output=True, check=True,
+        ).stdout
+        self.assertEqual(previous.read_bytes(), historical)
+
+    def test_r5_package_explicitly_pins_release_router_and_legacy_bindings(self):
+        source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
+        paths = [r["path"] for r in source["files"]]
+        self.assertEqual(len(paths), len(set(paths)), "duplicate source paths")
+        self.assertTrue({
+            "tools/lion_r24_whole_integration_gate.py",
+            "tools/lion_legacy_conversation_inventory.py",
+            "tools/lion_desktop_staging_inventory.py",
+            "browser_broker/src/main.cjs",
+            "browser_broker/src/canonical-conversation-consumer.cjs",
+            "browser_broker/test/manual-saas-bridge.test.cjs",
+            "browser_broker/test/manual-saas-binding-ui.test.cjs",
+            "browser_broker/operator_release/Start-LION-Current.ps1",
+            "browser_broker/operator_release/Start-LION.vbs",
+            "browser_broker/operator_release/Install-LION-Stable-Shortcut.ps1",
+            "cyber_lion/app_coordination/conversation_domain.py",
+            "cyber_lion/app_coordination/local_intelligence_gateway.py",
+            "LION/architecture/v1_5/DESKTOP_RELEASE_AND_CONVERSATION_CONTINUITY_R1.md",
+        }.issubset(set(paths)))
 
     def test_pr431_source_manifest_remains_byte_identical(self):
         import subprocess
