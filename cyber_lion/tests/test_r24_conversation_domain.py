@@ -123,6 +123,27 @@ class R24ConversationDomainTests(unittest.TestCase):
         self.assertEqual(len(self.op("lanes", {"conversation_id": conv["conversation_id"]})["lanes"]), 1)
         self.assertEqual(len(self.op("bridges", {"conversation_id": conv["conversation_id"]})["external_bridges"]), 1)
 
+    def test_bridge_cannot_bind_frozen_old_epoch_or_substituted_context(self):
+        conv = self.op("create", {"title": "source-bound", "idempotency_key": "bridge-source"})
+        digest = conv["current_binding"]["context_digest"]
+        expected = {"external_system": "CHATGPT_SAAS",
+                    "external_thread_ref": "native-current-1",
+                    "context_snapshot_digest": digest,
+                    "provenance": {"source": "native-operator"}}
+        with self.assertRaisesRegex(ConversationConflict, "context/epoch"):
+            self.op("bridge_create", {
+                "conversation_id": conv["conversation_id"],
+                "bridge": {**expected, "context_snapshot_digest": "f"*64},
+            })
+        self.assertEqual(len(self.op("bridges", {"conversation_id": conv["conversation_id"]})["external_bridges"]), 0)
+        self.op("bind", {
+            "conversation_id": conv["conversation_id"],
+            "transition": {"mission_id": "M1", "operation_id": "source-bound-successor"},
+        })
+        with self.assertRaisesRegex(ConversationConflict, "frozen"):
+            self.op("bridge_create", {"conversation_id": conv["conversation_id"], "bridge": expected})
+        self.assertEqual(len(self.op("bridges", {"conversation_id": conv["conversation_id"]})["external_bridges"]), 0)
+
     def test_simultaneous_same_mission_conversations_remain_distinct(self):
         a = self.op("create", {"mission_id": "M1", "idempotency_key": "same-mission-a"})
         b = self.op("create", {"mission_id": "M1", "idempotency_key": "same-mission-b"})

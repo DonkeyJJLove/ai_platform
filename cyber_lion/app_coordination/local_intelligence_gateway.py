@@ -153,7 +153,7 @@ html,body{height:100%;overflow:hidden}.layout{height:100vh;min-height:0}.app{hei
  <div class="cmc-bridge" data-bridge-mode="AUTO">
   <div class="k">CHATGPT SAAS EXTERNAL BRIDGE · AUTO-PROVISION</div>
   <div id="cmcBridgeState" class="cmc-bridge-state">NO BRIDGE · first SAAS/DUAL will auto-create a dedicated native thread in Phase 3 transport.</div>
-  <div class="row"><input id="cmcExternalThreadRef" readonly placeholder="external_thread_ref · auto-filled"><button type="button" id="cmcOpenSaasThread" disabled>Otwórz dokładny wątek SaaS</button><button type="button" id="cmcRotateBridge" disabled>Rotate / Rebind</button></div>
+  <div class="row"><input id="cmcExternalThreadRef" readonly placeholder="external_thread_ref · auto-filled"><button type="button" id="cmcOpenSaasThread" disabled>Otwórz dokładny wątek SaaS</button><button type="button" id="cmcOpenSaasProject">Otwórz projekt ChatGPT</button><button type="button" id="cmcBindExistingSaas" disabled>Powiąż otwarty wątek SaaS</button><button type="button" id="cmcRotateBridge" disabled>Rotate / Rebind</button></div>
  </div>
  <div id="cmcPending" class="cmc-pending"></div>
  <div id="cmcMessages" class="cmc-messages"></div>
@@ -316,9 +316,21 @@ async function cmcRefreshList(){
 function cmcRenderBridge(c){
  const rows=c.external_bridges||[],state=$('cmcBridgeState'),input=$('cmcExternalThreadRef');
  if(!state||!input)return;
- if(!rows.length){state.textContent='NO BRIDGE · AUTO-CREATE on first SAAS/DUAL · no active-tab inference';input.value='';return}
- const b=rows[rows.length-1];state.textContent='BOUND · '+b.external_system+' · bridge_id='+b.bridge_id+' · authority_effect='+b.authority_effect;input.value=b.external_thread_ref||'';
- $('cmcOpenSaasThread').disabled=!b.external_thread_ref;$('cmcRotateBridge').disabled=false;
+ const open=$('cmcOpenSaasThread'),rotate=$('cmcRotateBridge'),adopt=$('cmcBindExistingSaas');
+ const project=$('cmcOpenSaasProject');
+ if(project)project.disabled=c.state==='FROZEN';
+ if(!rows.length){
+  state.textContent='NO BRIDGE · choose a project ChatGPT thread and explicitly link it; no auto-send';
+  input.value='';if(open)open.disabled=true;if(rotate)rotate.disabled=true;
+  if(adopt)adopt.disabled=c.state==='FROZEN';
+  return;
+ }
+ const b=rows[rows.length-1];
+ state.textContent='BRIDGE RECORD · '+b.external_system+' · '+b.bridge_id+' · SaaS E2E NOT PROVEN';
+ input.value=b.external_thread_ref||'';
+ if(open)open.disabled=!b.external_thread_ref;
+ if(rotate)rotate.disabled=c.state==='FROZEN';
+ if(adopt)adopt.disabled=true;
 }
 function cmcRenderConversation(c){
  cmcActive=c;cmcActiveId=c.conversation_id;localStorage.setItem(CMC_ACTIVE_KEY,c.conversation_id);cmcRenderList();
@@ -402,6 +414,8 @@ function cmcWire(){
  $('cmcDetach').onclick=()=>cmcDetach().catch(e=>$('cmcHealth').textContent='DETACH ERROR · '+e.message);
  $('cmcLineage').onclick=()=>cmcShowLineage().catch(e=>$('cmcHealth').textContent='LINEAGE ERROR · '+e.message);
  $('cmcOpenSaasThread').onclick=()=>{if(cmcActiveId)location.href='lion-saas://open/'+encodeURIComponent(cmcActiveId)};
+ $('cmcOpenSaasProject').onclick=()=>{if(cmcActiveId)location.href='lion-saas://project/'+encodeURIComponent(cmcActiveId)};
+ $('cmcBindExistingSaas').onclick=()=>{if(cmcActiveId)location.href='lion-saas://bind/'+encodeURIComponent(cmcActiveId)};
  $('cmcRotateBridge').onclick=()=>{if(cmcActiveId)location.href='lion-saas://rotate/'+encodeURIComponent(cmcActiveId)};
  $('cmcSend').onclick=cmcSend;$('cmcRoute').onchange=()=>{$('cmcRouteCard').textContent=$('cmcRoute').value};
  $('cmcInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();cmcSend()}});

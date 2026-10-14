@@ -550,6 +550,14 @@ def create_bridge(
             out["idempotent_replay"] = True
             conn.execute("RELEASE SAVEPOINT conversation_bridge")
             return out
+        # Atomic canonical-DB fence against a successor epoch created after a
+        # browser-level operator approval but before this insertion.
+        current = _row(conn, conversation_id)
+        binding = _binding(conn, conversation_id)
+        if current["state"] == "FROZEN" or binding["state"] == "FROZEN":
+            raise ConversationConflict("frozen conversation cannot acquire a new bridge")
+        if binding["state"] != current["state"] or binding["context_digest"] != context_snapshot_digest:
+            raise ConversationConflict("bridge context/epoch source mismatch")
         conn.execute(
             "INSERT INTO conversation_external_bridges VALUES(?,?,?,?,?,?,?,?)",
             (
