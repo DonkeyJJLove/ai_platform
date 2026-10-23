@@ -1,3 +1,3 @@
 # Versions used for this candidate's local tests; optional component environment.
-cryptography==46.0.4
+cryptography==50.0.0
 psutil==7.2.2
