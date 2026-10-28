@@ -6,5 +6,5 @@
   "main": "src/main.cjs",
   "scripts": {"start": "electron .", "test": "node --test test/*.test.cjs", "check": "node --check src/main.cjs && node --check src/store.cjs && node --check src/engine.cjs && node --check src/http.cjs && node --check src/relay.cjs && node --check src/thread-consumer.cjs && node --check src/browser.cjs && node --check src/contract.cjs && node --check src/conversation.cjs"},
   "engines": {"node": ">=22.13.0"},
-  "dependencies": {"electron": "44.4.3", "express": "5.2.1"}
+  "dependencies": {"electron": "44.9.1", "express": "5.2.1"}
 }
